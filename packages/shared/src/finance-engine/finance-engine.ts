@@ -25,6 +25,9 @@ const balanceData = (input: any, baseCurrency: string, asOf: string) => {
       }
     }
   }
+  for (const [currency, value] of Object.entries(input.accountlessBalancesByCurrency ?? {})) {
+    spendableByCurrency[currency] = formatMoney(parseMoney(spendableByCurrency[currency] ?? '0.00') + parseMoney(value as string))
+  }
   let spendableInBase: Money | null = spendableByCurrency[baseCurrency] ? money(baseCurrency as any, parseMoney(spendableByCurrency[baseCurrency])) : money(baseCurrency as any, 0n)
   for (const [currency, value] of Object.entries(spendableByCurrency)) if (currency !== baseCurrency) {
     const quote = selectQuote(input.fxQuotes ?? [], currency as any, baseCurrency as any, asOf)

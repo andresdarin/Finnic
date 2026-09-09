@@ -54,7 +54,7 @@ export class FinanceController {
   @Get('accounts')
   async getAccounts(@CurrentUser() user: AuthenticatedUser) {
     const { id: profileId } = await this.profile(user)
-    return this.accountService.findActive(profileId)
+    return this.accountService.findActive(profileId, false)
   }
 
   @Post('accounts')

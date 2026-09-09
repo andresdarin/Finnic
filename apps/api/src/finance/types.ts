@@ -10,6 +10,7 @@ export type FinanceEngineInput = {
   scheduledCashFlows: unknown[]
   goals: unknown[]
   expenses: unknown[]
+  accountlessBalancesByCurrency?: Partial<Record<Currency, string>>
 }
 
 export type FxAdapter = {

@@ -65,6 +65,7 @@ export default function IncomeFormModal({ isOpen, onClose, onSuccess }: IncomeFo
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="rounded-full p-1.5 text-muted-foreground hover:bg-surface-soft hover:text-foreground transition-colors"
           >

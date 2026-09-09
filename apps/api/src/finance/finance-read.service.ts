@@ -27,9 +27,10 @@ export class FinanceReadService {
     const from = window.from ?? new Date(asOf.getTime() - 31 * 86400000)
     const to = window.to ?? new Date(asOf.getTime() + 366 * 86400000)
     const timeZone = profile.timeZone ?? 'America/Montevideo'
-    const [accounts, flows, goals, personal, household] = await Promise.all([
+    const [accounts, flows, goals, personal, accountlessPersonal, household] = await Promise.all([
       this.accounts.findActive(profileId, false), this.cashFlows.findRelevant(profileId, from, to), this.goals.findActive(profileId),
       this.prisma.personalExpense.findMany({ where: { profileId, date: { gte: from, lte: to } } }),
+      this.prisma.personalExpense.findMany({ where: { profileId, financeAccountId: null, date: { lte: asOf }, movementType: { in: ['INCOME', 'EXPENSE'] } }, select: { amount: true, currency: true, movementType: true } }),
       this.prisma.expense.findMany({ where: { household: { members: { some: { profileId } } }, date: { gte: from, lte: to } }, include: { category: true, splits: true, household: { include: { members: true } } } }),
     ])
 
@@ -45,10 +46,17 @@ export class FinanceReadService {
         return { id: expense.id, direction: 'OUTFLOW', occurredOn: expense.date.toISOString(), category: normalizeCategory(expense.category.name), amount: { currency: baseCurrency, amount: minorUnitsToMoney(typeof share === 'bigint' ? share : decimalToMinorUnits(share)) } }
       }),
     ]
+    const accountlessBalancesByCurrency = accountlessPersonal.reduce((balances, expense) => {
+      const currency = String(expense.currency) as Currency
+      const signedAmount = decimalToMinorUnits(expense.amount) * (expense.movementType === 'INCOME' ? 1n : -1n)
+      balances[currency] = minorUnitsToMoney(decimalToMinorUnits(balances[currency] ?? '0.00') + signedAmount)
+      return balances
+    }, {} as Partial<Record<Currency, string>>)
     const fxQuotes: FxQuote[] = []
     const historical: FxQuoteHistorical[] = []
     const currencies = new Set<Currency>([
       ...accounts.map((account) => account.currency as Currency), ...inputExpenses.map((expense) => expense.amount.currency),
+      ...Object.keys(accountlessBalancesByCurrency) as Currency[],
     ])
     for (const currency of currencies) {
       if (currency === baseCurrency) continue
@@ -62,6 +70,7 @@ export class FinanceReadService {
     return {
       asOf: asOf.toISOString(), baseCurrency, timeZone, minimumBuffer: decimalToString(profile.minimumBuffer),
       accounts: accounts.map((account) => ({ type: account.type, isSpendable: account.isSpendable, currency: account.currency, balance: normalizeMoney(account.balance, account.currency as Currency).amount, balanceAsOf: account.updatedAt.toISOString() })),
+      accountlessBalancesByCurrency,
       scheduledCashFlows: flows.map((flow) => ({ scheduledCashFlowId: flow.id, scheduledDueOn: localDate(flow.scheduledDueOn, timeZone), amount: normalizeMoney(flow.amount, flow.currency as Currency), direction: flow.direction, lifecycle: flow.lifecycle })),
       goals: goals.map((goal) => ({ id: goal.id, name: goal.name, targetAmount: normalizeMoney(goal.targetAmount, goal.currency as Currency), currentAmount: normalizeMoney(goal.currentAmount, goal.currency as Currency), targetDate: localDate(goal.targetDate, timeZone), status: goal.status })),
       expenses: inputExpenses,

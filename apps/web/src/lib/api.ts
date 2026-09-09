@@ -32,7 +32,21 @@ export async function apiFetch<T = unknown>(
 
   if (!res.ok) {
     const body = await res.json().catch(() => null)
-    throw new ApiError(res.status, body?.message ?? `Error ${res.status}: ${res.statusText}`)
+    let errorMessage = `Error ${res.status}: ${res.statusText || 'Petición incorrecta'}`
+    if (typeof body?.message === 'string') {
+      errorMessage = body.message
+    } else if (body?.message && typeof body.message === 'object') {
+      const fieldErrors = (body.message as Record<string, unknown>).fieldErrors
+      if (fieldErrors && typeof fieldErrors === 'object') {
+        const details = Object.entries(fieldErrors)
+          .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : String(v)}`)
+          .join('; ')
+        if (details) errorMessage = details
+      } else {
+        errorMessage = JSON.stringify(body.message)
+      }
+    }
+    throw new ApiError(res.status, errorMessage)
   }
 
   return res.json() as Promise<T>

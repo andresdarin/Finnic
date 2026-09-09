@@ -11,7 +11,7 @@ import {
 export class FinanceAccountService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findActive(profileId: string, provision = true) {
+  async findActive(profileId: string, provision = false) {
     const existing = await this.prisma.financeAccount.findMany({
       where: { profileId, isActive: true },
       orderBy: { createdAt: 'asc' },

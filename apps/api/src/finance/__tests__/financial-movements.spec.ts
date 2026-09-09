@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { CreateExpenseUseCase } from '../application/create-expense.usecase'
 import { CreateTransferUseCase } from '../application/create-transfer.usecase'
 import { RegisterIncomeUseCase } from '../application/register-income.usecase'
+import { FinanceAccountService } from '../finance-account.service'
 import { PersonalFinanceService } from '../../personal-finance/personal-finance.service'
 
 describe('Finnic Financial Movements & Account Invariants', () => {
@@ -86,6 +87,42 @@ describe('Finnic Financial Movements & Account Invariants', () => {
     createTransferUseCase = new CreateTransferUseCase(mockPrisma)
     registerIncomeUseCase = new RegisterIncomeUseCase(mockPrisma)
     personalFinanceService = new PersonalFinanceService(mockPrisma, createExpenseUseCase)
+  })
+
+  it('does not provision default accounts when listing active accounts', async () => {
+    const accounts = await new FinanceAccountService(mockPrisma).findActive('profile-1')
+
+    expect(accounts).toEqual([])
+    expect(mockPrisma.financeAccount.findMany).toHaveBeenCalledWith({
+      where: { profileId: 'profile-1', isActive: true },
+      orderBy: { createdAt: 'asc' },
+    })
+  })
+
+  it('leaves an expense unlinked when financeAccountId is omitted, even if accounts exist', async () => {
+    accountsStore.set('cash-1', {
+      id: 'cash-1',
+      profileId: 'profile-1',
+      type: 'CASH',
+      currency: 'UYU',
+      balance: '1000.00',
+      isActive: true,
+    })
+
+    await createExpenseUseCase.execute({
+      profileId: 'profile-1',
+      input: {
+        title: 'Compra sin cuenta',
+        amount: '300.00',
+        currency: 'UYU',
+        date: new Date().toISOString(),
+        category: 'food',
+      },
+    })
+
+    expect(expensesStore[0].financeAccountId).toBeUndefined()
+    expect(Number(accountsStore.get('cash-1').balance)).toBe(1000)
+    expect(mockPrisma.financeAccount.update).not.toHaveBeenCalled()
   })
 
   it('Scenario 1 (CASH): Expense of $300 decrements cash from $1000 to $700 and sums $300 to monthly expenses', async () => {

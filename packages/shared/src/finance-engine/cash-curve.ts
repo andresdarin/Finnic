@@ -11,16 +11,26 @@ const dateOf = (value: string, timeZone = 'America/Montevideo') => {
 }
 
 export const baseSpendable = (input: any) => {
-  if (!(input.accounts ?? []).length && input.balances?.spendableByCurrency) {
-    return parseMoney(input.balances.spendableByCurrency[input.baseCurrency ?? 'UYU'] ?? '0.00')
-  }
-  return (input.accounts ?? []).reduce((sum: bigint, account: any) => {
+  const accountTotal = (input.accounts ?? []).reduce((sum: bigint, account: any) => {
   if (account.managedByLovehold === false) return sum
   const raw = parseMoney(account.spendable ?? account.balance ?? '0.00')
   if (account.currency === (input.baseCurrency ?? 'UYU')) return sum + raw
   const quote = selectQuote(input.fxQuotes ?? [], account.currency, input.baseCurrency ?? 'UYU', input.asOf)
   return quote ? sum + parseMoney(convertAssetWithBidFloor({ currency: account.currency, amount: formatMoney(raw) } as any, input.baseCurrency, quote).amount) : sum
   }, 0n)
+  const baseCurrency = input.baseCurrency ?? 'UYU'
+  let accountless = 0n
+  for (const [currency, value] of Object.entries(input.accountlessBalancesByCurrency ?? {})) {
+    if (currency === baseCurrency) accountless += parseMoney(value as string)
+    else {
+      const quote = selectQuote(input.fxQuotes ?? [], currency as any, baseCurrency as any, input.asOf)
+      if (quote) accountless += parseMoney(convertAssetWithBidFloor({ currency, amount: formatMoney(parseMoney(value as string)) } as any, baseCurrency as any, quote).amount)
+    }
+  }
+  if (!(input.accounts ?? []).length && input.balances?.spendableByCurrency) {
+    return parseMoney(input.balances.spendableByCurrency[input.baseCurrency ?? 'UYU'] ?? '0.00')
+  }
+  return accountTotal + accountless
 }
 
 /** Projects only unresolved intent. PAID/RECEIVED are already in materialized balances. */

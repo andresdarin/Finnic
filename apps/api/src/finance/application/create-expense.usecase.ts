@@ -59,9 +59,7 @@ export class CreateExpenseUseCase {
           ? await tx.financeAccount.findFirst({
               where: { id: input.financeAccountId, profileId: command.profileId },
             })
-          : await tx.financeAccount.findFirst({
-              where: { profileId: command.profileId, currency: input.currency, isActive: true },
-            })
+          : null
 
         if (input.financeAccountId && (!account || account.isActive === false || account.currency !== input.currency)) {
           throw new BadRequestException('La cuenta no está disponible para registrar este gasto en esa moneda.')
