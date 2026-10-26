@@ -36,6 +36,10 @@ describe('AgentOrchestrator', () => {
     expect(instruction).toContain('CANAL WHATSAPP')
     expect(instruction).toContain('confirmación explícita')
     expect(instruction).toContain('No te presentes como una persona')
+    expect(instruction).toContain('respondiendo sí')
+    expect(instruction).toContain('fotos de tickets directamente en este chat')
+    expect(instruction).not.toContain('[Abrir Registrar gasto](/expenses/new)')
+    expect(instruction).not.toContain('indicá el botón de la propuesta existente')
   })
   it('1. responde una conversación sin tools', async () => {
     const result = await makeSubject({ chat: vi.fn(async () => ({ text: 'Hola' })) }, makeRegistry(), makeExecutor()).run({ ...request, message: 'Hola' })

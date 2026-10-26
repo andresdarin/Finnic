@@ -54,7 +54,7 @@ export class AgentOrchestrator {
       await this.conversations.createMessage({ conversationId: req.conversationId, role: AiMessageRole.USER, content: req.message })
       history.push({ role: 'user', parts: [{ text: req.message }] })
       for (let i = 0; i < Math.min(effective.policy.limits.maxIterations, MAX_ITERATIONS); i++) {
-        const result = await this.gemini.chat({ model: effective.model.model, systemInstruction: withFinnicVoice(effective.prompt.content) + runtimeKnowledge() + finnicChannelVoice(req.channel), history, tools, generationConfig: { temperature: effective.model.temperature, maxOutputTokens: effective.model.maxTokens, responseMimeType: effective.model.responseMimeType } })
+        const result = await this.gemini.chat({ model: effective.model.model, systemInstruction: withFinnicVoice(effective.prompt.content) + runtimeKnowledge(req.channel) + finnicChannelVoice(req.channel), history, tools, generationConfig: { temperature: effective.model.temperature, maxOutputTokens: effective.model.maxTokens, responseMimeType: effective.model.responseMimeType } })
         if (!result.functionCalls?.length) {
           const kind = calls.some(call => !call.success) || !result.text ? 'error' : calls.length ? 'query' : 'explanation'
           return this.complete(run.id, req, result.text || FALLBACK, calls, kind)
