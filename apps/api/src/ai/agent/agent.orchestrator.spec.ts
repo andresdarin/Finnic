@@ -28,6 +28,15 @@ const makeSubject = (gemini: any, registry: any, executor: any, conversations = 
 const request = { profileId: 'p', conversationId: 'c1' }
 
 describe('AgentOrchestrator', () => {
+  it('uses the shared personality and channel guidance at the actual model boundary', async () => {
+    const gemini = { chat: vi.fn(async () => ({ text: 'Buenas.' })) }
+    await makeSubject(gemini, makeRegistry(), makeExecutor()).run({ ...request, message: 'Hola', channel: 'whatsapp' })
+    const instruction = (gemini.chat.mock.calls[0] as unknown as [{ systemInstruction: string }])[0].systemInstruction
+    expect(instruction).toContain('[finnic-voice:v1]')
+    expect(instruction).toContain('CANAL WHATSAPP')
+    expect(instruction).toContain('confirmación explícita')
+    expect(instruction).toContain('No te presentes como una persona')
+  })
   it('1. responde una conversación sin tools', async () => {
     const result = await makeSubject({ chat: vi.fn(async () => ({ text: 'Hola' })) }, makeRegistry(), makeExecutor()).run({ ...request, message: 'Hola' })
     expect(result.text).toBe('Hola')

@@ -5,6 +5,7 @@ import { GeminiClient } from '../client/gemini.client'
 import { ChatMessage } from '../client/gemini.types'
 import { FINNIC_PROMPT_ID } from '../prompts/finnic.prompt'
 import { runtimeKnowledge } from '../prompts/product-knowledge'
+import { finnicChannelVoice, withFinnicVoice } from '../prompts/finnic-voice'
 import { PromptRegistry } from '../prompts/prompt.registry'
 import { ToolExecutor } from '../tools/tool.executor'
 import { ToolRegistry } from '../tools/tool.registry'
@@ -17,7 +18,7 @@ import type { EffectiveAiConfig } from '../config/ai-config.types'
 import { actionDescription, agentHistory } from './agent-history'
 import { confirmAction } from './confirm-action'
 
-export type AgentRequest = { profileId: string; conversationId: string; message: string }
+export type AgentRequest = { profileId: string; conversationId: string; message: string; channel?: 'app' | 'whatsapp' }
 export type AgentResponse = {
   text: string; conversationId: string; pendingActionId?: string; actionStatus?: PendingActionStatus
   kind?: 'explanation' | 'query' | 'action' | 'error'
@@ -53,7 +54,7 @@ export class AgentOrchestrator {
       await this.conversations.createMessage({ conversationId: req.conversationId, role: AiMessageRole.USER, content: req.message })
       history.push({ role: 'user', parts: [{ text: req.message }] })
       for (let i = 0; i < Math.min(effective.policy.limits.maxIterations, MAX_ITERATIONS); i++) {
-        const result = await this.gemini.chat({ model: effective.model.model, systemInstruction: effective.prompt.content + runtimeKnowledge(), history, tools, generationConfig: { temperature: effective.model.temperature, maxOutputTokens: effective.model.maxTokens, responseMimeType: effective.model.responseMimeType } })
+        const result = await this.gemini.chat({ model: effective.model.model, systemInstruction: withFinnicVoice(effective.prompt.content) + runtimeKnowledge() + finnicChannelVoice(req.channel), history, tools, generationConfig: { temperature: effective.model.temperature, maxOutputTokens: effective.model.maxTokens, responseMimeType: effective.model.responseMimeType } })
         if (!result.functionCalls?.length) {
           const kind = calls.some(call => !call.success) || !result.text ? 'error' : calls.length ? 'query' : 'explanation'
           return this.complete(run.id, req, result.text || FALLBACK, calls, kind)

@@ -42,9 +42,9 @@ export function nextStep(input: ExpenseProposal & { currencyConflict?: boolean; 
     const amount = formatMoney(proposal.amount, proposal.currency)
     const method = proposal.paymentMethod ? ` con ${PAYMENT_LABELS[proposal.paymentMethod]}` : ''
     const intro = resolution.options.length
-      ? `¿Con qué cuenta pagaste ${amount}${method}? Respondé con el número:\n${optionList(resolution.options.map(accountLabel))}\nO "sin cuenta" para registrarlo sin mover saldos.`
+      ? `¿Con qué cuenta pagaste ${amount}${method}?\n${optionList(resolution.options.map(accountLabel))}\nDecime el nombre o el número. También podés decir "sin cuenta" y lo dejamos sin asociar a un saldo.`
       : proposal.paymentMethod === 'CREDIT'
-        ? `El ticket indica un pago con crédito por ${amount}, pero no tenés una tarjeta de crédito configurada en ${proposal.currency}. Podés crearla en Balance y escribirme el nombre, o responder "sin cuenta" para guardar el gasto como crédito sin actualizar la deuda de una tarjeta.`
+        ? `Pagaste ${amount} con crédito, pero todavía no tenés una tarjeta de crédito configurada en ${proposal.currency}. Decime "sin cuenta" para dejarlo así por ahora, sin actualizar la deuda de una tarjeta. Si preferís asociarlo, creá la tarjeta en Balance y decime el nombre.`
         : `No tenés una cuenta compatible en ${proposal.currency}${method} para ${amount}. Respondé "sin cuenta" para registrarlo sin mover saldos, o creá la cuenta en Balance y escribime el nombre.`
     return { kind: 'ask', field: 'account', proposal, question: intro, options: resolution.options.map(a => ({ id: a.id, name: a.name })) }
   }

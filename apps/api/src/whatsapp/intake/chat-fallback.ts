@@ -31,11 +31,11 @@ export class ChatFallback {
         : null
       if (action && /^(s[ií]|confirmar)$/.test(normalized)) return { reply: (await this.orchestrator.confirmPending({ profileId: ctx.profileId, pendingActionId: action.id })).text, intent: 'other' }
       if (action) { await this.pending.cancel(ctx.profileId, action.id); return { reply: 'Operación cancelada.', intent: 'other' } }
-      const response = await this.orchestrator.run({ profileId: ctx.profileId, conversationId: conversation.id, message: ctx.text })
+      const response = await this.orchestrator.run({ profileId: ctx.profileId, conversationId: conversation.id, message: ctx.text, channel: 'whatsapp' })
       return { reply: response.text || HELP_TEXT, intent: 'other' }
     } catch {
       this.logger.warn({ event: 'whatsapp_chat_fallback_failed', inboundId: ctx.inboundId })
-      return { reply: `No entendí el mensaje.\n${HELP_TEXT}`, intent: 'help' }
+      return { reply: 'Ahora no pude responderte. Probá de nuevo en un momento. Si estabas confirmando un gasto, revisá el historial antes de volver a enviarlo.', intent: 'help' }
     }
   }
 }

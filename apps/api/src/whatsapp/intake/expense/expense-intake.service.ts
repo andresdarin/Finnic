@@ -91,7 +91,6 @@ export class ExpenseIntakeService {
     if (profile.planCurrency && row.currency !== profile.planCurrency && !row.tranquilityFxSnapshot) {
       lines.push(`Tu plan está en ${profile.planCurrency}: para que cuente en el presupuesto respondé "cotización 40,25" (${profile.planCurrency === 'UYU' ? 'pesos por dólar' : 'dólares por peso'}). Sin cotización no lo convierto.`)
     }
-    lines.push('Para corregir: "eran 580", "fue en efectivo" o "deshacé ese gasto".')
     return lines.join('\n')
   }
 }

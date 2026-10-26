@@ -30,7 +30,7 @@ export class DraftResponder {
       await this.drafts.close(draft.id, ctx.profileId, 'cancelled')
       return { reply: 'Listo, no registré ese gasto.', intent: 'cancel' }
     }
-    if (answer.kind === 'not_understood') return { reply: `No te entendí. ${draft.question ?? ''}\n(o escribí "cancelar")`.trim(), intent: 'clarification', result: { draftId: draft.id } }
+    if (answer.kind === 'not_understood') return { reply: `Me falta aclarar esto: ${draft.question ?? ''}\nSi preferís dejarlo, decime "cancelar".`.trim(), intent: 'clarification', result: { draftId: draft.id } }
     return this.expenses.continue(ctx, answer.proposal, profile, draft)
   }
 

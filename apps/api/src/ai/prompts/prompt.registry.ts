@@ -11,6 +11,7 @@ import {
   FINNIC_SYSTEM_PROMPT_V1,
 } from './finnic.prompt'
 import { AiConfigResolver } from '../config/ai-config.resolver'
+import { withFinnicVoice } from './finnic-voice'
 
 export interface RegisteredPrompt {
   systemPrompt: string
@@ -29,7 +30,7 @@ export class PromptRegistry {
   async getEffectivePrompt(agentSlug = 'finnic', environment = process.env.AI_ENV || 'PROD'): Promise<RegisteredPrompt> {
     try {
       const config = await this.resolver?.resolve(agentSlug, environment)
-      if (config) return { systemPrompt: config.prompt.content, generationConfig: { temperature: config.model.temperature, maxOutputTokens: config.model.maxTokens, responseMimeType: config.model.responseMimeType } }
+      if (config) return { systemPrompt: withFinnicVoice(config.prompt.content), generationConfig: { temperature: config.model.temperature, maxOutputTokens: config.model.maxTokens, responseMimeType: config.model.responseMimeType } }
     } catch { /* static registry is the bootstrap fallback */ }
     return this.get(FINNIC_PROMPT_ID)
   }
