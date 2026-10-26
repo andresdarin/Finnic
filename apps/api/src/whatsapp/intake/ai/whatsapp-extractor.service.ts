@@ -24,6 +24,7 @@ export class WhatsAppExtractorService {
   async extractReceipt(input: { image: Buffer; mimeType: string; caption: string; today: string }): Promise<ReceiptExtraction | null> {
     const raw = await this.gemini.generateContent({
       systemPrompt: receiptExtractionPrompt(input.today),
+      timeoutMs: 60_000,
       contents: [{
         role: 'user',
         parts: [

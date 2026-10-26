@@ -6,7 +6,23 @@ const config = { get: (key: string) => ({ GEMINI_API_KEY: 'secret', GEMINI_API_M
 const success = (text: string) => new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text }] } }] }))
 
 describe('GeminiClient', () => {
-  afterEach(() => vi.restoreAllMocks())
+  afterEach(() => { vi.restoreAllMocks(); vi.useRealTimers() })
+
+  it('allows a receipt request to run beyond the default deadline, then aborts at its own deadline', async () => {
+    vi.useFakeTimers()
+    let signal: AbortSignal | undefined
+    vi.spyOn(globalThis, 'fetch').mockImplementation((_url, init) => {
+      signal = init?.signal as AbortSignal
+      return new Promise((_resolve, reject) => signal?.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' }))))
+    })
+    const request = new GeminiClient(config as never).generateContent({ ...options, timeoutMs: 60_000 })
+    const rejected = expect(request).rejects.toThrow('Tiempo de espera')
+    await vi.advanceTimersByTimeAsync(20_000)
+    expect(signal?.aborted).toBe(false)
+    await vi.advanceTimersByTimeAsync(40_000)
+    await rejected
+    expect(signal?.aborted).toBe(true)
+  })
 
   it('sends the API key in a header, never in the URL', async () => {
     const request = vi.spyOn(globalThis, 'fetch').mockResolvedValue(success('{}'))

@@ -64,7 +64,7 @@ export class WhatsAppInboxService {
   }
 
   /** Transient failure: retry with backoff; after the last attempt the message is dead and the user is told. */
-  async fail(row: Pick<WhatsAppInboundMessage, 'id' | 'attempts'>, error: unknown, deadReply: string) {
+  async fail(row: Pick<WhatsAppInboundMessage, 'id' | 'attempts' | 'type'>, error: unknown, deadReply: string) {
     const attempts = row.attempts
     if (attempts >= MAX_PROCESSING_ATTEMPTS) {
       await this.prisma.whatsAppInboundMessage.updateMany({
@@ -75,7 +75,13 @@ export class WhatsAppInboxService {
     }
     await this.prisma.whatsAppInboundMessage.updateMany({
       where: { id: row.id, status: 'processing' },
-      data: { status: 'failed', leaseUntil: null, error: safeError(error), nextAttemptAt: new Date(Date.now() + backoff(attempts)) },
+      data: {
+        status: 'failed', leaseUntil: null, error: safeError(error), nextAttemptAt: new Date(Date.now() + backoff(attempts)),
+        ...(row.type === 'image' && attempts === 1 ? {
+          replyText: 'Recibí la foto, pero la lectura está demorando. Voy a reintentar; todavía no registré ningún gasto.',
+          replyStatus: 'pending', replyNextAttemptAt: new Date(),
+        } : {}),
+      },
     })
     return 'failed' as const
   }

@@ -31,6 +31,7 @@ export class GeminiClient {
     contents?: GeminiContent[]
     generationConfig?: ModelConfig
     signal?: AbortSignal
+    timeoutMs?: number
   }): Promise<string> {
     const config = this.getConfig()
     if (!config.GEMINI_API_KEY) throw new ServiceUnavailableException('Gemini no disponible temporalmente')
@@ -42,7 +43,7 @@ export class GeminiClient {
     for (const currentModel of models) {
       for (let attempt = 1; attempt <= GeminiClient.MAX_RETRIES_PER_MODEL; attempt++) {
         const controller = opts.signal ? undefined : new AbortController()
-        const timeout = controller ? setTimeout(() => controller.abort(), config.GEMINI_TIMEOUT_MS) : undefined
+        const timeout = controller ? setTimeout(() => controller.abort(), opts.timeoutMs ?? config.GEMINI_TIMEOUT_MS) : undefined
 
         try {
           const contents = opts.contents?.length
