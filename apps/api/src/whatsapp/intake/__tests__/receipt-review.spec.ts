@@ -13,6 +13,13 @@ const proposal: ExpenseProposal & { amount: string; currency: 'UYU'; date: strin
 }
 
 describe('confirmación del ticket antes de guardar', () => {
+  it('muestra el descuento y los precios unitarios sin volver a restarlos del total', () => {
+    const review = receiptReview({ ...proposal, amount: '64.00', items: [{ name: 'Salsa', quantity: 1, unitPrice: 92, totalPrice: 64 }], receipt: { sha256: null, subtotal: '92.00', confidence: 1, discounts: '28.00' } }, null)
+    expect(review).toContain('Salsa × 1: $U 64,00 (precio unitario: $U 92,00)')
+    expect(review).toContain('Descuentos del ticket: $U 28,00')
+    expect(review).toContain('Total: $U 64,00')
+    expect(review).not.toContain('guardaré solo el gasto total')
+  })
   it('muestra productos, precios y total sin afirmar que ya guardó el gasto', () => {
     const review = receiptReview(proposal, null)
     expect(review).toContain('Leche × 2: $U 100,00')

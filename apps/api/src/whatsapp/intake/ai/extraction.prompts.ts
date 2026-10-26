@@ -59,5 +59,8 @@ Reglas:
 - El total es el importe final pagado, no el subtotal, ni el importe entregado, ni el vuelto, ni el IVA.
 - Si hay más de un número que podría ser el total, poné el más probable en total, el resto en totalCandidates y bajá confidence.
 - No inventes productos ni importes. Si no se lee, null.
+- Si aparece un descuento asociado a un producto, totalPrice es el importe neto de ese producto después del descuento. unitPrice conserva el precio unitario impreso. No agregues el descuento como producto.
+- discounts es el total de descuentos como importe positivo; no lo restes dos veces. La suma de totalPrice debe coincidir con el total final cuando todos los productos y descuentos son legibles.
+- Para productos vendidos por unidad sin cantidad explícita, quantity es 1. Conservá cantidades fraccionarias impresas para productos por peso.
 - Los precios uruguayos usan coma decimal y punto de miles.`
 }

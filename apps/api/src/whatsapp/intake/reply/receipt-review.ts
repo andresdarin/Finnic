@@ -7,13 +7,15 @@ export function receiptReview(proposal: ExpenseProposal & { amount: string; curr
   const items = proposal.items ?? []
   let shown = 0
   for (const item of items) {
-    const line = `• ${item.name}${item.quantity ? ` × ${item.quantity}` : ''}: ${formatMoney(item.totalPrice.toFixed(2), proposal.currency)}`
+    const unit = item.unitPrice != null ? ` (precio unitario: ${formatMoney(item.unitPrice.toFixed(2), proposal.currency)})` : ''
+    const line = `• ${item.name}${item.quantity ? ` × ${item.quantity}` : ''}: ${formatMoney(item.totalPrice.toFixed(2), proposal.currency)}${unit}`
     if (lines.join('\n').length + line.length > 2800) break
     lines.push(line)
     shown++
   }
   if (shown < items.length) lines.push(`… y ${items.length - shown} productos más.`)
   if (!items.length) lines.push('No pude leer el detalle de productos.')
+  if (Number(proposal.receipt?.discounts) > 0) lines.push(`Descuentos del ticket: ${formatMoney(proposal.receipt!.discounts!, proposal.currency)} (incluidos en el total final)`)
   lines.push(`Total: ${formatMoney(proposal.amount, proposal.currency)}`, accountName ? `Cuenta: ${accountName}` : 'Sin cuenta asignada (no mueve saldos)')
   if (items.length && Math.abs(items.reduce((sum, item) => sum + Math.round(item.totalPrice * 100), 0) - Math.round(Number(proposal.amount) * 100)) > 5) {
     lines.push('El detalle no coincide con el total: si confirmás, guardaré solo el gasto total.')
