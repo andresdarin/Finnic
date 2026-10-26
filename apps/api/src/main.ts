@@ -14,7 +14,12 @@ async function bootstrap() {
     .map((origin) => origin.trim())
     .filter(Boolean)
   const allowedOrigins = Array.from(
-    new Set([...frontendOrigins, 'https://lovehold-web.vercel.app']),
+    new Set([
+      ...frontendOrigins,
+      'https://lovehold-web.vercel.app',
+      'https://www.finnic.space',
+      'https://finnic.space',
+    ]),
   )
 
   app.enableCors({
