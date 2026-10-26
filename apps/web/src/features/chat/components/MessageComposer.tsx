@@ -3,9 +3,10 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { ArrowUp } from 'lucide-react'
 import { COMPOSER_PLACEHOLDERS } from '../constants'
+import ChatAttachments, { type ChatFile } from './ChatAttachments'
 
 interface Props {
-  onSend: (text: string) => Promise<boolean>
+  onSend: (text: string, file?: File, kind?: 'image' | 'sticker', requestId?: string) => Promise<boolean>
   disabled?: boolean
 }
 
@@ -20,6 +21,8 @@ export default function MessageComposer({ onSend, disabled }: Props) {
     () => COMPOSER_PLACEHOLDERS[Math.floor(Math.random() * COMPOSER_PLACEHOLDERS.length)]
   )
   const [text, setText] = useState('')
+  const [attachment, setAttachment] = useState<ChatFile | null>(null)
+  const requestId = useRef<string | null>(null)
   const [isMultiLine, setIsMultiLine] = useState(false)
   const textarea = useRef<HTMLTextAreaElement>(null)
   const locked = useRef(false)
@@ -42,11 +45,13 @@ export default function MessageComposer({ onSend, disabled }: Props) {
   }, [disabled])
 
   async function submit() {
-    if (disabled || locked.current || !text.trim()) return
+    if (disabled || locked.current || (!text.trim() && !attachment)) return
     locked.current = true
     try {
-      if (await onSend(text.trim())) {
+      requestId.current ??= attachment?.requestId ?? crypto.randomUUID()
+      if (await onSend(text.trim(), attachment?.file, attachment?.kind, requestId.current)) {
         setText('')
+        setAttachment(null); requestId.current = null
         requestAnimationFrame(() => textarea.current?.focus())
       }
     } finally {
@@ -54,11 +59,12 @@ export default function MessageComposer({ onSend, disabled }: Props) {
     }
   }
 
-  const hasText = Boolean(text.trim())
+  const hasText = Boolean(text.trim() || attachment)
 
   return (
     <footer className="sticky bottom-0 z-10 shrink-0 bg-background/80 px-3 pt-2 backdrop-blur-xl sm:px-4 sm:pt-3 pb-[calc(8px+env(safe-area-inset-bottom))] select-none">
       <div className="mx-auto max-w-2xl">
+        <ChatAttachments value={attachment} disabled={disabled} onChange={value => { setAttachment(value); requestId.current = null }} />
         <label htmlFor="finnic-message" className="sr-only">
           Mensaje para Finnic
         </label>
@@ -73,7 +79,7 @@ export default function MessageComposer({ onSend, disabled }: Props) {
             id="finnic-message"
             ref={textarea}
             value={text}
-            onChange={(event) => setText(event.target.value)}
+            onChange={(event) => { setText(event.target.value); requestId.current = null }}
             onKeyDown={(event) => {
               if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
                 event.preventDefault()

@@ -22,15 +22,17 @@ import { WhatsAppLinkController } from './link/whatsapp-link.controller'
 import { WhatsAppLinkService } from './link/whatsapp-link.service'
 import { QueryIntakeService } from './queries/query-intake.service'
 import { WhatsAppMessageProcessor } from './whatsapp-message.processor'
+import { MediaHistoryService } from './media-history.service'
+import { AppChatController } from './app-chat.controller'
 
 /** WhatsApp → intake (tools layer) → finance use cases. */
 @Module({
   imports: [ConfigModule, PrismaModule, AiModule, FinanceModule, TranquilityModule, ProfilesModule, WhatsAppModule],
-  controllers: [WhatsAppLinkController, WhatsAppOpsController],
+  controllers: [WhatsAppLinkController, WhatsAppOpsController, AppChatController],
   providers: [
     AdminGuard, WhatsAppLinkService, WhatsAppInboxService, WhatsAppWorker, WhatsAppMessageProcessor, WhatsAppExtractorService,
     IntakeContextService, DraftRepository, DraftResponder, ExpenseIntakeService, ReceiptIntakeService, CorrectionIntakeService,
-    QueryIntakeService, ChatFallback,
+    QueryIntakeService, ChatFallback, MediaHistoryService,
   ],
   exports: [WhatsAppInboxService, WhatsAppWorker],
 })

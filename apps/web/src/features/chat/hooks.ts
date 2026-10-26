@@ -25,12 +25,16 @@ export function useFinnicChat() {
   }, [])
   useEffect(() => { void refresh() }, [refresh])
 
-  const sendMessage = async (content: string): Promise<boolean> => {
+  const sendMessage = async (content: string, file?: File, kind?: 'image' | 'sticker', requestId: string = crypto.randomUUID()): Promise<boolean> => {
     const text = content.trim()
-    if (!text || busy.current) return false
+    if ((!text && !file) || busy.current) return false
     busy.current = true; setSending(true); setError(null)
     try {
-      const res = await chatRequest<AgentResponse>('/api/ai/chat', { message: text, ...(conversation ? { conversationId: conversation.id } : {}) })
+      const form = new FormData()
+      form.set('message', text); form.set('requestId', requestId)
+      if (conversation) form.set('conversationId', conversation.id)
+      if (file) { form.set('file', file); form.set('kind', kind ?? 'image') }
+      const res = await chatRequest<AgentResponse>('/api/ai/chat/intake', form)
       const id = res.conversationId ?? conversation?.id
       if (id && !conversation) setConversation({ id, profileId: '', title: null, createdAt: '', updatedAt: '' })
       if (id) setMessages(await chatRequest<AiMessage[]>(`/api/ai/conversations/${id}/messages`))

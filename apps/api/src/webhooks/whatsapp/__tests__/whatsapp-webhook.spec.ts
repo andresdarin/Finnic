@@ -27,6 +27,10 @@ function controller(values: Record<string, string | undefined> = { META_APP_SECR
 }
 
 describe('WhatsApp webhook', () => {
+  it('preserves a sticker as its own media type, never as a receipt image', () => {
+    const messages = new WhatsAppWebhookService().parseMetaPayload(payload('sticker', { sticker: { id: 'sticker-1', mime_type: 'image/webp', sha256: 'hash', animated: true } }))
+    expect(messages[0]).toMatchObject({ type: 'sticker', text: '', media: { id: 'sticker-1', mimeType: 'image/webp', sha256: 'hash' } })
+  })
   it('devuelve el challenge para una verificación correcta', () => {
     const res = response()
     controller({ META_WEBHOOK_VERIFY_TOKEN: 'valid-token' }).instance.verify({ 'hub.mode': 'subscribe', 'hub.verify_token': 'valid-token', 'hub.challenge': 'challenge-1' }, res)

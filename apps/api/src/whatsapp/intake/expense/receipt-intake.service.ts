@@ -28,16 +28,17 @@ export class ReceiptIntakeService {
   ) {}
 
   async handle(ctx: InboundContext, profile: IntakeProfileContext): Promise<HandlerResult> {
-    if (!ctx.media) return { reply: 'No recibí la imagen. Probá enviarla de nuevo.', intent: 'other' }
+    if (!ctx.media && !ctx.attachment) return { reply: 'No recibí la imagen. Probá enviarla de nuevo.', intent: 'other' }
     let media: Awaited<ReturnType<WhatsAppClient['downloadMedia']>>
     try {
-      media = await this.client.downloadMedia(ctx.media.id, { maxBytes: MAX_MEDIA_BYTES, allowedTypes: ALLOWED_MEDIA_TYPES })
+      media = ctx.attachment ?? await this.client.downloadMedia(ctx.media!.id, { maxBytes: MAX_MEDIA_BYTES, allowedTypes: ALLOWED_MEDIA_TYPES })
     } catch (error) {
       const message = error instanceof BadRequestException ? MEDIA_ERRORS[String(error.message)] : undefined
       if (message) return { reply: message, intent: 'other', result: { mediaRejected: error instanceof Error ? error.message : 'invalid' } }
       throw error // transient: retried by the worker
     }
     await this.prisma.whatsAppInboundMessage.update({ where: { id: ctx.inboundId }, data: { mediaSha256: media.sha256, mediaSize: media.bytes.length, mediaMimeType: media.mimeType } })
+    ctx.attachment = media
 
     const reading = await this.extractor.extractReceipt({ image: media.bytes, mimeType: media.mimeType, caption: ctx.text, today: ctx.localDate })
     if (!reading) {

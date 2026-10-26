@@ -48,7 +48,10 @@ export type InboundContext = {
   wamid: string
   profileId: string
   text: string
-  type: 'text' | 'image' | 'unsupported'
+  type: 'text' | 'image' | 'sticker' | 'unsupported'
+  conversationId?: string
+  channel?: 'app' | 'whatsapp'
+  attachment?: { bytes: Buffer; mimeType: string; sha256: string }
   localDate: string
   contextWamid: string | null
   media: { id: string; mimeType: string | null; sha256: string | null } | null

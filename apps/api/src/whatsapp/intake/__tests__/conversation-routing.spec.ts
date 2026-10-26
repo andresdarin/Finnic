@@ -13,6 +13,14 @@ function setup() {
 }
 
 describe('conversational WhatsApp routing', () => {
+  it('accepts a sticker without invoking financial extraction, receipt scanning or draft confirmation', async () => {
+    const { processor, chat, extractor, expenses, message } = setup()
+    const result = await processor.handle({ ...message(''), type: 'sticker' } as never)
+    expect(result.reply).toContain('Te leo')
+    expect(chat.reply).not.toHaveBeenCalled()
+    expect(extractor.extractText).not.toHaveBeenCalled()
+    expect(expenses.continue).not.toHaveBeenCalled()
+  })
   it('keeps open financial questions conversational even if the classifier labels them help', async () => {
     const { processor, chat, expenses, message } = setup()
     const result = await processor.handle(message('Buenas. Quiero ordenar mis gastos y no sé por dónde arrancar.') as never)

@@ -4,6 +4,7 @@ import React, { useRef, useEffect } from 'react'
 import { ArrowRight, CheckCircle2, CircleAlert, Clock3, SearchCheck } from 'lucide-react'
 import type { AiMessage } from '../types'
 import FinnicMarkdown from './FinnicMarkdown'
+import ChatMediaMessage, { chatAttachment } from './ChatMediaMessage'
 
 interface Props {
   messages: AiMessage[]
@@ -150,6 +151,7 @@ export default function MessageList({
       ) : (
         <div role="log" aria-label="Conversación con Finnic" aria-live="polite" className="space-y-[var(--chat-message-gap)]">
           {validMessages.map((msg, index) => {
+            if (chatAttachment(msg)) return <ChatMediaMessage key={msg.id} message={msg} />
             const user = msg.role === 'USER'
             const meta = msg.metadata
             const pending = meta?.pendingActionId

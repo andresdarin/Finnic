@@ -29,7 +29,7 @@ export class CorrectionIntakeService {
 
   /** `onlyCurrencyOtherThan` narrows candidates to those a correction can apply to (FX quotes). */
   async target(ctx: InboundContext, explicitExpenseId?: string, onlyCurrencyOtherThan?: string): Promise<Target> {
-    const base = { profileId: ctx.profileId, movementType: 'EXPENSE' as const, source: 'whatsapp' }
+    const base = { profileId: ctx.profileId, movementType: 'EXPENSE' as const, source: ctx.channel === 'app' ? 'web' : 'whatsapp' }
     if (explicitExpenseId) {
       const expense = await this.prisma.personalExpense.findFirst({ where: { ...base, id: explicitExpenseId } })
       return expense ? { kind: 'found', expense } : { kind: 'none' }

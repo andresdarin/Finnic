@@ -6,7 +6,7 @@ export interface NormalizedWhatsAppMessage {
   from: string
   phoneNumberId: string
   timestamp?: string
-  type: 'text' | 'image' | 'unsupported'
+  type: 'text' | 'image' | 'sticker' | 'unsupported'
   text: string
   contextWamid?: string
   media?: { id: string; mimeType: string | null; sha256: string | null }
@@ -15,6 +15,7 @@ export interface NormalizedWhatsAppMessage {
 type MetaMessage = Record<string, unknown> & {
   id?: unknown; from?: unknown; timestamp?: unknown; type?: unknown
   text?: { body?: unknown }; image?: { id?: unknown; mime_type?: unknown; sha256?: unknown; caption?: unknown }
+  sticker?: { id?: unknown; mime_type?: unknown; sha256?: unknown }
   context?: { id?: unknown }
 }
 type MetaPayload = {
@@ -64,12 +65,13 @@ export class WhatsAppWebhookService {
       const body = str(message.text?.body)
       return body ? { ...base, type: 'text', text: body.slice(0, 4096) } : null
     }
-    if (message.type === 'image') {
-      const id = str(message.image?.id)
+    if (message.type === 'image' || message.type === 'sticker') {
+      const attachment = message.type === 'sticker' ? message.sticker : message.image
+      const id = str(attachment?.id)
       if (!id) return null
       return {
-        ...base, type: 'image', text: (str(message.image?.caption) ?? '').slice(0, 1024),
-        media: { id, mimeType: str(message.image?.mime_type) ?? null, sha256: str(message.image?.sha256) ?? null },
+        ...base, type: message.type, text: message.type === 'image' ? (str(message.image?.caption) ?? '').slice(0, 1024) : '',
+        media: { id, mimeType: str(attachment?.mime_type) ?? null, sha256: str(attachment?.sha256) ?? null },
       }
     }
     return { ...base, type: 'unsupported', text: '' }

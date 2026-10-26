@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger, Optional } from '@nestjs/common'
 import type { WhatsAppInboundMessage } from '@prisma/client'
 import { PrismaService } from '../../prisma/prisma.service'
 import { HELP_TEXT } from './constants'
@@ -18,6 +18,7 @@ import { correctionFromText } from './correction/correction-patch'
 import { QueryIntakeService } from './queries/query-intake.service'
 import { ChatFallback } from './chat-fallback'
 import type { HandlerResult, InboundContext, IntakeIntent } from './types'
+import { MediaHistoryService } from './media-history.service'
 
 export type ProcessorOutcome = HandlerResult & { profileId: string | null }
 
@@ -46,6 +47,7 @@ export class WhatsAppMessageProcessor {
     private readonly draftResponder: DraftResponder,
     private readonly queries: QueryIntakeService,
     private readonly chat: ChatFallback,
+    @Optional() private readonly history?: MediaHistoryService,
   ) {}
 
   async handle(row: WhatsAppInboundMessage): Promise<ProcessorOutcome> {
@@ -56,18 +58,27 @@ export class WhatsAppMessageProcessor {
     const profileId = linked.id
     const ctx: InboundContext = {
       inboundId: row.id, wamid: row.wamid, profileId, text,
-      type: row.type === 'image' ? 'image' : row.type === 'text' ? 'text' : 'unsupported',
+      type: row.type === 'image' || row.type === 'sticker' || row.type === 'text' ? row.type : 'unsupported',
       localDate: localDateOf(row.messageTimestamp ?? row.createdAt), contextWamid: row.contextWamid,
       media: row.mediaId ? { id: row.mediaId, mimeType: row.mediaMimeType, sha256: row.mediaSha256 } : null,
     }
+    return this.handleContext(ctx)
+  }
+
+  /** The authenticated app supplies its profile; WhatsApp still requires a verified phone link. */
+  async handleContext(ctx: InboundContext): Promise<ProcessorOutcome> {
+    const profileId = ctx.profileId
+    await this.history?.prepare(ctx)
     const profile = await this.context.load(profileId)
     const replay = await this.replay(ctx, profile)
-    if (replay) return { ...replay, profileId }
-    return { ...(await this.route(ctx, profile)), profileId }
+    const outcome = replay ?? await this.route(ctx, profile)
+    await this.history?.save(ctx, outcome)
+    return { ...outcome, profileId }
   }
 
   private async route(ctx: InboundContext, profile: IntakeProfileContext): Promise<HandlerResult> {
     if (LINK_COMMAND.test(ctx.text)) return { reply: 'Este número ya está vinculado a tu cuenta de Finnic.', intent: 'link' }
+    if (ctx.type === 'sticker') return { reply: 'Te leo. Cuando quieras, seguimos con tus números.', intent: 'other' }
     if (ctx.type === 'unsupported') return { reply: 'Por ahora entiendo mensajes de texto y fotos de tickets (JPG, PNG o WebP). No registré nada.', intent: 'other' }
     if (ctx.type === 'image') return this.receipts.handle(ctx, profile)
 

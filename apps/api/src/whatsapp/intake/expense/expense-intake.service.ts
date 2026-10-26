@@ -49,7 +49,7 @@ export class ExpenseIntakeService {
 
     const reconciled = receiptItems(proposal)
     const keepItems = reconciled.matches
-    const noteParts = ['Registrado por WhatsApp', proposal.inputMethod === 'RECEIPT_SCAN' ? 'desde foto de ticket' : null, proposal.paymentMethod ? `medio: ${PAYMENT_LABELS[proposal.paymentMethod]}` : null, proposal.accountless ? 'sin cuenta asignada' : null].filter(Boolean)
+    const noteParts = [ctx.channel === 'app' ? 'Registrado por el chat de Finnic' : 'Registrado por WhatsApp', proposal.inputMethod === 'RECEIPT_SCAN' ? 'desde foto de ticket' : null, proposal.paymentMethod ? `medio: ${PAYMENT_LABELS[proposal.paymentMethod]}` : null, proposal.accountless ? 'sin cuenta asignada' : null].filter(Boolean)
     const created = await this.createExpense.execute({
       profileId: ctx.profileId,
       input: {
@@ -60,7 +60,7 @@ export class ExpenseIntakeService {
         financeAccountId: proposal.financeAccountId ?? undefined, tranquilityCategoryId: proposal.budgetCategoryId ?? undefined,
         items: keepItems ? reconciled.items.map(item => ({ name: item.name, totalPrice: item.totalPrice, quantity: item.quantity ?? undefined, unitPrice: item.unitPrice ?? undefined, category: 'OTROS', rawLine: item.rawLine })) : undefined,
       },
-      context: { source: 'whatsapp', sourceMessageId: origin.wamid, inputMethod: proposal.inputMethod },
+      context: { source: ctx.channel === 'app' ? 'web' : 'whatsapp', sourceMessageId: origin.wamid, inputMethod: proposal.inputMethod },
     })
     await this.prisma.whatsAppExpenseAction.upsert({
       where: { inboundId: ctx.inboundId }, update: {},
