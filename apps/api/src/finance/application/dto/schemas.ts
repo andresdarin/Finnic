@@ -45,6 +45,7 @@ export const createExpenseSchema = z.object({
   financeAccountId: z.string().optional(),
   scheduledCashFlowId: z.string().optional(),
   scheduledDueOn: z.string().optional(),
+  tranquilityCategoryId: z.string().min(1).optional(),
 })
 
 export const registerIncomeSchema = z.object({

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { CashFlowLifecycle, CashFlowDirection, Prisma } from '@prisma/client'
 import { PrismaService } from '../../prisma/prisma.service'
 import { registerIncomeSchema, type RegisterIncomeInput } from './dto/schemas'
@@ -36,6 +36,9 @@ export class RegisterIncomeUseCase {
           : null
 
         if (isReceived && input.accountId && !account) throw new NotFoundException('Finance account not found')
+        if (account?.purpose === 'EMERGENCY' || account?.purpose === 'INVESTMENT') {
+          throw new BadRequestException('Registrá aportes/retiros desde Tranquilidad Financiera para conservar su historial.')
+        }
 
         const flow = await tx.scheduledCashFlow.create({
           data: {

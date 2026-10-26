@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run --config vitest.config.ts"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -20,6 +20,14 @@
     "./schemas": {
       "types": "./dist/schemas/index.d.ts",
       "default": "./dist/schemas/index.js"
+    },
+    "./tranquility": {
+      "types": "./dist/schemas/tranquility.d.ts",
+      "default": "./dist/schemas/tranquility.js"
+    },
+    "./tranquility-engine": {
+      "types": "./dist/tranquility-engine/index.d.ts",
+      "default": "./dist/tranquility-engine/index.js"
     }
   },
   "dependencies": {

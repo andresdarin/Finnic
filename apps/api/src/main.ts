@@ -5,7 +5,8 @@ import { ConfigService } from '@nestjs/config'
 import { AppModule } from './app.module'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  // rawBody is required to verify Meta's X-Hub-Signature-256 over the exact bytes.
+  const app = await NestFactory.create(AppModule, { rawBody: true })
 
   const configService = app.get(ConfigService)
   const frontendOrigins = (configService.get<string>('FRONTEND_URL') ?? 'http://localhost:3000')

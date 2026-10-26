@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Logger, Post, Query, Res } from '@nestjs/common'
+import { Controller, Get, Headers, Logger, Post, Query, Req, Res } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { WhatsAppInboundService } from './whatsapp-inbound.service'
+import { WhatsAppInboxService } from '../../whatsapp/intake/inbox/whatsapp-inbox.service'
+import { WhatsAppWorker } from '../../whatsapp/intake/inbox/whatsapp-worker.service'
 import { WhatsAppWebhookService } from './whatsapp-webhook.service'
 
 type WebhookResponse = {
@@ -8,6 +9,7 @@ type WebhookResponse = {
   status(code: number): WebhookResponse
   send(body?: unknown): unknown
 }
+type WebhookRequest = { rawBody?: Buffer; body?: unknown }
 
 @Controller('webhooks/whatsapp')
 export class WhatsAppWebhookController {
@@ -16,40 +18,44 @@ export class WhatsAppWebhookController {
   constructor(
     private readonly config: ConfigService,
     private readonly webhookService: WhatsAppWebhookService,
-    private readonly inboundService: WhatsAppInboundService,
+    private readonly inbox: WhatsAppInboxService,
+    private readonly worker: WhatsAppWorker,
   ) {}
 
   @Get()
   verify(@Query() query: Record<string, string>, @Res() response: WebhookResponse) {
-    const mode = query['hub.mode']
-    this.logger.log({ event: 'whatsapp_webhook_verification', mode: mode ?? null })
-
-    if (
-      mode === 'subscribe' &&
-      query['hub.verify_token'] === this.config.get<string>('META_WEBHOOK_VERIFY_TOKEN')
-    ) {
+    const expected = this.config.get<string>('META_WEBHOOK_VERIFY_TOKEN')
+    if (expected && query['hub.mode'] === 'subscribe' && query['hub.verify_token'] === expected) {
       return response.type('text/plain').send(query['hub.challenge'] ?? '')
     }
-
+    this.logger.warn({ event: 'whatsapp_webhook_verification_rejected' })
     return response.status(403).send()
   }
 
+  /**
+   * Signature first (fail closed), then durable persistence, then the 200. If persistence
+   * fails Meta gets a 5xx and redelivers; the wamid unique key absorbs duplicates.
+   */
   @Post()
-  receive(@Body() payload: unknown, @Res() response: WebhookResponse) {
-    this.logger.log({ event: 'whatsapp_webhook_received_raw', payload: JSON.stringify(payload) })
-    // Meta requires a quick acknowledgement; processing continues asynchronously.
-    response.status(200).send({ status: 'ok' })
-    void Promise.resolve().then(() => this.processPayload(payload))
-  }
-
-  private async processPayload(payload: unknown): Promise<void> {
-    const message = this.webhookService.parseMetaPayload(payload)
-    if (!message) {
-      this.logger.warn({ event: 'whatsapp_webhook_ignored', reason: 'unsupported_or_invalid_message', payload })
-      return
+  async receive(@Req() request: WebhookRequest, @Headers('x-hub-signature-256') signature: string | undefined, @Res() response: WebhookResponse) {
+    const secret = this.config.get<string>('META_APP_SECRET')
+    if (!secret) {
+      this.logger.error({ event: 'whatsapp_webhook_rejected', reason: 'META_APP_SECRET not configured' })
+      return response.status(503).send()
     }
-
-    this.logger.log({ event: 'whatsapp_message_parsed', from: message.from, text: message.text })
-    await this.inboundService.process(message)
+    if (!this.webhookService.verifySignature(request.rawBody, signature, secret)) {
+      this.logger.warn({ event: 'whatsapp_webhook_rejected', reason: 'invalid_signature' })
+      return response.status(401).send()
+    }
+    const messages = this.webhookService.parseMetaPayload(request.body)
+    try {
+      const stored = await this.inbox.enqueue(messages)
+      this.logger.log({ event: 'whatsapp_webhook_received', messages: messages.length, stored })
+    } catch {
+      this.logger.error({ event: 'whatsapp_webhook_persist_failed', messages: messages.length })
+      return response.status(500).send()
+    }
+    response.status(200).send({ status: 'ok' })
+    if (messages.length) void this.worker.kick()
   }
 }

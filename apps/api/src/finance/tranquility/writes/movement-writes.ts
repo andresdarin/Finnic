@@ -1,0 +1,44 @@
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common'
+import { FinancialInputMethod, Prisma } from '@prisma/client'
+import { CreateTranquilityMovementSchema } from '@lovehold/shared'
+
+type Tx = Prisma.TransactionClient
+export type WriteContext = { profileId: string; reportingCurrency: string }
+type Command = { type: 'EXPENSE' | 'INCOME' | 'TRANSFER'; amount: string; currency: string; date: string; concept: string; categoryId: string | null; note: string | null; financeAccountId: string | null; destinationAccountId: string | null; fxSnapshot: any }
+const decimal = (v: unknown) => new Prisma.Decimal(String(v))
+const day = (v: string) => new Date(`${v}T00:00:00.000Z`)
+const asJson = (v: unknown) => v === null ? Prisma.DbNull : v
+const command = (value: unknown) => { const result = CreateTranquilityMovementSchema.safeParse(value); if (!result.success) throw new BadRequestException(result.error.issues.map(issue => issue.message).join('; ')); return result.data as Command }
+const owned = async (tx: Tx, context: WriteContext, id: string) => { const account = await tx.financeAccount.findFirst({ where: { id, profileId: context.profileId, isActive: true } }); if (!account) throw new NotFoundException('Cuenta no encontrada.'); return account }
+const persistedRowToCommand = (row: any): Command => ({ type: row.movementType, amount: decimal(row.amount).toFixed(2), currency: row.currency, date: row.date.toISOString().slice(0, 10), concept: row.title, categoryId: row.tranquilityCategoryId, note: row.notes, financeAccountId: row.financeAccountId, destinationAccountId: row.destinationAccountId, fxSnapshot: row.tranquilityFxSnapshot ?? null })
+const validateAccounts = async (tx: Tx, context: WriteContext, input: Command) => {
+  if (!input.financeAccountId) throw new BadRequestException('La cuenta de origen es obligatoria.')
+  const source = await owned(tx, context, input.financeAccountId)
+  if (source.type === 'CREDIT') throw new BadRequestException('Usá una cuenta bancaria o de efectivo.')
+  if (source.currency !== input.currency) throw new BadRequestException('La moneda de la cuenta de origen no coincide.')
+  if (input.type !== 'TRANSFER') { if (source.purpose !== 'OPERATING') throw new BadRequestException('Los gastos e ingresos requieren una cuenta operativa.'); if (input.currency !== context.reportingCurrency && (!input.fxSnapshot || input.fxSnapshot.toCurrency !== context.reportingCurrency)) throw new BadRequestException('Se requiere cotización para convertir a la moneda de reporte.'); return { source, destination: null } }
+  if (!input.destinationAccountId || input.destinationAccountId === input.financeAccountId) throw new BadRequestException('Las cuentas de transferencia son inválidas.')
+  const destination = await owned(tx, context, input.destinationAccountId)
+  if (destination.type === 'CREDIT') throw new BadRequestException('Usá una cuenta bancaria o de efectivo.')
+  const conversionCurrency = source.currency === destination.currency ? context.reportingCurrency : destination.currency
+  if (source.currency !== destination.currency || source.currency !== context.reportingCurrency) { if (!input.fxSnapshot || input.fxSnapshot.toCurrency !== conversionCurrency) throw new BadRequestException('Se requiere cotización para la conversión.') }
+  return { source, destination }
+}
+const checkValuationBoundary = async (tx: Tx, context: WriteContext, input: Command) => { const ids = [input.financeAccountId, input.destinationAccountId].filter(Boolean) as string[]; const valuation = await tx.tranquilityValuation.findFirst({ where: { profileId: context.profileId, accountId: { in: ids } }, orderBy: { date: 'desc' } }); if (valuation && input.date < valuation.date.toISOString().slice(0, 10)) throw new BadRequestException('No se permiten movimientos anteriores a la última valuación.') }
+const apply = async (tx: Tx, context: WriteContext, input: Command, reverse = false) => {
+  const { source, destination } = await validateAccounts(tx, context, input); await checkValuationBoundary(tx, context, input); const amount = decimal(input.amount); const sign = reverse ? -1 : 1
+  if (input.type === 'INCOME') { const result = await tx.financeAccount.updateMany({ where: { id: source.id, profileId: context.profileId, ...(reverse ? { balance: { gte: amount } } : {}) }, data: { balance: { increment: amount.mul(sign) } } }); if (!result.count) throw new BadRequestException('Saldo insuficiente para revertir el ingreso.'); return }
+  // A quote for the reporting currency is not a transfer conversion. For a
+  // same-currency transfer the destination always receives the debited amount.
+  const converted = input.fxSnapshot && destination && source.currency !== destination.currency
+    ? decimal(input.fxSnapshot.convertedAmount)
+    : amount
+  const debit = await tx.financeAccount.updateMany({ where: { id: source.id, profileId: context.profileId, balance: { gte: reverse ? decimal(0) : amount } }, data: { balance: { increment: amount.mul(-sign) } } }); if (!debit.count) throw new BadRequestException('Saldo insuficiente.')
+  if (destination) { const credit = await tx.financeAccount.updateMany({ where: { id: destination.id, profileId: context.profileId, ...(reverse ? { balance: { gte: converted } } : {}) }, data: { balance: { increment: converted.mul(sign) } } }); if (!credit.count) throw new BadRequestException('Saldo insuficiente para revertir la transferencia.') }
+}
+const category = async (tx: Tx, context: WriteContext, id: string | null) => { if (!id) return null; const found = await tx.tranquilityCategory.findFirst({ where: { id, profileId: context.profileId } }); if (!found) throw new NotFoundException('Categoría no encontrada.'); return found }
+const rowData = (context: WriteContext, input: Command, c: any) => ({ profileId: context.profileId, title: input.concept, amount: input.amount, date: day(input.date), monthKey: input.date.slice(0, 7), type: input.type === 'INCOME' ? 'income' : 'variable', movementType: input.type, inputMethod: FinancialInputMethod.MANUAL, category: c?.name ?? 'OTHER', categoryKey: c?.id ?? null, currency: input.currency, notes: input.note, financeAccountId: input.financeAccountId, destinationAccountId: input.destinationAccountId, tranquilityCategoryId: input.categoryId, tranquilityBucket: c?.bucket ?? null, tranquilityFxSnapshot: asJson(input.fxSnapshot), tranquilityOwned: true })
+export async function createMovement(tx: Tx, context: WriteContext, raw: unknown) { const input = command(raw); const c = await category(tx, context, input.categoryId); await apply(tx, context, input); return tx.personalExpense.create({ data: rowData(context, input, c) }) }
+export async function patchMovement(tx: Tx, context: WriteContext, id: string, patch: Record<string, unknown>) { const row: any = await tx.personalExpense.findFirst({ where: { id, profileId: context.profileId, tranquilityOwned: true } }); if (!row) throw new NotFoundException('Movimiento no encontrado.'); if (row.scheduledCashFlowId || row.sourceMessageId) throw new ConflictException('El movimiento no es editable.'); const old = persistedRowToCommand(row); const next = command({ ...old, ...patch }); if (next.date > new Date().toISOString().slice(0, 10)) throw new BadRequestException('No se permiten movimientos futuros.'); await apply(tx, context, old, true); const c = await category(tx, context, next.categoryId); await apply(tx, context, next); return tx.personalExpense.update({ where: { id }, data: rowData(context, next, c) }) }
+export async function deleteMovement(tx: Tx, context: WriteContext, id: string) { const row: any = await tx.personalExpense.findFirst({ where: { id, profileId: context.profileId, tranquilityOwned: true } }); if (!row) throw new NotFoundException('Movimiento no encontrado.'); if (row.scheduledCashFlowId || row.sourceMessageId) throw new ConflictException('El movimiento no es eliminable.'); await apply(tx, context, persistedRowToCommand(row), true); return tx.personalExpense.delete({ where: { id } }) }
+export async function setupAccounts(tx: Tx, profileId: string, input: any) { const values = [['Disponible', 'OPERATING', input.initialAvailable, true], ['Fondo de emergencia', 'EMERGENCY', input.emergencyInitial, false], ['Inversiones', 'INVESTMENT', input.investmentInitial, false]] as const; const result = []; for (const [name, purpose, opening, spendable] of values) { let finalName: string = name; let suffix = 0; while (await tx.financeAccount.findFirst({ where: { profileId, name: finalName } })) finalName = `${name} (Tranquilidad${++suffix > 1 ? ` ${suffix}` : ''})`; result.push(await tx.financeAccount.create({ data: { profileId, name: finalName, purpose, isSpendable: spendable, currency: input.config.currency, balance: opening, openingBalance: opening } })) } return result }

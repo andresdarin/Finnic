@@ -19,6 +19,10 @@ model Profile {
   baseCurrency   FinanceCurrency? @default(UYU)
   timeZone       String?          @default("America/Montevideo")
   minimumBuffer  Decimal?         @default(0) @db.Decimal(18, 2)
+  // WhatsApp link is only written after a one-time code sent from the linked phone.
+  whatsappLinkedAt         DateTime?
+  whatsappDefaultAccountId String?
+  whatsappDefaultCurrency  FinanceCurrency?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 
@@ -37,6 +41,17 @@ model Profile {
   aiPendingActions    AiPendingAction[]
   aiRuns              AiRun[]
   inboundMessages     WhatsAppInboundMessage[]
+  tranquilityConfig    TranquilityConfig?
+  tranquilityBudgets   TranquilityBudget[]
+  tranquilityCategories TranquilityCategory[]
+  tranquilityScenarios TranquilityScenario[]
+  tranquilityValuations TranquilityValuation[]
+  tranquilityGoals     TranquilityGoal[]
+  whatsappLinkCodes    WhatsAppLinkCode[]
+  whatsappDrafts       WhatsAppExpenseDraft[]
+  whatsappActions      WhatsAppExpenseAction[]
+  rewardEntries        RewardEntry[]
+  rewardItems          RewardItem[]
 }
 
 enum FinanceCurrency {
@@ -86,6 +101,12 @@ enum FinanceAccountType {
   CREDIT
 }
 
+enum FinanceAccountPurpose {
+  OPERATING
+  EMERGENCY
+  INVESTMENT
+}
+
 enum FinancialMovementType {
   EXPENSE
   INCOME
@@ -105,6 +126,8 @@ model FinanceAccount {
   type               FinanceAccountType  @default(BANK)
   currency           FinanceCurrency
   balance            Decimal             @db.Decimal(18, 2)
+  openingBalance     Decimal?            @db.Decimal(18, 2)
+  purpose            FinanceAccountPurpose @default(OPERATING)
   creditLimit        Decimal?            @db.Decimal(18, 2)
   closingDay         Int?
   dueDay             Int?
@@ -117,9 +140,11 @@ model FinanceAccount {
   personalExpenses   PersonalExpense[]   @relation("sourceAccount")
   receivedTransfers  PersonalExpense[]   @relation("destinationAccount")
   scheduledCashFlows ScheduledCashFlow[]
+  tranquilityValuations TranquilityValuation[]
 
   // Multiple accounts in one currency are supported by distinct names.
   @@unique([profileId, name])
+  @@unique([id, profileId])
   @@index([profileId, isActive, isSpendable])
 }
 
@@ -346,12 +371,17 @@ model PersonalExpense {
   financeAccountId     String?
   destinationAccountId String?
   categoryKey          String?
+  tranquilityCategoryId String?
+  tranquilityBucket    String?
+  tranquilityFxSnapshot Json?
+  tranquilityOwned     Boolean             @default(false)
 
   items              PersonalExpenseItem[]
   profile            Profile               @relation(fields: [profileId], references: [id], onDelete: Cascade)
   financeAccount     FinanceAccount?       @relation("sourceAccount", fields: [financeAccountId], references: [id])
   destinationAccount FinanceAccount?       @relation("destinationAccount", fields: [destinationAccountId], references: [id])
   scheduledCashFlow  ScheduledCashFlow?    @relation(fields: [scheduledCashFlowId], references: [id])
+  tranquilityCategory TranquilityCategory? @relation(fields: [tranquilityCategoryId, profileId], references: [id, profileId])
 
   // PostgreSQL UNIQUE permits multiple NULLs; application validation enforces
   // the logical key only when both schedule fields are present.
@@ -360,6 +390,134 @@ model PersonalExpense {
   @@index([profileId, monthKey])
   @@index([financeAccountId, profileId])
   @@index([destinationAccountId, profileId])
+}
+
+model TranquilityConfig {
+  id                    String   @id @default(cuid())
+  profileId             String   @unique
+  currency              FinanceCurrency
+  config                Json
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  profile               Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model TranquilityBudget {
+  id             String   @id @default(cuid())
+  profileId      String
+  month          String
+  currency       FinanceCurrency
+  needsTarget    Decimal  @db.Decimal(18, 2)
+  wantsTarget    Decimal  @db.Decimal(18, 2)
+  futureTarget   Decimal  @db.Decimal(18, 2)
+  configSnapshot Json
+  createdAt      DateTime @default(now())
+  profile        Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  @@unique([profileId, month])
+  @@index([profileId, month])
+}
+
+model TranquilityCategory {
+  id        String   @id @default(cuid())
+  profileId String
+  name      String
+  bucket    String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  expenses  PersonalExpense[]
+  @@unique([profileId, name])
+  @@unique([id, profileId])
+}
+
+model TranquilityScenario {
+  id             String   @id @default(cuid())
+  profileId      String
+  name           String
+  scenario       Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  profile        Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  @@index([profileId, createdAt])
+}
+
+model TranquilityValuation {
+  id        String   @id @default(cuid())
+  profileId String
+  accountId String
+  date      DateTime @db.Date
+  oldBalance Decimal @db.Decimal(18, 2)
+  newBalance Decimal @db.Decimal(18, 2)
+  difference Decimal @db.Decimal(18, 2)
+  note      String?
+  createdAt DateTime @default(now())
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  account   FinanceAccount @relation(fields: [accountId, profileId], references: [id, profileId])
+  @@index([profileId, date])
+}
+
+// LLEGAR: dated capital goals funded by explicit allocations of the investment pool.
+model TranquilityGoal {
+  id              String          @id @default(cuid())
+  profileId       String
+  name            String
+  targetAmount    Decimal         @db.Decimal(18, 2)
+  currency        FinanceCurrency
+  targetDate      DateTime        @db.Date
+  allocatedAmount Decimal         @default(0) @db.Decimal(18, 2)
+  status          String          @default("ACTIVE") // ACTIVE|COMPLETED|ARCHIVED
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  profile         Profile         @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  contributions   TranquilityGoalContribution[]
+
+  @@unique([id, profileId])
+  @@index([profileId, status])
+}
+
+model TranquilityGoalContribution {
+  id         String          @id @default(cuid())
+  profileId  String
+  goalId     String
+  kind       String // CONTRIBUTION (real transfer) | ALLOCATION | RELEASE
+  amount     Decimal         @db.Decimal(18, 2)
+  date       DateTime        @db.Date
+  movementId String?
+  createdAt  DateTime        @default(now())
+  goal       TranquilityGoal @relation(fields: [goalId, profileId], references: [id, profileId], onDelete: Cascade)
+
+  @@index([profileId, goalId, date])
+}
+
+// Finnic Rewards: points never represent money; uniqueness prevents duplicate awards.
+model RewardEntry {
+  id          String   @id @default(cuid())
+  profileId   String
+  kind        String // EARN|REDEEM
+  points      Int
+  ruleKey     String
+  periodKey   String
+  description String
+  rewardId    String?
+  createdAt   DateTime @default(now())
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, ruleKey, periodKey])
+  @@index([profileId, createdAt])
+}
+
+model RewardItem {
+  id          String          @id @default(cuid())
+  profileId   String
+  name        String
+  pointsCost  Int
+  priceAmount Decimal         @db.Decimal(18, 2)
+  currency    FinanceCurrency
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  profile     Profile         @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, isActive])
 }
 
 model PersonalExpenseItem {
@@ -409,13 +567,33 @@ model WhatsAppInboundMessage {
   phoneNumberId       String?
   profileId           String?
   conversationId      String?
-  type                String // text
+  type                String // text|image|unsupported
   body                String?   @db.Text
   receivedAt          DateTime  @default(now())
-  status              String    @default("received") // received|processing|completed|failed
+  // received -> processing (lease) -> completed | failed (retry with backoff) | dead
+  status              String    @default("received")
   processingStartedAt DateTime?
   completedAt         DateTime?
   error               String?   @db.Text
+  attempts            Int       @default(0)
+  nextAttemptAt       DateTime  @default(now())
+  leaseUntil          DateTime?
+  messageTimestamp    DateTime?
+  contextWamid        String?
+  mediaId             String?
+  mediaMimeType       String?
+  mediaSha256         String?
+  mediaSize           Int?
+  intent              String?
+  result              Json?
+  // The reply lifecycle is independent: a stored result is never re-executed to resend it.
+  replyText           String?   @db.Text
+  replyStatus         String? // pending|sent|failed|dead
+  replyAttempts       Int       @default(0)
+  replyNextAttemptAt  DateTime?
+  replyWamid          String?
+  replySentAt         DateTime?
+  replyError          String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -424,7 +602,59 @@ model WhatsAppInboundMessage {
 
   @@index([from, createdAt])
   @@index([status])
+  @@index([status, nextAttemptAt])
+  @@index([replyStatus, replyNextAttemptAt])
   @@index([phoneNumberId])
+  @@index([replyWamid])
+  @@index([profileId, mediaSha256])
+}
+
+model WhatsAppLinkCode {
+  id          String    @id @default(cuid())
+  profileId   String
+  codeHash    String    @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  usedByPhone String?
+  createdAt   DateTime  @default(now())
+  profile     Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, createdAt])
+}
+
+// One open clarification per origin message; the origin wamid stays the idempotency key.
+model WhatsAppExpenseDraft {
+  id              String    @id @default(cuid())
+  profileId       String
+  sourceInboundId String    @unique
+  sourceWamid     String
+  status          String    @default("awaiting") // awaiting|completed|cancelled|expired
+  pendingField    String?
+  question        String?   @db.Text
+  proposal        Json
+  expenseId       String?
+  expiresAt       DateTime
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  profile         Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, status, updatedAt])
+}
+
+// Audit and idempotency for every WhatsApp-driven write (one row per inbound message).
+model WhatsAppExpenseAction {
+  id        String   @id @default(cuid())
+  profileId String
+  inboundId String   @unique
+  expenseId String?
+  kind      String // create|correct|undo
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now())
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, createdAt])
+  @@index([expenseId])
 }
 
 model AiMessage {

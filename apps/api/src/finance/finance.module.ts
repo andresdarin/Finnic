@@ -16,6 +16,9 @@ import { FinanceReadService } from './finance-read.service'
 import { ConfigurableFxAdapter, FX_ADAPTER } from './fx'
 import { FinanceService } from './finance.service'
 import { FinanceActivityService } from './application/finance-activity.service'
+import { CorrectExpenseUseCase } from './application/correct-expense.usecase'
+import { UndoExpenseUseCase } from './application/undo-expense.usecase'
+import { SpendingOutlookUseCase } from './application/spending-outlook.usecase'
 
 @Module({
   imports: [PrismaModule],
@@ -23,6 +26,9 @@ import { FinanceActivityService } from './application/finance-activity.service'
   providers: [
     FinanceActivityService,
     CreateExpenseUseCase,
+    CorrectExpenseUseCase,
+    UndoExpenseUseCase,
+    SpendingOutlookUseCase,
     RegisterIncomeUseCase,
     CreateTransferUseCase,
     FinanceReadUseCases,
@@ -40,6 +46,9 @@ import { FinanceActivityService } from './application/finance-activity.service'
   exports: [
     FinanceActivityService,
     CreateExpenseUseCase,
+    CorrectExpenseUseCase,
+    UndoExpenseUseCase,
+    SpendingOutlookUseCase,
     RegisterIncomeUseCase,
     CreateTransferUseCase,
     FinanceAccountService,

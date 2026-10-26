@@ -22,12 +22,13 @@ export class FinanceActivityService {
     const totals: Record<string, Record<string, bigint>> = {}
     for (const row of groups) {
       const currency = totals[row.currency] ??= { EXPENSE: 0n, INCOME: 0n, TRANSFER: 0n }
-      currency[row.movementType] = (currency[row.movementType] || 0n) + parseMoney(String(row._sum.amount || '0'))
+      // Decimal#toString drops trailing zeros ("850"); money parsing needs exactly two decimals.
+      currency[row.movementType] = (currency[row.movementType] || 0n) + parseMoney(row._sum.amount ? row._sum.amount.toFixed(2) : '0.00')
     }
     return {
       source: '/finanzas', scope: 'personal', monthKey, timeZone, asOf: new Date().toISOString(),
       totalsByCurrency: Object.fromEntries(Object.entries(totals).map(([currency, types]) => [currency, Object.fromEntries(Object.entries(types).map(([type, amount]) => [type, formatMoney(amount)]))])),
-      categories: groups.filter(row => row.movementType === 'EXPENSE').map(row => ({ currency: row.currency, category: row.category, amount: String(row._sum.amount || '0'), count: row._count })),
+      categories: groups.filter(row => row.movementType === 'EXPENSE').map(row => ({ currency: row.currency, category: row.category, amount: row._sum.amount ? row._sum.amount.toFixed(2) : '0.00', count: row._count })),
       movements: recent.map(row => ({ ...row, amount: String(row.amount) })),
       totalCount: groups.reduce((count, row) => count + row._count, 0),
       detailLimit: 30, note: 'Totales del mes completo. Detalle de hasta 30 movimientos; transferencias separadas, sin conversión de moneda. No incluye gastos compartidos del hogar.',

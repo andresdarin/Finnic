@@ -64,6 +64,14 @@ export class CreateExpenseUseCase {
         if (input.financeAccountId && (!account || account.isActive === false || account.currency !== input.currency)) {
           throw new BadRequestException('La cuenta no está disponible para registrar este gasto en esa moneda.')
         }
+        if (account?.purpose === 'EMERGENCY' || account?.purpose === 'INVESTMENT') {
+          throw new BadRequestException('Registrá aportes/retiros desde Tranquilidad Financiera para conservar su historial.')
+        }
+        // Budget category is optional and must belong to the same profile.
+        const budgetCategory = input.tranquilityCategoryId
+          ? await tx.tranquilityCategory.findFirst({ where: { id: input.tranquilityCategoryId, profileId: command.profileId } })
+          : null
+        if (input.tranquilityCategoryId && !budgetCategory) throw new BadRequestException('La categoría de presupuesto no existe.')
         const expense = await tx.personalExpense.create({
           data: {
             profileId: command.profileId,
@@ -85,6 +93,8 @@ export class CreateExpenseUseCase {
             financeAccountId: account?.id,
             scheduledCashFlowId: input.scheduledCashFlowId,
             scheduledDueOn: input.scheduledDueOn ? new Date(input.scheduledDueOn) : undefined,
+            tranquilityCategoryId: budgetCategory?.id,
+            tranquilityBucket: budgetCategory?.bucket,
             items: input.items?.length
               ? {
                   create: input.items.map((row) => ({

@@ -7,6 +7,7 @@ import { SavingsGoalService } from './savings-goal.service'
 import { decimalToMinorUnits, decimalToString, localDate, minorUnitsToMoney, normalizeCategory, normalizeMoney } from './finance.normalizer'
 import type { FinanceEngineInput, FxAdapter } from './types'
 import { FX_ADAPTER } from './fx'
+import { planReservation } from './application/plan-reservation'
 
 export type ReadWindow = { asOf?: Date; from?: Date; to?: Date }
 
@@ -67,12 +68,31 @@ export class FinanceReadService {
         if (quoteHistorical) historical.push(quoteHistorical)
       }
     }
+    // Free money excludes non-spendable funds (emergency/investment) and subtracts card debt.
+    // Pending DEBT outflows in a currency with card debt are that same debt: count it once.
+    const creditDebtCurrencies = new Set(accounts.filter((account) => account.type === 'CREDIT' && Number(account.balance) > 0).map((account) => account.currency))
+    const month = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit' }).format(asOf)
+    const reservation = await planReservation(this.prisma, profileId, month)
     return {
       asOf: asOf.toISOString(), baseCurrency, timeZone, minimumBuffer: decimalToString(profile.minimumBuffer),
-      accounts: accounts.map((account) => ({ type: account.type, isSpendable: account.isSpendable, currency: account.currency, balance: normalizeMoney(account.balance, account.currency as Currency).amount, balanceAsOf: account.updatedAt.toISOString() })),
+      accounts: accounts.map((account) => {
+        const balance = normalizeMoney(account.balance, account.currency as Currency).amount
+        const negated = balance.startsWith('-') ? balance.slice(1) : balance === '0.00' ? balance : `-${balance}`
+        const spendable = account.type === 'CREDIT' ? negated : account.isSpendable ? balance : '0.00'
+        const nonSpendable = account.type !== 'CREDIT' && !account.isSpendable ? balance : '0.00'
+        return { type: account.type, isSpendable: account.isSpendable, currency: account.currency, balance, spendable, nonSpendable, balanceAsOf: account.updatedAt.toISOString() }
+      }),
       accountlessBalancesByCurrency,
-      scheduledCashFlows: flows.map((flow) => ({ scheduledCashFlowId: flow.id, scheduledDueOn: localDate(flow.scheduledDueOn, timeZone), amount: normalizeMoney(flow.amount, flow.currency as Currency), direction: flow.direction, lifecycle: flow.lifecycle })),
-      goals: goals.map((goal) => ({ id: goal.id, name: goal.name, targetAmount: normalizeMoney(goal.targetAmount, goal.currency as Currency), currentAmount: normalizeMoney(goal.currentAmount, goal.currency as Currency), targetDate: localDate(goal.targetDate, timeZone), status: goal.status })),
+      scheduledCashFlows: flows
+        .filter((flow) => !(flow.direction === 'OUTFLOW' && flow.categoryKey === 'DEBT' && creditDebtCurrencies.has(flow.currency)))
+        .map((flow) => ({ scheduledCashFlowId: flow.id, scheduledDueOn: localDate(flow.scheduledDueOn, timeZone), amount: normalizeMoney(flow.amount, flow.currency as Currency), direction: flow.direction, lifecycle: flow.lifecycle })),
+      goals: [
+        ...goals.map((goal) => ({ id: goal.id, name: goal.name, targetAmount: normalizeMoney(goal.targetAmount, goal.currency as Currency), currentAmount: normalizeMoney(goal.currentAmount, goal.currency as Currency), targetDate: localDate(goal.targetDate, timeZone), status: goal.status })),
+        // Planned GUARDAR not yet moved this month is reserved (spec: "aportes de metas").
+        ...(reservation && reservation.currency === baseCurrency && reservation.remaining !== '0.00'
+          ? [{ id: 'tranquility-plan', name: 'Ahorro planificado del mes', periodContribution: { currency: baseCurrency, amount: reservation.remaining } }]
+          : []),
+      ],
       expenses: inputExpenses,
       fxQuotes: [...fxQuotes, ...historical],
     }

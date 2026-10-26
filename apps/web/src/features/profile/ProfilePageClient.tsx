@@ -10,6 +10,7 @@ import { SettingsEntryCard } from './SettingsEntryCard'
 import { EditProfileModal } from './EditProfileModal'
 import { RankProgressCompact } from './RankProgressCompact'
 import { ProfileMiniStats } from './ProfileMiniStats'
+import { WhatsAppLinkCard } from './whatsapp/components/WhatsAppLinkCard'
 import LiquidGlass from '@/components/ui/LiquidGlass'
 import { APP_VERSION } from '@/lib/version'
 
@@ -76,6 +77,8 @@ export default function ProfilePageClient() {
             <NextGoalsCard />
             <SettingsEntryCard email={profile?.email} onLogout={logout} />
           </div>
+
+          <WhatsAppLinkCard />
         </div>
       </div>
 

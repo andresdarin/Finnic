@@ -84,6 +84,16 @@ export class CreateTransferUseCase {
       if (input.feeAmount !== undefined && feeAccount.currency !== sourceCurrency) {
         throw new BadRequestException(`La cuenta de comisión debe estar en ${sourceCurrency}.`)
       }
+      if (
+        sourceAccount.purpose === 'EMERGENCY' ||
+        sourceAccount.purpose === 'INVESTMENT' ||
+        destAccount.purpose === 'EMERGENCY' ||
+        destAccount.purpose === 'INVESTMENT' ||
+        feeAccount.purpose === 'EMERGENCY' ||
+        feeAccount.purpose === 'INVESTMENT'
+      ) {
+        throw new BadRequestException('Registrá aportes/retiros desde Tranquilidad Financiera para conservar su historial.')
+      }
 
       const feeAmount = Number(input.feeAmount ?? 0)
       const sourceAmountNumber = Number(sourceAmount)

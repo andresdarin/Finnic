@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import {
   createFinanceAccountSchema,
@@ -69,6 +69,7 @@ export class FinanceAccountService {
       where: { id: accountId, profileId },
     })
     if (!account) throw new NotFoundException('Finance account not found')
+    if (account.purpose !== 'OPERATING') throw new ConflictException('Los fondos solo pueden modificarse mediante valuaciones o movimientos de Tranquilidad.')
 
     const updated = await this.prisma.financeAccount.update({
       where: { id: accountId },
