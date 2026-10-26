@@ -11,6 +11,9 @@ const TYPES: Record<PaymentMethod, IntakeAccount['type'][]> = {
   DEBIT: ['BANK'], TRANSFER: ['BANK'], CREDIT: ['CREDIT'], CASH: ['CASH'], CARD: ['BANK', 'CREDIT'],
 }
 
+export const compatibleAccount = (account: IntakeAccount, currency: Currency, method: PaymentMethod | null) =>
+  account.isActive && account.purpose === 'OPERATING' && account.currency === currency && (!method || TYPES[method].includes(account.type))
+
 const matchesName = (account: IntakeAccount, hint: string) => {
   const name = normalizeText(account.name)
   const wanted = normalizeText(hint)
@@ -32,14 +35,14 @@ export function resolveAccount(input: {
   const inCurrency = operating.filter(a => a.currency === input.currency)
 
   if (input.hint) {
-    const byName = inCurrency.filter(a => matchesName(a, input.hint!))
+    const byName = inCurrency.filter(a => compatibleAccount(a, input.currency, input.method) && matchesName(a, input.hint!))
     if (byName.length === 1) return { status: 'RESOLVED', account: byName[0]!, reason: 'name' }
     if (byName.length > 1) return { status: 'ASK', options: byName, reason: 'ambiguous' }
   }
   if (input.method) {
     const byType = inCurrency.filter(a => TYPES[input.method!].includes(a.type))
     if (byType.length === 1) return { status: 'RESOLVED', account: byType[0]!, reason: 'method' }
-    return { status: 'ASK', options: byType.length ? byType : inCurrency, reason: byType.length ? 'ambiguous' : 'no_match' }
+    return { status: 'ASK', options: byType, reason: byType.length ? 'ambiguous' : 'no_match' }
   }
   const fallback = inCurrency.find(a => a.id === input.defaultAccountId)
   if (fallback) return { status: 'RESOLVED', account: fallback, reason: 'default' }

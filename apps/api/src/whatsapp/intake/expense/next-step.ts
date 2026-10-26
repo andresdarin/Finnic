@@ -1,4 +1,4 @@
-import { resolveAccount, type IntakeAccount } from '../parsing/account-resolution'
+import { compatibleAccount, resolveAccount, type IntakeAccount } from '../parsing/account-resolution'
 import { formatMoney, optionList, PAYMENT_LABELS } from '../reply/format'
 import type { Currency, ExpenseProposal, PendingField } from '../types'
 import type { IntakeProfileContext } from './intake-context.service'
@@ -34,15 +34,18 @@ export function nextStep(input: ExpenseProposal & { currencyConflict?: boolean; 
 
   if (!proposal.date || input.dateAsk) return { kind: 'ask', field: 'date', proposal, question: '¿Qué día fue la compra? (por ejemplo "hoy", "ayer" o 21/10)' }
 
-  const resolution = proposal.financeAccountId
-    ? { status: 'RESOLVED' as const, account: ctx.accounts.find(a => a.id === proposal.financeAccountId) ?? null, reason: 'name' as const }
+  const selected = ctx.accounts.find(a => a.id === proposal.financeAccountId && compatibleAccount(a, proposal.currency!, proposal.paymentMethod))
+  const resolution = selected && !proposal.accountless
+    ? { status: 'RESOLVED' as const, account: selected, reason: 'name' as const }
     : resolveAccount({ accounts: ctx.accounts, currency: proposal.currency, method: proposal.paymentMethod, hint: proposal.accountHint, defaultAccountId: ctx.defaultAccountId, accountless: proposal.accountless })
   if (resolution.status === 'ASK') {
     const amount = formatMoney(proposal.amount, proposal.currency)
     const method = proposal.paymentMethod ? ` con ${PAYMENT_LABELS[proposal.paymentMethod]}` : ''
     const intro = resolution.options.length
       ? `¿Con qué cuenta pagaste ${amount}${method}? Respondé con el número:\n${optionList(resolution.options.map(accountLabel))}\nO "sin cuenta" para registrarlo sin mover saldos.`
-      : `No tenés una cuenta en ${proposal.currency}${method} para ${amount}. Respondé "sin cuenta" para registrarlo sin mover saldos, o creá la cuenta en Balance y escribime el nombre.`
+      : proposal.paymentMethod === 'CREDIT'
+        ? `El ticket indica un pago con crédito por ${amount}, pero no tenés una tarjeta de crédito configurada en ${proposal.currency}. Podés crearla en Balance y escribirme el nombre, o responder "sin cuenta" para guardar el gasto como crédito sin actualizar la deuda de una tarjeta.`
+        : `No tenés una cuenta compatible en ${proposal.currency}${method} para ${amount}. Respondé "sin cuenta" para registrarlo sin mover saldos, o creá la cuenta en Balance y escribime el nombre.`
     return { kind: 'ask', field: 'account', proposal, question: intro, options: resolution.options.map(a => ({ id: a.id, name: a.name })) }
   }
   return {
