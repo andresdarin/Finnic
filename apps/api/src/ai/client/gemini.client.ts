@@ -32,6 +32,7 @@ export class GeminiClient {
     generationConfig?: ModelConfig
     signal?: AbortSignal
     timeoutMs?: number
+    thinkingLevel?: 'low'
   }): Promise<string> {
     const config = this.getConfig()
     if (!config.GEMINI_API_KEY) throw new ServiceUnavailableException('Gemini no disponible temporalmente')
@@ -57,7 +58,10 @@ export class GeminiClient {
                 ? [{ parts: [{ text: opts.systemPrompt }] }]
                 : []
 
-          const body: Record<string, unknown> = { contents, generationConfig: opts.generationConfig }
+          const thinkingConfig = opts.thinkingLevel
+            ? currentModel.startsWith('gemini-2.5') ? { thinkingBudget: 1024 } : { thinkingLevel: opts.thinkingLevel }
+            : undefined
+          const body: Record<string, unknown> = { contents, generationConfig: { ...opts.generationConfig, ...(thinkingConfig ? { thinkingConfig } : {}) } }
           if (opts.systemPrompt && opts.contents?.length) {
             body.systemInstruction = { parts: [{ text: opts.systemPrompt }] }
           }
@@ -93,6 +97,7 @@ export class GeminiClient {
           const result = (await response.json()) as GeminiGenerateContentResponse
           const finishReason = result.candidates?.[0]?.finishReason
           if (finishReason && finishReason !== 'STOP') console.error(`[GeminiClient] finishReason: ${finishReason}`)
+          if (finishReason === 'MAX_TOKENS') throw new ServiceUnavailableException('La lectura de IA quedó incompleta; se debe reintentar.')
 
           const text = this.extractCandidateText(result)
           if (!text) throw new BadRequestException('Gemini no devolvió contenido en la respuesta.')

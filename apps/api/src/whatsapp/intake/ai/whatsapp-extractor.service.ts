@@ -25,6 +25,7 @@ export class WhatsAppExtractorService {
     const raw = await this.gemini.generateContent({
       systemPrompt: receiptExtractionPrompt(input.today),
       timeoutMs: 60_000,
+      thinkingLevel: 'low',
       contents: [{
         role: 'user',
         parts: [

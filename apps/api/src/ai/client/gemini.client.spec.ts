@@ -6,6 +6,15 @@ const config = { get: (key: string) => ({ GEMINI_API_KEY: 'secret', GEMINI_API_M
 const success = (text: string) => new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text }] } }] }))
 
 describe('GeminiClient', () => {
+  it('rejects truncated JSON instead of treating a partial receipt as a valid reading', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ candidates: [{ finishReason: 'MAX_TOKENS', content: { parts: [{ text: '{"total":"12' }] } }] })))
+    await expect(new GeminiClient(config as never).generateContent(options)).rejects.toThrow('quedó incompleta')
+  })
+  it.each([['gemini-3.5-flash', { thinkingLevel: 'low' }], ['gemini-2.5-flash', { thinkingBudget: 1024 }]])('bounds receipt reasoning for %s without consuming the JSON output budget', async (model, thinkingConfig) => {
+    const request = vi.spyOn(globalThis, 'fetch').mockResolvedValue(success('{}'))
+    await new GeminiClient(config as never).generateContent({ ...options, model: model as string, thinkingLevel: 'low' })
+    expect(JSON.parse(String(request.mock.calls[0]?.[1]?.body)).generationConfig.thinkingConfig).toEqual(thinkingConfig)
+  })
   afterEach(() => { vi.restoreAllMocks(); vi.useRealTimers() })
 
   it('allows a receipt request to run beyond the default deadline, then aborts at its own deadline', async () => {
