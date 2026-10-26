@@ -10,10 +10,9 @@ import { DraftRepository, type StoredDraft } from './draft.repository'
 import { findReceiptDuplicate } from './receipt-duplicates'
 import type { IntakeProfileContext } from './intake-context.service'
 import { nextStep } from './next-step'
+import { receiptItems } from './receipt-items'
 
 const FIXED: ExpenseCategoryKey[] = ['alquiler', 'gastos_comunes', 'ute', 'ose', 'antel', 'internet']
-const itemsMatch = (items: NonNullable<ExpenseProposal['items']>, amount: string) =>
-  Math.abs(items.reduce((sum, item) => sum + Math.round(item.totalPrice * 100), 0) - Math.round(Number(amount) * 100)) <= 5
 
 @Injectable()
 export class ExpenseIntakeService {
@@ -48,7 +47,8 @@ export class ExpenseIntakeService {
       return { reply: question, intent: 'clarification', result: { draftId: saved.id, pendingField: 'receipt_confirmation' } }
     }
 
-    const keepItems = proposal.items?.length ? itemsMatch(proposal.items, proposal.amount) : false
+    const reconciled = receiptItems(proposal)
+    const keepItems = reconciled.matches
     const noteParts = ['Registrado por WhatsApp', proposal.inputMethod === 'RECEIPT_SCAN' ? 'desde foto de ticket' : null, proposal.paymentMethod ? `medio: ${PAYMENT_LABELS[proposal.paymentMethod]}` : null, proposal.accountless ? 'sin cuenta asignada' : null].filter(Boolean)
     const created = await this.createExpense.execute({
       profileId: ctx.profileId,
@@ -58,7 +58,7 @@ export class ExpenseIntakeService {
         type: proposal.category === 'supermercado' ? 'supermarket' : FIXED.includes(proposal.category as ExpenseCategoryKey) ? 'fixed' : 'variable',
         inputMethod: proposal.inputMethod, notes: noteParts.join(' · '),
         financeAccountId: proposal.financeAccountId ?? undefined, tranquilityCategoryId: proposal.budgetCategoryId ?? undefined,
-        items: keepItems ? proposal.items!.map(item => ({ name: item.name, totalPrice: item.totalPrice, quantity: item.quantity ?? undefined, unitPrice: item.unitPrice ?? undefined, category: 'OTROS' })) : undefined,
+        items: keepItems ? reconciled.items.map(item => ({ name: item.name, totalPrice: item.totalPrice, quantity: item.quantity ?? undefined, unitPrice: item.unitPrice ?? undefined, category: 'OTROS', rawLine: item.rawLine })) : undefined,
       },
       context: { source: 'whatsapp', sourceMessageId: origin.wamid, inputMethod: proposal.inputMethod },
     })

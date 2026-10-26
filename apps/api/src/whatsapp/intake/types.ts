@@ -29,7 +29,7 @@ export type ExpenseProposal = {
   financeAccountId: string | null
   accountless: boolean
   inputMethod: 'MANUAL' | 'RECEIPT_SCAN'
-  items?: Array<{ name: string; totalPrice: number; quantity?: number | null; unitPrice?: number | null; category?: string }>
+  items?: Array<{ name: string; totalPrice: number; quantity?: number | null; unitPrice?: number | null; category?: string; rawLine?: string }>
   receipt?: { sha256: string | null; subtotal: string | null; confidence: number | null; discounts?: string | null }
   duplicateAcknowledged?: boolean
   receiptConfirmed?: boolean

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import { api, Edges, imageMessage, makeUser, startApp, testDatabaseUrl, textMessage, webhook } from './e2e.harness'
+import { api, Edges, imageMessage, JPEG, makeUser, startApp, testDatabaseUrl, textMessage, webhook } from './e2e.harness'
 
 const url = testDatabaseUrl()
 const suite = describe.skipIf(!url)
@@ -204,6 +204,22 @@ suite('WhatsApp → Finnic E2E (HTTP + PostgreSQL real, Gemini/Meta simulados en
     expect(await ctx.prisma.personalExpense.count({ where: { sourceMessageId: message.id } })).toBe(0)
     expect((await say(userA.phone, 'sí')).reply).toContain('✅ Registré $U 310,00')
     expect(await ctx.prisma.personalExpense.count({ where: { sourceMessageId: message.id } })).toBe(1)
+  })
+
+  it('conserva productos con descuento y guarda una sola vez después de confirmar', async () => {
+    edges.receiptQueue.push({ isReceipt: true, merchant: 'Ticket descuento', date: null, currency: 'UYU', total: '153.00', discounts: '28.00', confidence: 1, paymentMethod: 'CREDIT', items: [{ name: 'Pulpa', quantity: 1, unitPrice: 89, totalPrice: 89 }, { name: 'Salsa', quantity: 1, unitPrice: 92, totalPrice: 92 }] })
+    vi.mocked((await import('../../whatsapp-client.service')).WhatsAppClient.prototype.downloadMedia).mockResolvedValueOnce({ bytes: JPEG, mimeType: 'image/jpeg', sha256: 'discount-ticket' })
+    const message = imageMessage(userA.phone)
+    await send(message); await ctx.worker.drain()
+    expect(edges.lastTo(userA.phone)).toContain('distribuiré el descuento proporcionalmente')
+    expect(await ctx.prisma.personalExpense.count({ where: { sourceMessageId: message.id } })).toBe(0)
+    expect((await say(userA.phone, 'sí')).reply).toContain('✅ Registré $U 153,00')
+    await send(message); await ctx.worker.drain()
+    const rows = await ctx.prisma.personalExpense.findMany({ where: { sourceMessageId: message.id }, include: { items: true } })
+    expect(rows).toHaveLength(1)
+    expect(rows[0]!.items).toHaveLength(2)
+    expect(rows[0]!.items.reduce((sum, item) => sum + Math.round(Number(item.totalPrice) * 100), 0)).toBe(15300)
+    expect(rows[0]!.items.every(item => item.rawLine?.includes('Importe impreso'))).toBe(true)
   })
 
   it('responde consultas sin sumar monedas ni usar el saldo bancario como dinero libre', async () => {

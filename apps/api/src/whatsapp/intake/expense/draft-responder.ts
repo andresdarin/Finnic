@@ -24,6 +24,7 @@ export class DraftResponder {
       return { reply: 'Listo, no registré nada.', intent: 'cancel' }
     }
     if (draft.pendingField === 'which_expense') return this.whichExpense(ctx, draft, profile)
+    if (draft.pendingField === 'receipt_confirmation' && /^revisar$/i.test(ctx.text.trim())) return this.expenses.continue(ctx, { ...draft.proposal, receiptConfirmed: false }, profile, draft)
     const answer = applyDraftAnswer(draft.pendingField, ctx.text, draft.proposal, draft.meta, ctx.localDate)
     if (answer.kind === 'cancel') {
       await this.drafts.close(draft.id, ctx.profileId, 'cancelled')
