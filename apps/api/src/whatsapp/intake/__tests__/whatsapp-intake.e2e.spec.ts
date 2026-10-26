@@ -140,7 +140,7 @@ suite('WhatsApp → Finnic E2E (HTTP + PostgreSQL real, Gemini/Meta simulados en
   it('una compra en USD no se convierte sin cotización explícita', async () => {
     edges.textReplies.unshift({ match: /20 dólares/, json: ai({ amount: '20', currency: 'USD', title: 'Amazon', merchant: 'Amazon', category: 'compras', budgetCategory: 'Compras personales', paymentMethod: 'DEBIT' }) })
     const ask = await say(userA.phone, 'Gasté 20 dólares en Amazon con débito')
-    expect(ask.reply).toContain('No tenés una cuenta en USD')
+    expect(ask.reply).toContain('No tenés una cuenta compatible en USD')
     const saved = await say(userA.phone, 'sin cuenta')
     expect(saved.reply).toContain('US$ 20,00')
     expect(saved.reply).toContain('cotización')
