@@ -4,6 +4,7 @@ import { AiPendingActionService } from '../../ai/pending/ai-pending-action.servi
 import { WhatsAppChannelService } from '../../ai/whatsapp/whatsapp-channel.service'
 import { PrismaService } from '../../prisma/prisma.service'
 import { HELP_TEXT } from './constants'
+import { whatsAppChatText } from './reply/chat-text'
 import type { HandlerResult, InboundContext } from './types'
 
 /**
@@ -32,7 +33,7 @@ export class ChatFallback {
       if (action && /^(s[ií]|confirmar)$/.test(normalized)) return { reply: (await this.orchestrator.confirmPending({ profileId: ctx.profileId, pendingActionId: action.id })).text, intent: 'other' }
       if (action) { await this.pending.cancel(ctx.profileId, action.id); return { reply: 'Operación cancelada.', intent: 'other' } }
       const response = await this.orchestrator.run({ profileId: ctx.profileId, conversationId: conversation.id, message: ctx.text, channel: 'whatsapp' })
-      return { reply: response.text || HELP_TEXT, intent: 'other' }
+      return { reply: whatsAppChatText(response.text || HELP_TEXT), intent: 'other' }
     } catch {
       this.logger.warn({ event: 'whatsapp_chat_fallback_failed', inboundId: ctx.inboundId })
       return { reply: 'Ahora no pude responderte. Probá de nuevo en un momento. Si estabas confirmando un gasto, revisá el historial antes de volver a enviarlo.', intent: 'help' }
