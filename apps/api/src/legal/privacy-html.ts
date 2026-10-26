@@ -1,0 +1,10 @@
+import { FINNIC_PRIVACY as policy } from '@lovehold/shared'
+
+const escapeHtml = (text: string) => text.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!)
+
+/** Public HTML also lets Meta read the policy without a frontend session or preview access. */
+export function privacyHtml() {
+  const sections = policy.sections.map(section => `<section id="${section.id}"><h2>${escapeHtml(section.title)}</h2>${section.paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('')}</section>`).join('')
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${escapeHtml(policy.title)}</title>
+<style>:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f5f2ee;color:#102d38;font:17px/1.75 system-ui,sans-serif}main{max-width:72ch;margin:auto;padding:40px 24px}header{border-bottom:1px solid #cecfc9;padding-bottom:28px}h1{font-size:32px;line-height:1.2;text-wrap:balance}h2{font-size:22px;line-height:1.35}section{margin:40px 0;scroll-margin-top:24px}p{margin:16px 0}a{color:inherit;text-underline-offset:4px;overflow-wrap:anywhere}a:focus-visible{outline:2px solid #083a4f;outline-offset:4px}footer{border-top:1px solid #cecfc9;padding:24px 0;font-size:15px}.draft{background:#e5e1dd;padding:12px 16px;border-radius:8px;font-weight:600}@media(max-width:400px){h1{font-size:28px}}@media print{body{background:white}main{max-width:none;padding:0}}</style></head><body><main><header><strong>Finnic</strong>${policy.draft ? '<p class="draft">Borrador para revisión. Todavía no está publicado como política vigente.</p>' : ''}<h1>${escapeHtml(policy.title)}</h1><p>Última actualización: ${escapeHtml(policy.date)}</p><p>${escapeHtml(policy.introduction)}</p><a href="mailto:${policy.email}">${policy.email}</a></header><article>${sections}</article><footer>Responsable: ${escapeHtml(policy.responsible)}.<p><a href="https://www.gub.uy/unidad-reguladora-control-datos-personales/personas">Información sobre tus derechos en Uruguay</a></p></footer></main></body></html>`
+}

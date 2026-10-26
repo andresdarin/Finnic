@@ -11,6 +11,7 @@ import { AiModule } from './ai/ai.module'
 import { WebhooksModule } from './webhooks/webhooks.module'
 import { TranquilityModule } from './finance/tranquility/tranquility.module'
 import { RewardsModule } from './rewards/rewards.module'
+import { LegalModule } from './legal/legal.module'
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { RewardsModule } from './rewards/rewards.module'
     WebhooksModule,
     TranquilityModule,
     RewardsModule,
+    LegalModule,
   ],
 })
 export class AppModule {}
