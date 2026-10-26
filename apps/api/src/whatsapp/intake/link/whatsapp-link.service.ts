@@ -38,7 +38,7 @@ export class WhatsAppLinkService {
     })
     const phone = profile?.whatsappPhone ?? null
     return {
-      linked: Boolean(phone), phoneSuffix: phone ? phone.slice(-4) : null, linkedAt: profile?.whatsappLinkedAt?.toISOString() ?? null,
+      linked: Boolean(phone && profile?.whatsappLinkedAt), phoneSuffix: phone ? phone.slice(-4) : null, linkedAt: profile?.whatsappLinkedAt?.toISOString() ?? null,
       defaultAccountId: profile?.whatsappDefaultAccountId ?? null, defaultCurrency: profile?.whatsappDefaultCurrency ?? null,
       businessNumber: process.env.WHATSAPP_BUSINESS_DISPLAY_NUMBER || null,
     }
