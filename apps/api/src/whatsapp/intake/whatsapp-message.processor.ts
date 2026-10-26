@@ -77,7 +77,8 @@ export class WhatsAppMessageProcessor {
     if (intent === 'cancel') return { reply: 'No hay nada pendiente para cancelar.', intent: 'cancel' }
 
     const ai = NEEDS_AI.has(intent) ? await this.extract(ctx, profile) : null
-    intent = intent ?? ai?.intent ?? 'other'
+    // A classifier's generic "help" must not replace an open conversation with a menu.
+    intent = intent ?? (ai?.intent === 'help' ? 'other' : ai?.intent) ?? 'other'
     switch (intent) {
       case 'register_expense': return this.expenses.continue(ctx, proposalFromText(ctx.text, ai, profile, ctx.localDate), profile)
       case 'correct_last':
