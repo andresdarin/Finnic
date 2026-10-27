@@ -1,3 +1,4 @@
 # Handoff
-**De:** Planificación → **A:** SDE · feature `landing-admin`
-Spec: `specs/2026-10-27-landing-admin-design.md` · ADR-003. Orden de tareas en `decisions/engineering-manager/landing-admin.md`.
+**De:** Verificación → **A:** DevOps / dueño · feature `landing-admin`
+Rama `feat/landing-admin` (worktree `../Lovehold-landing-admin`), sin push. Código, tests y verificación listos.
+Pasos de producción en orden en `decisions/devops/landing-admin.md` (empezar por `admin:grant`). Runbook en `decisions/sre/landing-admin.md`.
