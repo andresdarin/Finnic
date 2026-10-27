@@ -75,4 +75,12 @@ describe.skipIf(!url)('Local Docker: financial answers and explicit memory acros
     expect(await appSay('Mi cuenta habitual es Cuenta inexistente')).toContain('No encontré')
     expect((await ctx.prisma.profile.findUniqueOrThrow({ where: { id: owner.profile.id } })).whatsappDefaultAccountId).toBeNull()
   })
+  it('asks for an amount and cancels an explicit incomplete expense with Gemini unavailable', async () => {
+    expect(await waSay('Anotá un gasto de prueba del súper, todavía no te doy el importe')).toMatch(/importe|monto|cuánto/i)
+    const draft = await ctx.prisma.whatsAppExpenseDraft.findFirst({ where: { profileId: owner.profile.id, status: 'awaiting' } })
+    expect(draft).not.toBeNull()
+    expect(await waSay('cancelar')).toContain('no registré nada')
+    expect(await ctx.prisma.whatsAppExpenseDraft.count({ where: { profileId: owner.profile.id, status: 'awaiting' } })).toBe(0)
+    expect(await ctx.prisma.personalExpense.count({ where: { profileId: owner.profile.id } })).toBe(38)
+  })
 })

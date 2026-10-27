@@ -17,6 +17,7 @@ export function ruleIntent(raw: string): IntakeIntent | null {
   if (/\bpuedo comprar\b|\bme alcanza para\b|\bpuedo pagar\b/.test(text)) return 'query_can_afford'
   if (/\bcuanto puedo gastar\b|\bcuanto me queda\b|\bque puedo gastar\b/.test(text)) return 'query_spending_capacity'
   if (/\bcomo voy\b.*\b(ahorro|ahorros|metas?|plan)\b|\bcuanto (ahorre|llevo ahorrado)\b/.test(text)) return 'query_savings'
+  if (/^(anota|registra|agrega|carga)(me)? (un |el |este )?gasto\b/.test(text)) return 'register_expense'
   if (/\b(gaste|pague|compre|abone|gastamos|pagamos)\b/.test(text) && moneyCandidates(raw).length > 0) return 'register_expense'
   return null
 }
