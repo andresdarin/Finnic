@@ -19,6 +19,12 @@ export class FinanceActivityService {
       where: { profileId, monthKey }, orderBy: [{ date: 'desc' }, { id: 'desc' }], take: 30,
       select: { id: true, title: true, amount: true, currency: true, date: true, movementType: true, category: true, financeAccount: { select: { name: true } } },
     })
+    const expenseCurrencies = [...new Set(groups.filter(row => row.movementType === 'EXPENSE').map(row => row.currency))]
+    const largest = await Promise.all(expenseCurrencies.map(currency => this.prisma.personalExpense.findFirst({
+      where: { profileId, monthKey, currency, movementType: 'EXPENSE' },
+      orderBy: [{ amount: 'desc' }, { date: 'desc' }, { id: 'desc' }],
+      select: { id: true, title: true, merchant: true, amount: true, currency: true, date: true, category: true },
+    })))
     const totals: Record<string, Record<string, bigint>> = {}
     for (const row of groups) {
       const currency = totals[row.currency] ??= { EXPENSE: 0n, INCOME: 0n, TRANSFER: 0n }
@@ -30,16 +36,26 @@ export class FinanceActivityService {
       totalsByCurrency: Object.fromEntries(Object.entries(totals).map(([currency, types]) => [currency, Object.fromEntries(Object.entries(types).map(([type, amount]) => [type, formatMoney(amount)]))])),
       categories: groups.filter(row => row.movementType === 'EXPENSE').map(row => ({ currency: row.currency, category: row.category, amount: row._sum.amount ? row._sum.amount.toFixed(2) : '0.00', count: row._count })),
       movements: recent.map(row => ({ ...row, amount: String(row.amount) })),
+      largestExpensesByCurrency: largest.flatMap(row => row ? [{ ...row, amount: row.amount.toFixed(2) }] : []),
       totalCount: groups.reduce((count, row) => count + row._count, 0),
-      detailLimit: 30, note: 'Totales del mes completo. Detalle de hasta 30 movimientos; transferencias separadas, sin conversión de moneda. No incluye gastos compartidos del hogar.',
+      detailLimit: 30, note: 'Totales y gasto de mayor importe por moneda del mes completo. Solo el detalle reciente se limita a 30 movimientos. Transferencias separadas, sin conversión de moneda. No incluye gastos compartidos del hogar.',
     }
   }
 
   async accounts(profileId: string) {
-    const accounts = await this.prisma.financeAccount.findMany({
+    const [profile, accounts] = await Promise.all([
+      this.prisma.profile.findUnique({ where: { id: profileId }, select: { whatsappDefaultAccountId: true, whatsappDefaultCurrency: true } }),
+      this.prisma.financeAccount.findMany({
       where: { profileId, isActive: true }, orderBy: { name: 'asc' },
-      select: { id: true, name: true, type: true, currency: true, balance: true, isSpendable: true, updatedAt: true },
-    })
-    return { source: '/balance', asOf: new Date().toISOString(), accounts: accounts.map(row => ({ ...row, balance: String(row.balance) })), note: 'Saldos registrados en Finnic, sin sincronización bancaria. CREDIT representa deuda.' }
+      select: { id: true, name: true, type: true, currency: true, purpose: true, balance: true, isSpendable: true, updatedAt: true },
+      }),
+    ])
+    const defaultAccount = accounts.find(account => account.id === profile?.whatsappDefaultAccountId && account.purpose === 'OPERATING' && (!profile.whatsappDefaultCurrency || account.currency === profile.whatsappDefaultCurrency))
+    const currency = profile?.whatsappDefaultCurrency
+    return {
+      source: '/balance', asOf: new Date().toISOString(), accounts: accounts.map(row => ({ ...row, balance: String(row.balance) })),
+      paymentPreferences: { currency: currency === 'UYU' || currency === 'USD' ? currency : null, account: defaultAccount ? { id: defaultAccount.id, name: defaultAccount.name, currency: defaultAccount.currency } : null },
+      note: 'Saldos registrados en Finnic, sin sincronización bancaria. CREDIT representa deuda. Las preferencias de pago son explícitas; no autorizan gastos ni reemplazan compatibilidad de cuenta y medio de pago.',
+    }
   }
 }

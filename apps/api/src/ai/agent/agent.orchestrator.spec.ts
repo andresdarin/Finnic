@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { z } from 'zod'
 import { AgentOrchestrator, MAX_ITERATIONS } from './agent.orchestrator'
 import { ToolExecutor } from '../tools/tool.executor'
+import { ChatUnavailableError } from '../client/chat-fallback'
 
 const prompt = { systemPrompt: 'Finnic', generationConfig: {} }
 const readTool = { name: 'get_financial_snapshot', description: 'snapshot', risk: 'read', inputSchema: z.object({}) }
@@ -28,6 +29,14 @@ const makeSubject = (gemini: any, registry: any, executor: any, conversations = 
 const request = { profileId: 'p', conversationId: 'c1' }
 
 describe('AgentOrchestrator', () => {
+  it('reports provider overload without executing or confirming any expense', async () => {
+    const executor = makeExecutor(), pending = makePending(), conversations = makeConversations()
+    const result = await makeSubject({ chat: vi.fn(async () => { throw new ChatUnavailableError('Ahora hay mucha demanda. Probá de nuevo en un momento.') }) }, makeRegistry(), executor, conversations, pending).run({ ...request, message: 'Cómo voy?' })
+    expect(result.text).toContain('mucha demanda')
+    expect(result.kind).toBe('error')
+    expect(executor.execute).not.toHaveBeenCalled()
+    expect(pending.confirm).not.toHaveBeenCalled()
+  })
   it('applies profile style at the real model boundary after checking conversation ownership', async () => {
     const instruction = vi.fn(async () => '\nESTILO PERSONAL APRENDIDO: breve')
     const gemini = { chat: vi.fn(async () => ({ text: 'Dale.' })) }

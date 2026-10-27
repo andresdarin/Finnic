@@ -22,8 +22,8 @@ const expenseSchema = z.object({
 
 type Declaration = { name: string; description: string; parameters: object }
 const declarations: Declaration[] = [
-  { name: 'get_monthly_activity', description: 'Consulta totales de ingresos y egresos personales del mes completo, categorías por moneda y hasta 30 movimientos recientes. No incluye hogar ni convierte monedas.', parameters: { type: 'object', properties: { month: { type: 'string', description: 'Mes YYYY-MM. Omitir para mes actual en zona horaria del perfil.' } } } },
-  { name: 'get_accounts', description: 'Lista cuentas propias activas, nombres, monedas, saldos registrados y tipos. Solo lectura, sin sincronización bancaria.', parameters: { type: 'object', properties: {} } },
+  { name: 'get_monthly_activity', description: 'Consulta totales, categorías y gasto más caro por moneda del mes completo (largestExpensesByCurrency), además de hasta 30 movimientos recientes. Para el mayor gasto usá largestExpensesByCurrency, nunca deduzcas el máximo del detalle limitado. No incluye hogar ni convierte monedas.', parameters: { type: 'object', properties: { month: { type: 'string', description: 'Mes YYYY-MM. Omitir para mes actual en zona horaria del perfil.' } } } },
+  { name: 'get_accounts', description: 'Lista cuentas propias activas, nombres, monedas, saldos y tipos, más paymentPreferences con cuenta y moneda habituales explícitas del perfil. Consultala para recordar esas preferencias entre conversaciones. Solo lectura, sin sincronización bancaria.', parameters: { type: 'object', properties: {} } },
   { name: 'get_product_guide', description: 'Explica funcionalidades reales, rutas y límites de Finnic.', parameters: { type: 'object', properties: {} } },
   { name: 'get_financial_snapshot', description: 'Obtiene snapshot financiero completo (balances, ingresos, gastos)', parameters: { type: 'object', properties: {} } },
   { name: 'get_spending_capacity', description: 'Obtiene la capacidad de gasto disponible para una ventana temporal', parameters: { type: 'object', properties: { window: { type: 'string', enum: [...windows], default: 'today' } } } },

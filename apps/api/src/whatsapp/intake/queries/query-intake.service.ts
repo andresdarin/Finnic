@@ -25,8 +25,8 @@ export class QueryIntakeService {
   ) {}
 
   async monthSpending(ctx: InboundContext): Promise<HandlerResult> {
-    const month = ctx.localDate.slice(0, 7)
-    const data = await this.activity.monthly(ctx.profileId, month)
+    const data = await this.activity.monthly(ctx.profileId)
+    const month = data.monthKey
     const label = `${MONTHS[Number(month.slice(5)) - 1]} ${month.slice(0, 4)}`
     const totals = Object.entries(data.totalsByCurrency).filter(([, types]) => types.EXPENSE && types.EXPENSE !== '0.00')
     if (!totals.length) return { reply: `No tengo gastos personales registrados en ${label}.`, intent: 'query_month_spending' }
@@ -39,6 +39,17 @@ export class QueryIntakeService {
     if (totals.length > 1) lines.push('Son monedas distintas: no las sumo sin una cotización explícita.')
     lines.push('No incluye gastos compartidos del hogar ni transferencias.')
     return { reply: lines.join('\n'), intent: 'query_month_spending' }
+  }
+
+  async largestExpense(ctx: InboundContext): Promise<HandlerResult> {
+    const data = await this.activity.monthly(ctx.profileId)
+    const signal = currencySignal(ctx.text)
+    const requestedCurrency = signal === 'UYU' || signal === 'USD' ? signal : null
+    const expenses = data.largestExpensesByCurrency.filter(row => !requestedCurrency || row.currency === requestedCurrency)
+    if (!expenses.length) return { reply: 'No tengo gastos personales registrados este mes' + (requestedCurrency ? ` en ${requestedCurrency}.` : '.'), intent: 'other' }
+    const lines = expenses.map(row => `Tu gasto más alto${expenses.length > 1 ? ` en ${row.currency}` : ''} fue ${row.title}: ${formatMoney(row.amount, row.currency)}${row.merchant ? ` en ${row.merchant}` : ''}, el ${new Intl.DateTimeFormat('es-UY', { timeZone: data.timeZone, day: 'numeric', month: 'numeric' }).format(row.date)}.`)
+    if (lines.length > 1) lines.push('Las monedas van por separado.')
+    return { reply: lines.join('\n'), intent: 'other', result: { monthKey: data.monthKey, source: 'largest_expenses_full_month' } }
   }
 
   async capacity(ctx: InboundContext, ai: TextExtraction | null): Promise<HandlerResult> {
