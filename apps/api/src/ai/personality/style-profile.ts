@@ -2,7 +2,7 @@ type Preferences = { brevity: 'short' | 'balanced' | 'detailed'; tone: 'neutral'
 export type StyleProfile = Preferences & { enabled: boolean; since: string; explicit?: Partial<Preferences>; stickers: 'occasional' | 'requested' }
 export const initialStyle = (since = new Date(0).toISOString()): StyleProfile => ({ enabled: true, since, brevity: 'short', tone: 'neutral', emojis: 'none', stickers: 'occasional' })
 const textStyleRequest = /(?:textos?|mensajes?|respuestas?).*(?:cort|breve|larg|amigable)|(?:no uses|sin|evit[aá]).*(?:signos de apertura|apertura de signos)/i
-export const isStyleRequest = (text: string) => textStyleRequest.test(text) || /(?:olvid[aá]|reinici[aá]).*mi estilo|no\s+(?:te\s+)?adaptes|volv[eé]\s+a\s+adaptarte|(?:activ[aá]|desactiv[aá]).*adaptaci[oó]n|(?:hablame|respond[eé](?:me)?|escribime).*(?:corto|breve|detalle|formal|relajad|emojis)|^m[aá]s (?:corto|breve|detallado)[.!\s]*$|(?:no .*|sin |solo .*|ocasional.*)stickers|stickers.*(?:solo|ocasional)/i.test(text)
+export const isStyleRequest = (text: string) => textStyleRequest.test(text) || /(?:olvid[aá]|reinici[aá]).*mi estilo|no\s+(?:te\s+)?adaptes|volv[eé]\s+a\s+adaptarte|(?:activ[aá]|desactiv[aá]).*adaptaci[oó]n|(?:hablame|respond[eé](?:me)?|escribime).*(?:cort[oa]|cortit[oa]|breve|detalle|formal|relajad|emojis)|^m[aá]s (?:corto|breve|detallado)[.!\s]*$|(?:no .*|sin |solo .*|ocasional.*)stickers|stickers.*(?:solo|ocasional)/i.test(text)
 
 /** Only closed style dimensions enter the system prompt, never copied user instructions. */
 export function learnStyle(previous: StyleProfile, samples: string[], latest: string, now = new Date().toISOString()): StyleProfile {
@@ -26,7 +26,7 @@ export function learnStyle(previous: StyleProfile, samples: string[], latest: st
   for (const text of [...samples, latest]) {
     if (/^m[aá]s (?:corto|breve)[.!\s]*$/i.test(text)) prefer('brevity', 'short')
     if (/^m[aá]s detallado[.!\s]*$/i.test(text)) prefer('brevity', 'detailed')
-    if (/(?:respond[eé]|hablame|escribime|respuestas?).*(?:corto|breve|al grano|cortitas?)/i.test(text)) prefer('brevity', 'short')
+    if (/(?:respond[eé]|hablame|escribime|respuestas?).*(?:cort[oa]s?|cortit[oa]s?|breve|al grano)/i.test(text)) prefer('brevity', 'short')
     if (/(?:respond[eé]|hablame|explicame|respuestas?).*(?:detalle|detallad|largo)/i.test(text) && !/(?:no|sin|evit[aá]).*(?:detalle|detallad|largo)/i.test(text)) prefer('brevity', 'detailed')
     if (/(?:textos?|mensajes?|respuestas?).*(?:m[aá]s cort|breve|cortit)|(?:no|evit[aá]).*(?:textos?|mensajes?|respuestas?).*larg/i.test(text)) prefer('brevity', 'short')
     if (/(?:hablame|respond[eé]|escribime|textos?|mensajes?|respuestas?).*(?:informal|relajad|como amigo|amigable)/i.test(text)) prefer('tone', 'relaxed')
