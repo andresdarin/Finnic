@@ -21,7 +21,7 @@ jobs:
           for sample in 1 2 3; do
             curl --fail --silent --show-error --max-time 100 \
               --write-out '\nHTTP %{http_code}; total %{time_total}s; first byte %{time_starttransfer}s\n' \
-              https://lovehold.onrender.com/health/database
+              https://lovehold.onrender.com/api/health/database
             echo
             sleep 2
           done
