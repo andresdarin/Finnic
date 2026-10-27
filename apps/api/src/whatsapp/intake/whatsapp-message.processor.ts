@@ -22,6 +22,9 @@ import { MediaHistoryService } from './media-history.service'
 import { asksForSticker, FinnicStickersService } from '../../ai/personality/finnic-stickers.service'
 import { isStyleRequest } from '../../ai/personality/style-profile'
 import { finnicText } from '../../ai/prompts/finnic-voice'
+import { isLargestExpenseQuestion } from './queries/largest-expense'
+import { paymentPreference } from './parsing/payment-preferences'
+import { moneyCandidates } from './parsing/money-text'
 
 export type ProcessorOutcome = HandlerResult & { profileId: string | null }
 
@@ -89,13 +92,21 @@ export class WhatsAppMessageProcessor {
     const sticker = await this.stickers?.select(ctx.profileId, ctx.text)
     if (sticker) return { reply: 'Sticker de Finnic', intent: 'other', result: { outboundSticker: sticker } }
     if (asksForSticker(ctx.text)) return { reply: 'No pude preparar el sticker. Probá de nuevo en un momento.', intent: 'other' }
+    const preference = paymentPreference(ctx.text, profile)
+    if (preference) {
+      if (preference.input) await this.links.updateDefaults(ctx.profileId, preference.input)
+      return { reply: preference.reply, intent: 'other' }
+    }
     if (isStyleRequest(ctx.text)) return this.chat.reply(ctx)
+    if (isLargestExpenseQuestion(ctx.text)) return this.queries.largestExpense(ctx)
 
     let intent = ruleIntent(ctx.text)
     const draft = await this.drafts.findOpen(ctx.profileId)
     if (draft && (intent === null || intent === 'cancel')) return this.draftResponder.answer(ctx, draft, profile, intent === 'cancel')
     if (intent === 'cancel') return { reply: 'No hay nada pendiente para cancelar.', intent: 'cancel' }
 
+    // Open conversation needs the agent, not a separate classifier round-trip first.
+    if (intent === null && moneyCandidates(ctx.text).length === 0 && !/anot|registr|gast[eé]|pagu[eé]|compr[eé]|\bgasto\b/i.test(ctx.text)) return this.chat.reply(ctx)
     const ai = NEEDS_AI.has(intent) ? await this.extract(ctx, profile) : null
     // A classifier's generic "help" must not replace an open conversation with a menu.
     intent = intent ?? (ai?.intent === 'help' ? 'other' : ai?.intent) ?? 'other'
