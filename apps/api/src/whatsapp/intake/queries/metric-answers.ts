@@ -7,11 +7,12 @@ import { formatMoney } from '../reply/format'
 import { isLargestExpenseQuestion } from './largest-expense'
 import type { InboundContext } from '../types'
 
-type Kind = 'monthly' | 'product' | 'largest_expense' | 'household_scope' | 'card_payment_definition' | 'bank_sync' | 'net_definition' | 'rate_definition' | 'rate' | 'net' | 'emergency' | 'budget' | 'goals_definition' | 'capacity_definition' | 'credit'
+type Kind = 'currency_definition' | 'monthly' | 'product' | 'largest_expense' | 'household_scope' | 'card_payment_definition' | 'bank_sync' | 'net_definition' | 'rate_definition' | 'rate' | 'net' | 'emergency' | 'budget' | 'goals_definition' | 'capacity_definition' | 'credit'
 /** Specific financial reads and definitions; general advice remains a conversation. */
 export function financialQuestionKind(raw: string): Kind | null {
   const text = normalizeText(raw)
   if (/\b(hipotetico|ejemplo)\b/.test(text)) return null
+  if (/pesos|dolares|uyu|usd/.test(text) && /como.*(?:sum|convert)|que cotizacion.*usas|que cotizacion.*usando/.test(text)) return 'currency_definition'
   if (/tarjeta/.test(text) && /pago|pagar/.test(text) && /dos veces|doble|duplic/.test(text)) return 'card_payment_definition'
   if (/bancar|banco/.test(text) && /tiempo real|conectad|conexion|solo lo que|sincroniz/.test(text)) return 'bank_sync'
   if (/hogar|compartidos/.test(text) && /personales/.test(text) && /gaste|total|sum|contar|duplic/.test(text)) return 'household_scope'
@@ -33,6 +34,7 @@ export function financialQuestionKind(raw: string): Kind | null {
 }
 
 export async function metricAnswer(kind: Exclude<Kind, 'monthly' | 'product' | 'largest_expense'>, ctx: InboundContext, activity: FinanceActivityService, metrics?: FinanceMetricsService) {
+  if (kind === 'currency_definition') return 'Los saldos van por moneda. Para el presupuesto, uso la cotización que quedó guardada en cada movimiento convertido; si falta, el total queda incompleto. No hay una única cotización actual para todo el plan: la referencia de Prex es aparte y no cambia tus gastos anteriores.'
   if (kind === 'card_payment_definition') return 'No: la compra es el gasto y el pago de la tarjeta cancela la deuda. Son cosas distintas, no dos gastos.'
   if (kind === 'bank_sync') return 'Solo veo lo que registrás en Finnic. No tengo conexión a tus bancos ni veo sus movimientos en tiempo real.'
   if (kind === 'household_scope') return 'Desde este chat puedo consultar tus gastos personales, pero no calcular todavía el total combinado con el hogar sin duplicados. Podés revisar ambos en Movimientos; sumarlos directamente puede contar dos veces una misma compra.'

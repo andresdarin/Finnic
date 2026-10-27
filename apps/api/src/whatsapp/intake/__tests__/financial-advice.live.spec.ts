@@ -54,4 +54,20 @@ describe.skipIf(!url || !key)('Financial advice grounded in a populated local pr
     expect(answer.pendingActionId).toBeUndefined()
     expect(await ctx.prisma.personalExpense.count({ where: { profileId: user.profile.id } })).toBe(before)
   }, 60000)
+  it.each([
+    'Si tengo pesos y dólares, cómo los sumás? Qué cotización estás usando ahora?',
+    'Cuánto debería tener en un fondo de emergencia y dónde conviene guardarlo?',
+    'Qué tengo que mirar antes de comprar en cuotas sin interés?',
+    'Qué diferencia hay entre ahorrar e invertir?',
+    'Si me aumentan el sueldo, cómo decido cuánto ahorrar y cuánto mejorar mi estilo de vida?',
+  ])('reviews an outstanding advice case without writes: %s', async question => {
+    const before = await ctx.prisma.personalExpense.count({ where: { profileId: user.profile.id } })
+    const conversation = await ctx.app.get(AiConversationService).ensureConversation(user.profile.id)
+    const answer = await ctx.app.get(AgentOrchestrator).run({ profileId: user.profile.id, conversationId: conversation.id, message: question, channel: 'whatsapp' })
+    results.push({ question, answer, actualPlan: await ctx.app.get(FinanceMetricsService).plan(user.profile.id) })
+    expect(answer.kind).not.toBe('error')
+    expect(answer.pendingActionId).toBeUndefined()
+    expect(await ctx.prisma.personalExpense.count({ where: { profileId: user.profile.id } })).toBe(before)
+    // Content is reviewed from the saved literal answer, not certified by HTTP success.
+  }, 60000)
 })
