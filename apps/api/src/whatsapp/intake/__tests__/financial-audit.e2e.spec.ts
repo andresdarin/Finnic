@@ -72,7 +72,7 @@ describe.skipIf(!url)('Financial audit: actual shared reads with Gemini unavaila
   it('exposes the public Prex reference in both chat and existing read tool without changing the plan', async () => {
     vi.spyOn(PublicExchangeService.prototype, 'prex').mockResolvedValue({ status: 'available', provider: 'Prex Uruguay', baseCurrency: 'USD', quoteCurrency: 'UYU', buy: '40.02', sell: '40.43', sourceDate: '2026-10-27', fetchedAt: '2026-10-27T15:00:00.000Z', freshness: 'current_day', source: { name: 'Cambio Uruguay', url: 'https://cambio-uruguay.com/historico/prex/usd', official: false }, notice: 'Referencia de prueba, no garantizada.' })
     const reply = await say('A cuánto cotiza el dólar en Prex hoy?')
-    expect(reply).toContain('40,02'); expect(reply).toContain('40,43'); expect(reply).toContain('un tercero')
+    expect(reply).toContain('40,43'); expect(reply).toContain('40,02'); expect(reply).toContain('Prex'); expect(reply).toMatch(/variado|cambiado/)
     const tool = ctx.app.get(ToolRegistry).get('get_financial_snapshot')
     const args = tool.inputSchema.parse({ exchangeProvider: 'prex' })
     const result = await tool.execute(args, { profileId: owner.profile.id }) as { exchangeReference: { source: { official: boolean } }; financialPlan: { totals: { savingsRatePct: number } } }

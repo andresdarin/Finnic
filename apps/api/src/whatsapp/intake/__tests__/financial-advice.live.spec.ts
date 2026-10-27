@@ -19,6 +19,8 @@ describe.skipIf(!url || !key)('Financial advice grounded in a populated local pr
     ctx = await startApp(url!); user = await makeUser(ctx.prisma)
     ctx.app.get(ConfigService).set('GEMINI_API_KEY', key)
     ctx.app.get(ConfigService).set('GEMINI_API_MODEL', 'gemini-3.1-flash-lite')
+    ctx.app.get(ConfigService).set('GEMINI_FALLBACK_MODELS', 'gemini-3.1-flash-lite')
+    ctx.app.get(ConfigService).set('GEMINI_TIMEOUT_MS', 45000)
     process.env.GEMINI_API_MODEL = 'gemini-3.1-flash-lite'
     expect((await api(ctx.base, user.token)('/finance/tranquility/setup', 'POST', setup)).status).toBe(201)
     const categories = await ctx.prisma.tranquilityCategory.findMany({ where: { profileId: user.profile.id } })
@@ -34,7 +36,7 @@ describe.skipIf(!url || !key)('Financial advice grounded in a populated local pr
     ] })
   }, 60000)
   afterAll(async () => {
-    if (results.length) { const dir = resolve('../../tmp/finnic-financial-retest-20261027'); await mkdir(dir, { recursive: true }); await writeFile(resolve(dir, 'populated-profile-live.json'), JSON.stringify(results, null, 2)) }
+    if (results.length) { const dir = resolve('../../tmp/finnic-financial-retest-20261027'); await mkdir(dir, { recursive: true }); const text = JSON.stringify(results, null, 2); await writeFile(resolve(dir, `populated-profile-live-${Date.now()}.json`), text); await writeFile(resolve(dir, 'populated-profile-live.json'), text) }
     if (ctx) { if (user) await ctx.prisma.profile.delete({ where: { id: user.profile.id } }); await ctx.app.close() }
   })
   it.each([
