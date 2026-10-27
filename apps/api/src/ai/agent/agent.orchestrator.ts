@@ -5,6 +5,7 @@ import { GeminiClient } from '../client/gemini.client'
 import { ChatMessage } from '../client/gemini.types'
 import { FINNIC_PROMPT_ID } from '../prompts/finnic.prompt'
 import { runtimeKnowledge } from '../prompts/product-knowledge'
+import { financialFocus } from '../prompts/financial-focus'
 import { finnicChannelVoice, finnicText, withFinnicVoice } from '../prompts/finnic-voice'
 import { PromptRegistry } from '../prompts/prompt.registry'
 import { ToolExecutor } from '../tools/tool.executor'
@@ -59,7 +60,7 @@ export class AgentOrchestrator {
       const personalStyle = await this.styleMemory?.instruction(req.profileId, req.conversationId, req.message) ?? ''
       const signal = AbortSignal.timeout(45_000)
       for (let i = 0; i < Math.min(effective.policy.limits.maxIterations, MAX_ITERATIONS); i++) {
-        const result = await this.gemini.chat({ model: effective.model.model, systemInstruction: withFinnicVoice(effective.prompt.content) + personalStyle + runtimeKnowledge(req.channel) + finnicChannelVoice(req.channel), history, tools, signal, generationConfig: { temperature: effective.model.temperature, maxOutputTokens: effective.model.maxTokens, responseMimeType: effective.model.responseMimeType } })
+        const result = await this.gemini.chat({ model: effective.model.model, systemInstruction: withFinnicVoice(effective.prompt.content) + personalStyle + runtimeKnowledge(req.channel) + finnicChannelVoice(req.channel) + financialFocus(req.message), history, tools, signal, generationConfig: { temperature: effective.model.temperature, maxOutputTokens: effective.model.maxTokens, responseMimeType: effective.model.responseMimeType } })
         if (!result.functionCalls?.length) {
           const kind = calls.some(call => !call.success) || !result.text ? 'error' : calls.length ? 'query' : 'explanation'
           return this.complete(run.id, req, result.text || FALLBACK, calls, kind)
