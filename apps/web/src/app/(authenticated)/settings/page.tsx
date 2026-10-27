@@ -1,32 +1,12 @@
-'use client'
-
-import React from 'react'
-import { Settings, Search } from 'lucide-react'
+import Link from 'next/link'
+import PasswordForm from '@/features/auth/password/PasswordForm'
 
 export default function SettingsPage() {
   return (
-    <div className="space-y-6">
-      <header className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-soft border border-border">
-          <Settings className="h-5 w-5 text-foreground/80" />
-        </div>
-        <div>
-          <h1 className="type-display text-2xl text-foreground">Ajustes</h1>
-          <p className="text-sm text-muted-foreground">Configuración del perfil y del hogar compartido</p>
-        </div>
-      </header>
-
-      <section className="neu-raised flex flex-col items-center gap-4 rounded-2xl border border-border bg-surface p-12 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-soft">
-          <Search className="h-6 w-6 text-muted-foreground animate-pulse" />
-        </div>
-        <div>
-          <h3 className="type-section text-lg text-foreground">Próximamente</h3>
-          <p className="mt-1 text-sm text-muted-foreground max-w-sm">
-            Vas a poder editar tus datos personales, cambiar los colores de tu perfil y desvincular o invitar miembros.
-          </p>
-        </div>
-      </section>
+    <div className="mx-auto max-w-lg space-y-6 px-4 py-6">
+      <Link href="/profile" className="inline-flex min-h-11 items-center text-sm text-primary underline underline-offset-4">Volver a mi perfil</Link>
+      <header className="space-y-2"><h1 className="type-display text-2xl">Cambiar contraseña</h1><p className="text-sm text-muted-foreground">Confirmá tu contraseña actual y elegí una nueva.</p></header>
+      <PasswordForm />
     </div>
   )
 }

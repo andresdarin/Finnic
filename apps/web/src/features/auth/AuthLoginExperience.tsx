@@ -298,6 +298,7 @@ export default function AuthLoginExperience() {
 
         {/* Enlaces de pie y navegación */}
         <footer className="mt-1 flex flex-col items-center">
+          <Link href="/forgot-password" className="mb-2 inline-flex min-h-11 items-center text-sm font-medium text-primary underline-offset-4 hover:underline">¿Olvidaste tu contraseña?</Link>
           <p className="text-center text-xs sm:text-sm font-medium text-navy/75 dark:text-foreground/75">
             ¿No tenés cuenta?{' '}
             <Link
