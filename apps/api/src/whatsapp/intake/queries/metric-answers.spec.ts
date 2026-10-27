@@ -13,6 +13,7 @@ describe('financial audit interpretation', () => {
     ['Cuál fue el producto individual más caro de este mes?', 'product'],
     ['Gasté más o menos que el mes pasado?', 'monthly'],
     ['Cuál es mi deuda de tarjeta registrada?', 'credit'],
+    ['Cuánto gasté entre mis gastos personales y los del hogar, sin contarlos dos veces?', 'household_scope'],
   ])('recognizes %s', (question, kind) => expect(financialQuestionKind(question)).toBe(kind))
   it.each([
     'Si no puedo pagar todo este mes, qué debería priorizar?',

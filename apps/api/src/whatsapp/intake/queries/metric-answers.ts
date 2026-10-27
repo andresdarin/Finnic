@@ -7,11 +7,12 @@ import { formatMoney } from '../reply/format'
 import { isLargestExpenseQuestion } from './largest-expense'
 import type { InboundContext } from '../types'
 
-type Kind = 'monthly' | 'product' | 'largest_expense' | 'net_definition' | 'rate_definition' | 'rate' | 'net' | 'emergency' | 'budget' | 'goals_definition' | 'capacity_definition' | 'credit'
+type Kind = 'monthly' | 'product' | 'largest_expense' | 'household_scope' | 'net_definition' | 'rate_definition' | 'rate' | 'net' | 'emergency' | 'budget' | 'goals_definition' | 'capacity_definition' | 'credit'
 /** Specific financial reads and definitions; general advice remains a conversation. */
 export function financialQuestionKind(raw: string): Kind | null {
   const text = normalizeText(raw)
   if (/\b(hipotetico|ejemplo)\b/.test(text)) return null
+  if (/hogar|compartidos/.test(text) && /personales/.test(text) && /gaste|total|sum|contar|duplic/.test(text)) return 'household_scope'
   if (/tasa de ahorro/.test(text)) {
     if (/significa|calcul|que es|sin ingresos|no (?:tengo|hay) ingresos|ingresos (?:son )?cero/.test(text)) return 'rate_definition'
     return 'rate'
@@ -30,6 +31,7 @@ export function financialQuestionKind(raw: string): Kind | null {
 }
 
 export async function metricAnswer(kind: Exclude<Kind, 'monthly' | 'product' | 'largest_expense'>, ctx: InboundContext, activity: FinanceActivityService, metrics?: FinanceMetricsService) {
+  if (kind === 'household_scope') return 'Desde este chat puedo consultar tus gastos personales, pero no calcular todavía el total combinado con el hogar sin duplicados. Podés revisar ambos en Movimientos; sumarlos directamente puede contar dos veces una misma compra.'
   if (kind === 'net_definition') return 'El ahorro neto es lo que ingresó menos tus gastos del mes. El saldo es la plata registrada en tus cuentas: son cosas distintas.'
   if (kind === 'rate_definition') return 'La tasa de ahorro es (ingresos − gastos) ÷ ingresos × 100. Con ingresos cero no está definida: podés medir cuánto ahorraste o usaste de tus ahorros, pero no ese porcentaje.'
   if (kind === 'capacity_definition') return 'El saldo es lo registrado en tus cuentas. El margen para gastar también considera deuda, pagos pendientes, ahorro reservado y colchón mínimo; deja afuera fondos no gastables.'
