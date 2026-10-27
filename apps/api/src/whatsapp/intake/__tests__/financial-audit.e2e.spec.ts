@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { api, Edges, makeUser, startApp, testDatabaseUrl, textMessage, webhook } from './e2e.harness'
 import { previousMonth } from '../parsing/query-period'
 import { ToolRegistry } from '../../../ai/tools/tool.registry'
+import { PublicExchangeService } from '../../../finance/fx/public-exchange.service'
 
 const url = testDatabaseUrl()
 const month = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Montevideo', year: 'numeric', month: '2-digit' }).format(new Date())
@@ -67,6 +68,17 @@ describe.skipIf(!url)('Financial audit: actual shared reads with Gemini unavaila
   it('does not divide by zero or substitute planned salary for actual income', async () => {
     expect(await say('Cuál es mi tasa de ahorro este mes?', zero)).toContain('no está definida')
     expect(await say('Si un mes no tengo ingresos, mi tasa de ahorro se puede calcular igual?')).toContain('no está definida')
+  })
+  it('exposes the public Prex reference in both chat and existing read tool without changing the plan', async () => {
+    vi.spyOn(PublicExchangeService.prototype, 'prex').mockResolvedValue({ status: 'available', provider: 'Prex Uruguay', baseCurrency: 'USD', quoteCurrency: 'UYU', buy: '40.02', sell: '40.43', sourceDate: '2026-10-27', fetchedAt: '2026-10-27T15:00:00.000Z', freshness: 'current_day', source: { name: 'Cambio Uruguay', url: 'https://cambio-uruguay.com/historico/prex/usd', official: false }, notice: 'Referencia de prueba, no garantizada.' })
+    const reply = await say('A cuánto cotiza el dólar en Prex hoy?')
+    expect(reply).toContain('40,02'); expect(reply).toContain('40,43'); expect(reply).toContain('un tercero')
+    const tool = ctx.app.get(ToolRegistry).get('get_financial_snapshot')
+    const args = tool.inputSchema.parse({ exchangeProvider: 'prex' })
+    const result = await tool.execute(args, { profileId: owner.profile.id }) as { exchangeReference: { source: { official: boolean } }; financialPlan: { totals: { savingsRatePct: number } } }
+    expect(result.exchangeReference.source.official).toBe(false)
+    expect(result.financialPlan.totals.savingsRatePct).toBe(21.5)
+    expect(await ctx.prisma.personalExpense.count({ where: { profileId: owner.profile.id } })).toBe(baseline)
   })
   it('gives the same calendar result over the real WhatsApp worker without writes', async () => {
     expect(await webhook(ctx.base)(textMessage(owner.phone, 'Cuánto gasté el mes pasado?'))).toBe(200)
