@@ -24,6 +24,7 @@ import { isStyleRequest } from '../../ai/personality/style-profile'
 import { finnicText } from '../../ai/prompts/finnic-voice'
 import { paymentPreference } from './parsing/payment-preferences'
 import { moneyCandidates } from './parsing/money-text'
+import { offTopicReply } from '../../ai/prompts/financial-scope'
 
 export type ProcessorOutcome = HandlerResult & { profileId: string | null }
 
@@ -88,6 +89,8 @@ export class WhatsAppMessageProcessor {
     if (ctx.type === 'sticker') return { reply: 'Te leo. Cuando quieras, seguimos con tus números.', intent: 'other' }
     if (ctx.type === 'unsupported') return { reply: 'Por ahora entiendo mensajes de texto y fotos de tickets (JPG, PNG o WebP). No registré nada.', intent: 'other' }
     if (ctx.type === 'image') return this.receipts.handle(ctx, profile)
+    const redirect = offTopicReply(ctx.text)
+    if (redirect) return { reply: redirect, intent: 'other' }
     const sticker = await this.stickers?.select(ctx.profileId, ctx.text)
     if (sticker) return { reply: 'Sticker de Finnic', intent: 'other', result: { outboundSticker: sticker } }
     if (asksForSticker(ctx.text)) return { reply: 'No pude preparar el sticker. Probá de nuevo en un momento.', intent: 'other' }

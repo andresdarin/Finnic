@@ -6,6 +6,7 @@ import { ChatMessage } from '../client/gemini.types'
 import { FINNIC_PROMPT_ID } from '../prompts/finnic.prompt'
 import { runtimeKnowledge } from '../prompts/product-knowledge'
 import { financialFocus } from '../prompts/financial-focus'
+import { offTopicReply } from '../prompts/financial-scope'
 import { finnicChannelVoice, finnicText, withFinnicVoice } from '../prompts/finnic-voice'
 import { PromptRegistry } from '../prompts/prompt.registry'
 import { ToolExecutor } from '../tools/tool.executor'
@@ -56,6 +57,8 @@ export class AgentOrchestrator {
     try {
       const history = agentHistory(await this.conversations.getRecentWindow(req.conversationId, 20))
       await this.conversations.createMessage({ conversationId: req.conversationId, role: AiMessageRole.USER, content: req.message })
+      const redirect = offTopicReply(req.message)
+      if (redirect) return this.complete(run.id, req, redirect, [], 'explanation')
       history.push({ role: 'user', parts: [{ text: req.message }] })
       const personalStyle = await this.styleMemory?.instruction(req.profileId, req.conversationId, req.message) ?? ''
       const signal = AbortSignal.timeout(45_000)

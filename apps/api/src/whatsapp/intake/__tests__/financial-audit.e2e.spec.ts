@@ -80,6 +80,15 @@ describe.skipIf(!url)('Financial audit: actual shared reads with Gemini unavaila
     expect(edges.lastTo(owner.phone)).toBe(reply)
     expect(await ctx.prisma.personalExpense.count({ where: { profileId: owner.profile.id } })).toBe(baseline)
   })
+  it('redirects recipes in app and WhatsApp without changing financial records', async () => {
+    const question = 'Cómo se hace una torta de papas?'
+    const reply = await say(question)
+    expect(reply).toContain('Con la receta no te puedo ayudar')
+    expect(await webhook(ctx.base)(textMessage(owner.phone, question))).toBe(200)
+    await ctx.worker.drain()
+    expect(edges.lastTo(owner.phone)).toBe(reply)
+    expect(await ctx.prisma.personalExpense.count({ where: { profileId: owner.profile.id } })).toBe(baseline)
+  })
   it('exposes the public Prex reference in both chat and existing read tool without changing the plan', async () => {
     vi.spyOn(PublicExchangeService.prototype, 'prex').mockResolvedValue({ status: 'available', provider: 'Prex Uruguay', baseCurrency: 'USD', quoteCurrency: 'UYU', buy: '40.02', sell: '40.43', sourceDate: '2026-10-27', fetchedAt: '2026-10-27T15:00:00.000Z', freshness: 'current_day', source: { name: 'Cambio Uruguay', url: 'https://cambio-uruguay.com/historico/prex/usd', official: false }, notice: 'Referencia de prueba, no garantizada.' })
     const reply = await say('A cuánto cotiza el dólar en Prex hoy?')
