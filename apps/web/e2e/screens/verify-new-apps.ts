@@ -26,7 +26,7 @@ function check(ok: boolean, label: string) {
 async function login(page: Page, email: string, password: string) {
   await page.goto(`${ADMIN}/login`)
   await page.getByLabel('Email').fill(email)
-  await page.getByLabel('Contraseña').fill(password)
+  await page.getByLabel('Contraseña', { exact: true }).fill(password)
   await page.getByRole('button', { name: 'Ingresar' }).click()
   // Termina cuando sale de /login (admin) o aparece el error (sin rol).
   await Promise.race([
