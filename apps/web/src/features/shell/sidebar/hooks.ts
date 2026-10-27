@@ -6,6 +6,7 @@ import { Home, Wallet, TrendingUp, Fuel, Target, Settings, BadgeDollarSign, Brai
 export const NAV_ITEMS = [
   { label: 'Inicio', href: '/dashboard', icon: Home },
   { label: 'Finanzas Personales', href: '/finanzas', icon: BadgeDollarSign },
+  { label: 'Tranquilidad Financiera', href: '/tranquilidad-financiera', icon: BadgeDollarSign },
   { label: 'Movimientos', href: '/expenses', icon: Wallet },
   { label: 'Balance', href: '/balance', icon: TrendingUp },
   { label: 'Nafta', href: '/fuel', icon: Fuel },
