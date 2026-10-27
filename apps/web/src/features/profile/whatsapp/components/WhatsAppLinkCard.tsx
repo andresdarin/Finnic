@@ -2,9 +2,9 @@
 
 import { MessageCircle, RefreshCw, Unlink } from 'lucide-react'
 import LiquidGlass from '@/components/ui/LiquidGlass'
+import CustomSelect from '@/components/ui/CustomSelect'
 import { useWhatsAppLink } from '../hooks/useWhatsAppLink'
 
-const selectCls = 'min-h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30'
 const buttonCls = 'inline-flex min-h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold transition-colors disabled:opacity-50'
 
 /** Links the user's own phone with a one-time code sent from that phone. */
@@ -48,17 +48,18 @@ export function WhatsAppLinkCard() {
         <div className="mt-4 space-y-3 text-sm">
           <p className="text-foreground">Vinculado al número terminado en <strong>{status.phoneSuffix}</strong>.</p>
           <p className="text-[11px] text-muted-foreground">Si no indicás moneda o medio de pago, Finnic te pregunta. Podés fijar valores predeterminados:</p>
-          <label className="grid gap-1 text-xs font-medium text-muted-foreground">Moneda predeterminada
-            <select className={selectCls} disabled={busy} value={status.defaultCurrency ?? ''} onChange={event => void saveDefaults({ defaultCurrency: event.target.value || null })}>
-              <option value="">Preguntarme siempre</option><option value="UYU">Pesos (UYU)</option><option value="USD">Dólares (USD)</option>
-            </select>
-          </label>
-          <label className="grid gap-1 text-xs font-medium text-muted-foreground">Cuenta predeterminada
-            <select className={selectCls} disabled={busy} value={status.defaultAccountId ?? ''} onChange={event => void saveDefaults({ defaultAccountId: event.target.value || null })}>
-              <option value="">Preguntarme siempre</option>
-              {accounts.filter(account => !status.defaultCurrency || account.currency === status.defaultCurrency).map(account => <option key={account.id} value={account.id}>{account.name} · {account.currency}</option>)}
-            </select>
-          </label>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-1 text-xs font-medium text-muted-foreground">
+              <label htmlFor="wa-default-currency">Moneda predeterminada</label>
+              <CustomSelect id="wa-default-currency" size="sm" disabled={busy} value={status.defaultCurrency ?? ''} onChange={value => void saveDefaults({ defaultCurrency: value || null })}
+                options={[{ value: '', label: 'Preguntarme siempre' }, { value: 'UYU', label: 'Pesos (UYU)' }, { value: 'USD', label: 'Dólares (USD)' }]} />
+            </div>
+            <div className="grid gap-1 text-xs font-medium text-muted-foreground">
+              <label htmlFor="wa-default-account">Cuenta predeterminada</label>
+              <CustomSelect id="wa-default-account" size="sm" disabled={busy} value={status.defaultAccountId ?? ''} onChange={value => void saveDefaults({ defaultAccountId: value || null })}
+                options={[{ value: '', label: 'Preguntarme siempre' }, ...accounts.filter(account => !status.defaultCurrency || account.currency === status.defaultCurrency).map(account => ({ value: account.id, label: account.name, hint: account.currency }))]} />
+            </div>
+          </div>
           <button type="button" disabled={busy} onClick={() => void unlink()} className={`${buttonCls} border border-border text-danger hover:bg-surface-soft`}><Unlink className="h-4 w-4" />Desvincular</button>
         </div>
       )}

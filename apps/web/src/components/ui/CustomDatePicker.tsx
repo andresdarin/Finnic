@@ -184,7 +184,7 @@ export default function CustomDatePicker({
         aria-expanded={open}
         aria-label={label ? `${label}: ${value ? formatDisplayDate(value) : placeholder ?? 'sin elegir'}` : undefined}
       >
-        <span className={value ? 'text-foreground' : 'text-muted-foreground'}>
+        <span className={`min-w-0 truncate ${value ? 'text-foreground' : 'text-muted-foreground'}`}>
           {value ? formatDisplayDate(value) : placeholder}
         </span>
         <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />

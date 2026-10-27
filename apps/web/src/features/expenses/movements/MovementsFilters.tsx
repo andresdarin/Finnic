@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Search, SlidersHorizontal, X, RotateCcw, Calendar, DollarSign, Wallet, Layers } from 'lucide-react'
 import MovementsMonthPicker from './MovementsMonthPicker'
+import CustomDatePicker from '@/components/ui/CustomDatePicker'
 import type { MovementFilters } from './types'
 import { formatMonthLabel } from './utils'
 
@@ -254,15 +255,16 @@ function FilterSheet({ filters, onChange, onClear, onClose }: Props & { onClose:
 
           {/* Fecha Específica */}
           <div className="flex flex-col gap-1.5">
-            <label className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+              <Calendar className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
               Día exacto (opcional)
-            </label>
-            <input
-              type="date"
+            </span>
+            <CustomDatePicker
               value={filters.period}
-              onChange={(e) => onChange('period', e.target.value)}
-              className="h-11 w-full rounded-xl border border-border/80 bg-surface-soft/60 px-3.5 text-xs sm:text-sm text-foreground outline-none transition-all focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/20"
+              onChange={(value) => onChange('period', value)}
+              label="Día exacto"
+              placeholder="Cualquier día"
+              className="neu-inset w-full rounded-2xl border border-border/50 bg-surface-soft/60 px-3.5 text-base sm:text-sm"
             />
           </div>
         </div>

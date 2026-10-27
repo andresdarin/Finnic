@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import type { TranquilityDashboard } from '../types'
-import { Button, Card, Field, SectionTitle, SelectField } from './Primitives'
+import { Button, Card, Field, SectionTitle, SelectField, SegmentedField } from './Primitives'
 import { decimal, money } from '../utils'
 
 type Pool = 'EMERGENCY' | 'INVESTMENT'
@@ -52,10 +52,37 @@ export function PoolsPanel({ dashboard, onTransfer, onValuation }: {
     <div className="grid gap-4 md:grid-cols-2"><PoolCard title="Fondo de emergencia" value={dashboard.pools.emergency.balance} currency={dashboard.pools.emergency.currency} detail={dashboard.goalMetrics ? `Meta: ${money(dashboard.goalMetrics.emergency.target, dashboard.pools.emergency.currency)} · ${dashboard.goalMetrics.emergency.progressPct}%` : 'Meta no disponible'} /><PoolCard title="Inversión" value={dashboard.pools.investment.balance} currency={dashboard.pools.investment.currency} detail={`Mes: ${money(dashboard.pools.investment.monthContributions, dashboard.pools.investment.currency)} / ${money(dashboard.config?.monthlyContribution, dashboard.pools.investment.currency)} · Histórico: ${money(dashboard.pools.investment.lifetimeContributions, dashboard.pools.investment.currency)} · Ganancias: ${money(dashboard.pools.investment.gains, dashboard.pools.investment.currency)}`} /></div>
     <Card><SectionTitle eyebrow="GUARDAR" title="Mover dinero con trazabilidad" detail="Aporte y retiro son transferencias reales. Sin FX: elegí cuentas en la moneda del fondo." />
       {message && <p className="mb-3 rounded-xl border border-warning/40 bg-accent-soft px-3 py-2 text-sm" role="alert">{message}</p>}
-      <div className="grid gap-3 sm:grid-cols-5"><SelectField label="Acción" value={action} onChange={event => { setAction(event.target.value as typeof action); setSource(''); setTargetId('') }}><option value="APORTE">Aporte</option><option value="RETIRO">Retiro</option></SelectField><SelectField label="Fondo" value={pool} onChange={event => { setPool(event.target.value as Pool); setSource(''); setTargetId('') }}><option value="EMERGENCY">Emergencia</option><option value="INVESTMENT">Inversión</option></SelectField><SelectField label={action === 'APORTE' ? 'Cuenta operativa' : 'Cuenta del fondo'} value={source} onChange={event => setSource(event.target.value)}><option value="">Seleccioná cuenta</option>{candidates.map(account => <option key={account.id} value={account.id}>{account.name} · {money(account.balance, account.currency)}</option>)}</SelectField><SelectField label={action === 'APORTE' ? 'Destino' : 'Destino operativo'} value={action === 'APORTE' ? poolAccount?.id ?? '' : targetId} onChange={event => setTargetId(event.target.value)} disabled={action === 'APORTE'}><option value="">Seleccioná destino</option>{targetCandidates.map(account => <option key={account.id} value={account.id}>{account.name} · {money(account.balance, account.currency)}</option>)}</SelectField><Field label="Importe" value={amount} onChange={event => setAmount(event.target.value)} inputMode="decimal" /></div>
-      <div className="mt-3 flex flex-wrap items-end gap-3"><Field label="Fecha" type="date" value={date} onChange={event => setDate(event.target.value)} /><Button onClick={() => void transfer()}>{action === 'APORTE' ? 'Registrar aporte' : 'Registrar retiro'}</Button></div>
+      <div className="flex flex-col gap-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <SegmentedField label="Acción" value={action} onChange={value => { setAction(value); setSource(''); setTargetId('') }} options={[{ value: 'APORTE', label: 'Aporte' }, { value: 'RETIRO', label: 'Retiro' }]} />
+          <SegmentedField label="Fondo" value={pool} onChange={value => { setPool(value); setSource(''); setTargetId('') }} options={[{ value: 'EMERGENCY', label: 'Emergencia' }, { value: 'INVESTMENT', label: 'Inversión' }]} />
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <SelectField label={action === 'APORTE' ? 'Desde la cuenta' : 'Desde el fondo'} value={source} onChange={event => setSource(event.target.value)}>
+            <option value="">Seleccioná cuenta</option>
+            {candidates.map(account => <option key={account.id} value={account.id} data-hint={`Saldo ${money(account.balance, account.currency)}`}>{account.name}</option>)}
+          </SelectField>
+          {action === 'APORTE'
+            ? <div className="grid gap-1.5 text-xs font-bold text-foreground"><span>Hacia</span><p className="flex min-h-11 items-center rounded-2xl border border-dashed border-border/60 px-3.5 text-sm font-medium text-muted-foreground">{poolAccount ? poolAccount.name : 'Sin cuenta del fondo'}</p></div>
+            : <SelectField label="Hacia la cuenta" value={targetId} onChange={event => setTargetId(event.target.value)}>
+                <option value="">Seleccioná destino</option>
+                {targetCandidates.map(account => <option key={account.id} value={account.id} data-hint={`Saldo ${money(account.balance, account.currency)}`}>{account.name}</option>)}
+              </SelectField>}
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Importe" value={amount} onChange={event => setAmount(event.target.value)} inputMode="decimal" placeholder="0,00" />
+          <Field label="Fecha" type="date" value={date} onChange={event => setDate(event.target.value)} />
+        </div>
+        <Button className="w-full sm:w-auto sm:self-start" onClick={() => void transfer()}>{action === 'APORTE' ? 'Registrar aporte' : 'Registrar retiro'}</Button>
+      </div>
     </Card>
-    <Card><SectionTitle title="Valuar una posición" detail="Una valuación corrige el saldo del fondo; no crea ingresos ni aportes." /><div className="grid gap-3 sm:grid-cols-3"><SelectField label="Cuenta" value={pool} onChange={event => setPool(event.target.value as Pool)}><option value="EMERGENCY">Emergencia</option><option value="INVESTMENT">Inversión</option></SelectField><Field label="Nuevo saldo" value={balance} onChange={event => setBalance(event.target.value)} inputMode="decimal" /><Button onClick={() => void valuation()}>Guardar valuación</Button></div></Card>
+    <Card><SectionTitle title="Valuar una posición" detail="Una valuación corrige el saldo del fondo; no crea ingresos ni aportes." /><div className="flex flex-col gap-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <SegmentedField label="Fondo" value={pool} onChange={setPool} options={[{ value: 'EMERGENCY', label: 'Emergencia' }, { value: 'INVESTMENT', label: 'Inversión' }]} />
+          <Field label="Nuevo saldo" value={balance} onChange={event => setBalance(event.target.value)} inputMode="decimal" placeholder="0,00" />
+        </div>
+        <Button className="w-full sm:w-auto sm:self-start" onClick={() => void valuation()}>Guardar valuación</Button>
+      </div></Card>
   </div>
 }
 

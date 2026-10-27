@@ -57,47 +57,49 @@ export function MovementList({ dashboard, state, onDelete, onEdit }: Props) {
         title="Movimientos"
         detail="Filtrá por período, tipo, categoría o texto. Las cuentas y monedas siempre se muestran por separado."
       />
-      <div className="grid gap-3 sm:grid-cols-5">
-        <Field
-          label="Desde"
-          type="date"
-          value={state.filters.dateFrom}
-          onChange={(event) => updateFilter("dateFrom", event.target.value)}
-        />
-        <Field
-          label="Hasta"
-          type="date"
-          value={state.filters.dateTo}
-          onChange={(event) => updateFilter("dateTo", event.target.value)}
-        />
-        <SelectField
-          label="Tipo"
-          value={state.filters.type}
-          onChange={(event) => updateFilter("type", event.target.value)}
-        >
-          <option value="">Todos</option>
-          <option value="EXPENSE">Gastos</option>
-          <option value="INCOME">Ingresos</option>
-          <option value="TRANSFER">Transferencias</option>
-        </SelectField>
-        <SelectField
-          label="Categoría"
-          value={state.filters.categoryId}
-          onChange={(event) => updateFilter("categoryId", event.target.value)}
-        >
-          <option value="">Todas</option>
-          {dashboard.categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </SelectField>
+      <div className="flex flex-col gap-3">
         <Field
           label="Buscar"
           value={state.filters.query}
           onChange={(event) => updateFilter("query", event.target.value)}
           placeholder="Concepto o nota"
         />
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Field
+            label="Desde"
+            type="date"
+            value={state.filters.dateFrom}
+            onChange={(event) => updateFilter("dateFrom", event.target.value)}
+          />
+          <Field
+            label="Hasta"
+            type="date"
+            value={state.filters.dateTo}
+            onChange={(event) => updateFilter("dateTo", event.target.value)}
+          />
+          <SelectField
+            label="Tipo"
+            value={state.filters.type}
+            onChange={(event) => updateFilter("type", event.target.value)}
+          >
+            <option value="">Todos</option>
+            <option value="EXPENSE">Gastos</option>
+            <option value="INCOME">Ingresos</option>
+            <option value="TRANSFER">Transferencias</option>
+          </SelectField>
+          <SelectField
+            label="Categoría"
+            value={state.filters.categoryId}
+            onChange={(event) => updateFilter("categoryId", event.target.value)}
+          >
+            <option value="">Todas</option>
+            {dashboard.categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </SelectField>
+        </div>
       </div>
       {error && (
         <p className="mt-3 text-sm text-danger" role="alert">

@@ -3,7 +3,7 @@
 import type { TranquilityDashboard } from "../types";
 import type { ReturnTypeUseMovementForm } from "../hooks/movementTypes";
 import { money } from "../utils";
-import { Button, Field, SelectField } from "./Primitives";
+import { Button, Field, SegmentedField, SelectField } from "./Primitives";
 
 type Props = {
   dashboard: TranquilityDashboard;
@@ -19,37 +19,29 @@ export function MovementFields({ dashboard, state, saving, onSubmit }: Props) {
   const accounts = state.type === "TRANSFER" ? dashboard.accounts : operating;
   return (
     <form
-      className="space-y-3"
+      className="flex flex-col gap-4"
       onSubmit={(event) => {
         event.preventDefault();
         void onSubmit();
       }}
     >
-      <div className="grid gap-3 sm:grid-cols-4">
-        <SelectField
-          label="Tipo"
-          value={state.type}
-          onChange={(event) =>
-            state.setType(event.target.value as typeof state.type)
-          }
-        >
-          <option value="EXPENSE">Gasto</option>
-          <option value="INCOME">Ingreso</option>
-          <option value="TRANSFER">Transferencia</option>
-        </SelectField>
+      <SegmentedField
+        label="Tipo"
+        value={state.type}
+        onChange={state.setType}
+        options={[
+          { value: "EXPENSE", label: "Gasto" },
+          { value: "INCOME", label: "Ingreso" },
+          { value: "TRANSFER", label: "Transferencia" },
+        ]}
+      />
+      <div className="grid grid-cols-2 gap-3">
         <Field
           label="Importe"
           value={state.amount}
           onChange={(event) => state.setAmount(event.target.value)}
           inputMode="decimal"
           placeholder="0,00"
-          required
-        />
-        <Field
-          label="Concepto"
-          value={state.concept}
-          onChange={(event) => state.setConcept(event.target.value)}
-          placeholder="Ej. supermercado"
           required
         />
         <Field
@@ -60,22 +52,24 @@ export function MovementFields({ dashboard, state, saving, onSubmit }: Props) {
           required
         />
       </div>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <Field
+        label="Concepto"
+        value={state.concept}
+        onChange={(event) => state.setConcept(event.target.value)}
+        placeholder="Ej. supermercado"
+        required
+      />
+      <div className="grid gap-3 sm:grid-cols-2">
         <SelectField
-          label={
-            state.type === "TRANSFER"
-              ? "Cuenta origen"
-              : "Cuenta de cargo / ingreso"
-          }
+          label={state.type === "TRANSFER" ? "Cuenta origen" : "Cuenta"}
           value={state.accountId}
           onChange={(event) => state.setAccountId(event.target.value)}
           required
         >
           <option value="">Seleccioná una cuenta</option>
           {accounts.map((account) => (
-            <option key={account.id} value={account.id}>
-              {account.name} · {account.currency} · saldo{" "}
-              {money(account.balance, account.currency)}
+            <option key={account.id} value={account.id} data-hint={`Saldo ${money(account.balance, account.currency)}`}>
+              {account.name} · {account.currency}
             </option>
           ))}
         </SelectField>
@@ -105,21 +99,20 @@ export function MovementFields({ dashboard, state, saving, onSubmit }: Props) {
             {dashboard.accounts
               .filter((account) => account.id !== state.accountId)
               .map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name} · {account.currency} · saldo{" "}
-                  {money(account.balance, account.currency)}
+                <option key={account.id} value={account.id} data-hint={`Saldo ${money(account.balance, account.currency)}`}>
+                  {account.name} · {account.currency}
                 </option>
               ))}
           </SelectField>
         )}
-        <Field
-          label="Nota (opcional)"
-          value={state.note}
-          onChange={(event) => state.setNote(event.target.value)}
-          maxLength={500}
-          placeholder="Un detalle para recordar"
-        />
       </div>
+      <Field
+        label="Nota (opcional)"
+        value={state.note}
+        onChange={(event) => state.setNote(event.target.value)}
+        maxLength={500}
+        placeholder="Un detalle para recordar"
+      />
       {state.needsFx && (
         <div className="grid gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3 sm:grid-cols-3">
           <div className="text-sm">
@@ -162,7 +155,7 @@ export function MovementFields({ dashboard, state, saving, onSubmit }: Props) {
         </p>
       )}
       <div className="flex gap-2">
-        <Button type="submit" disabled={saving}>
+        <Button type="submit" disabled={saving} className="flex-1 sm:flex-none">
           {state.editingId ? "Guardar cambios" : "Registrar movimiento"}
         </Button>
         {state.editingId && (

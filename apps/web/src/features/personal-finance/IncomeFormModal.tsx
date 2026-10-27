@@ -56,7 +56,7 @@ export default function IncomeFormModal({ isOpen, onClose, onSuccess }: IncomeFo
       <div className="neu-raised relative z-10 my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-y-auto rounded-3xl border border-border/50 bg-surface p-4 animate-in fade-in zoom-in-95 duration-200 sm:max-h-[calc(100dvh-2rem)] sm:p-6">
         <div className="flex items-center justify-between pb-4 border-b border-border/60">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <ArrowUp className="h-5 w-5" />
             </div>
             <div>
@@ -91,7 +91,7 @@ export default function IncomeFormModal({ isOpen, onClose, onSuccess }: IncomeFo
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-[minmax(0,1fr)_7rem] sm:grid-cols-3">
+          <div className="grid grid-cols-[minmax(0,1fr)_8.5rem] gap-3 sm:grid-cols-3">
             <div className="min-w-0 sm:col-span-2">
               <label className="mb-1 block text-xs font-semibold text-foreground">Monto</label>
               <input
@@ -145,8 +145,9 @@ export default function IncomeFormModal({ isOpen, onClose, onSuccess }: IncomeFo
                           ? 'bg-primary text-primary-foreground shadow-sm'
                           : 'text-muted-foreground hover:bg-surface-soft hover:text-foreground'
                       }`}
+                      aria-label={option.label}
                     >
-                      {option.label}
+                      {option.value}
                     </button>
                   )
                 })}
@@ -154,7 +155,7 @@ export default function IncomeFormModal({ isOpen, onClose, onSuccess }: IncomeFo
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2">
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs font-semibold text-foreground">Categoría</label>
               <CustomSelect
@@ -175,7 +176,7 @@ export default function IncomeFormModal({ isOpen, onClose, onSuccess }: IncomeFo
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-xs transition hover:bg-emerald-700 disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#083A4F] px-4 py-2.5 text-sm font-bold text-white shadow-xs transition hover:bg-[#062c3c] dark:bg-[#C0D5D6] dark:text-[#083A4F] disabled:opacity-50"
             >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {submitting ? 'Guardando...' : 'Confirmar Ingreso'}

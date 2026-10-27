@@ -36,6 +36,11 @@ jobs:
         run: |
           echo "export const APP_VERSION = '${{ steps.version.outputs.version }}'" > apps/web/src/lib/version.ts
 
+      # Proyecto fijo: sin esto la CLI intenta crear uno con el nombre del repo ("Finnic"),
+      # que Vercel rechaza por tener mayúsculas
       - name: Deploy to Vercel
+        env:
+          VERCEL_ORG_ID: team_3WjDLdS8wdelZE2gwsJDRRd3
+          VERCEL_PROJECT_ID: prj_M3uxdmaY82rpxPrRpK30EBDe4Jdm
         run: |
           npx vercel --token=${{ secrets.VERCEL_TOKEN }} --prod --yes
