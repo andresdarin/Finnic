@@ -21,7 +21,7 @@ export function LegalDocument({ doc, current }: { doc: LegalDoc; current: LegalK
 
         <header className="mt-14 max-w-3xl sm:mt-20">
           {doc.draft && <p className="mb-6 inline-flex rounded-full bg-accent-soft px-3 py-1 text-xs font-medium text-accent-hover">Borrador para revisión</p>}
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent">Legal</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-ink">Legal</p>
           <h1 className="type-display mt-4 text-balance text-[2.5rem] leading-[1.05] sm:text-[3.5rem]">{doc.title}</h1>
           <p className="mt-6 max-w-2xl text-base leading-7 text-navy/70 sm:text-lg sm:leading-8">{doc.introduction}</p>
           <div className="mt-8 flex flex-wrap gap-3 text-sm">
@@ -40,7 +40,7 @@ export function LegalDocument({ doc, current }: { doc: LegalDoc; current: LegalK
           <article className="rounded-[2rem] border border-navy/10 bg-white/75 px-6 py-4 shadow-[0_30px_80px_-50px_rgba(8,58,79,0.4)] backdrop-blur-sm sm:px-12 sm:py-6">
             {doc.sections.map((section, i) => (
               <section key={section.id} id={section.id} className="scroll-mt-8 border-b border-navy/[0.07] py-10 last:border-b-0">
-                <p className="font-mono text-xs text-accent tabular-nums">{sectionNumber(i)}</p>
+                <p className="font-mono text-xs text-accent-ink tabular-nums">{sectionNumber(i)}</p>
                 <h2 className="type-display mt-2 text-2xl leading-snug sm:text-[1.75rem]">{section.title}</h2>
                 <div className="mt-5 space-y-4 text-[15px] leading-7 text-navy/75 sm:text-base sm:leading-8">
                   {section.paragraphs.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
@@ -50,7 +50,7 @@ export function LegalDocument({ doc, current }: { doc: LegalDoc; current: LegalK
           </article>
         </div>
 
-        <footer className="mt-14 flex flex-col items-start justify-between gap-3 border-t border-navy/10 py-8 text-sm text-navy/55 sm:flex-row sm:items-center">
+        <footer className="mt-14 flex flex-col items-start justify-between gap-3 border-t border-navy/10 py-8 text-sm text-navy/70 sm:flex-row sm:items-center">
           <p>Responsable: {doc.responsible} · © {new Date().getFullYear()} Finnic</p>
           <a href={UY_RIGHTS_URL} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center underline-offset-4 hover:text-navy hover:underline">
             Tus derechos sobre datos personales en Uruguay ↗

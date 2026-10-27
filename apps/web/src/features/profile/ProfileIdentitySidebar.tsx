@@ -1,8 +1,8 @@
 'use client'
 
-import { MapPin, Clock, Linkedin, Instagram, Link as LinkIcon, Smile, Calendar } from 'lucide-react'
+import { Calendar, LogOut, Receipt, Clock, Trophy } from 'lucide-react'
+import { useProfile } from '@/features/auth/ProfileProvider'
 import { ProfileAvatarFeature } from './ProfileAvatarFeature'
-import { Trophy, Receipt, Clock as ClockIcon } from 'lucide-react'
 import { formatMemberSince } from './utils'
 
 interface ProfileIdentitySidebarProps {
@@ -16,8 +16,15 @@ interface ProfileIdentitySidebarProps {
   unlockedAchievementsCount: number
 }
 
+const BADGES = [
+  { Icon: Trophy, title: 'Primer movimiento', hint: 'Registraste tu primer gasto.' },
+  { Icon: Receipt, title: 'Primer ticket', hint: 'Subiste tu primer ticket.' },
+  { Icon: Clock, title: 'Gastos fijos al día', hint: 'Pagaste todos tus gastos recurrentes.' },
+]
+
 /**
- * Identity sidebar with Finnic's dark premium glassmorphic system.
+ * Identidad del perfil: solo datos reales de la cuenta (nombre, usuario, antigüedad),
+ * logros y cierre de sesión, que así queda disponible también en mobile.
  */
 export function ProfileIdentitySidebar({
   displayName,
@@ -29,13 +36,12 @@ export function ProfileIdentitySidebar({
   onAvatarUpdate,
   unlockedAchievementsCount,
 }: ProfileIdentitySidebarProps) {
-  // Extract username from email
-  const username = email ? email.split('@')[0] : 'usuario'
+  const { logout } = useProfile()
+  const username = email ? email.split('@')[0] : null
 
   return (
     <div className="flex flex-col gap-6 text-foreground">
-      {/* Avatar Section with Status Overlay */}
-      <div className="relative self-center lg:self-start">
+      <div className="self-center lg:self-start">
         <ProfileAvatarFeature
           avatarUrl={avatarUrl}
           displayName={displayName}
@@ -43,109 +49,59 @@ export function ProfileIdentitySidebar({
           color={color}
           onAvatarUpdate={onAvatarUpdate}
         />
-        
-        {/* Status Bubble (GitHub style emoji badge) */}
-        <div className="absolute bottom-4 right-4 bg-surface-soft/95 border border-border/80 rounded-full p-2 shadow-lg backdrop-blur-md flex items-center justify-center h-8 w-8 hover:scale-110 transition-transform duration-200 cursor-pointer" title="Trabajando duro">
-          <Smile className="h-4 w-4 text-primary" />
-        </div>
       </div>
 
-      {/* Identity Titles */}
       <div className="flex flex-col text-center lg:text-left">
         <h2 className="text-2xl font-bold leading-tight tracking-tight text-foreground">
-          {displayName ?? 'Andrés Darín'}
+          {displayName ?? 'Tu perfil'}
         </h2>
-        <p className="text-base text-muted-foreground/70 mt-0.5">
-          {username}
-        </p>
+        {username && <p className="mt-0.5 text-base text-muted-foreground">{username}</p>}
       </div>
 
-      {/* Bio / Description */}
-      <p className="text-sm text-foreground/90 leading-relaxed text-center lg:text-left font-medium">
-        Passionate about technology, system analyst, guitarrist, gamer, coder
-      </p>
-
-      {/* Edit Profile Button */}
       <button
+        type="button"
         onClick={onEdit}
-        className="w-full py-2 px-4 rounded-lg bg-surface-soft/20 hover:bg-surface-soft/40 border border-border/50 text-sm font-semibold text-foreground transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+        className="min-h-11 w-full rounded-lg border border-border/50 bg-surface-soft/20 px-4 text-sm font-semibold text-foreground transition-[background-color,scale] duration-200 hover:bg-surface-soft/40 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
       >
-        Edit profile
+        Editar perfil
       </button>
 
-      {/* Additional Metadata / Links */}
-      <div className="flex flex-col gap-2.5 text-xs text-muted-foreground border-b border-border/20 pb-5">
-        <div className="flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-muted-foreground/60 shrink-0" />
-          <span>Montevideo</span>
-        </div>
-        {createdAt && (
-          <div className="flex items-center gap-2" title="Fecha de registro">
-            <Calendar className="h-4 w-4 text-muted-foreground/60 shrink-0" />
-            <span>Miembro desde {formatMemberSince(createdAt)}</span>
-          </div>
-        )}
-        <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-muted-foreground/60 shrink-0" />
-          <span>11:46 <span className="text-muted-foreground/40">(UTC -03:00)</span></span>
-        </div>
-        <a href="https://www.linkedin.com/in/juanandressilvadarin/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-primary transition-colors">
-          <Linkedin className="h-4 w-4 text-muted-foreground/60 shrink-0" />
-          <span className="truncate">juanandressilvadarin</span>
-        </a>
-        <a href="https://instagram.com/andresdarin" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-primary transition-colors">
-          <Instagram className="h-4 w-4 text-muted-foreground/60 shrink-0" />
-          <span className="truncate">andresdarin</span>
-        </a>
-        <a href="https://jasd-dev.com/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-primary transition-colors">
-          <LinkIcon className="h-4 w-4 text-muted-foreground/60 shrink-0" />
-          <span className="truncate">jasd-dev.com</span>
-        </a>
-      </div>
+      {createdAt && (
+        <p className="flex items-center justify-center gap-2 border-b border-border/20 pb-5 text-xs text-muted-foreground lg:justify-start">
+          <Calendar className="h-4 w-4 shrink-0" aria-hidden="true" />
+          Miembro desde {formatMemberSince(createdAt)}
+        </p>
+      )}
 
-      {/* Achievements Section (Horizontal list) */}
-      <div className="border-b border-border/20 pb-5">
-        <h3 className="text-sm font-bold text-foreground mb-3">Achievements</h3>
-        <div className="flex flex-wrap gap-2.5 justify-center lg:justify-start">
-          {/* Badge 1 */}
-          <div className={`h-10 w-10 rounded-full border flex items-center justify-center hover:scale-110 transition-transform duration-200 cursor-pointer shadow-md ${
-            unlockedAchievementsCount >= 1
-              ? 'border-primary/30 bg-primary/[0.08] text-primary shadow-primary/5'
-              : 'border-border/30 bg-surface-soft/10 text-muted-foreground/60 opacity-40'
-          }`} title="Primer movimiento: Registraste tu primer gasto.">
-            <Trophy className="h-5 w-5" />
-          </div>
-          {/* Badge 2 */}
-          <div className={`h-10 w-10 rounded-full border flex items-center justify-center hover:scale-110 transition-transform duration-200 cursor-pointer shadow-md ${
-            unlockedAchievementsCount >= 2
-              ? 'border-primary/30 bg-primary/[0.08] text-primary shadow-primary/5'
-              : 'border-border/30 bg-surface-soft/10 text-muted-foreground/60 opacity-40'
-          }`} title="Primer ticket: Subiste tu primer ticket.">
-            <Receipt className="h-5 w-5" />
-          </div>
-          {/* Badge 3 */}
-          <div className={`h-10 w-10 rounded-full border flex items-center justify-center hover:scale-110 transition-transform duration-200 cursor-pointer shadow-md ${
-            unlockedAchievementsCount >= 3
-              ? 'border-primary/30 bg-primary/[0.08] text-primary shadow-primary/5'
-              : 'border-border/30 bg-surface-soft/10 text-muted-foreground/60 opacity-40'
-          }`} title="Gastos fijos al día: Pagaste todos tus gastos recurrentes.">
-            <ClockIcon className="h-5 w-5" />
-          </div>
-        </div>
-      </div>
+      <section aria-labelledby="profile-badges" className="border-b border-border/20 pb-5">
+        <h3 id="profile-badges" className="mb-3 text-sm font-bold text-foreground">Logros</h3>
+        <ul className="flex flex-wrap justify-center gap-2.5 lg:justify-start">
+          {BADGES.map(({ Icon, title, hint }, index) => {
+            const unlocked = unlockedAchievementsCount > index
+            return (
+              <li
+                key={title}
+                title={`${title}: ${hint}`}
+                className={`flex h-10 w-10 items-center justify-center rounded-full border ${
+                  unlocked ? 'border-primary/30 bg-primary/[0.08] text-primary' : 'border-border/40 text-muted-foreground'
+                }`}
+              >
+                <Icon className="h-5 w-5" aria-hidden="true" />
+                <span className="sr-only">{`${title}: ${unlocked ? 'desbloqueado' : 'pendiente'}`}</span>
+              </li>
+            )
+          })}
+        </ul>
+      </section>
 
-      {/* Organizations Section */}
-      <div>
-        <h3 className="text-sm font-bold text-foreground mb-3">Organizations</h3>
-        <div className="flex justify-center lg:justify-start">
-          <div className="h-9 w-9 rounded-md border border-border/50 bg-surface-soft/10 flex items-center justify-center hover:border-primary/50 transition-colors duration-200 cursor-pointer" title="Finnic Contribuidores">
-            {/* Minimal cow SVG representation */}
-            <svg viewBox="0 0 24 24" className="h-5 w-5 text-primary" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15.5c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5.67-1.5 1.5-1.5 1.5.67 1.5 1.5zm-1.5-4c-.83 0-1.5-.67-1.5-1.5V9c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v3c0 .83-.67 1.5-1.5 1.5z" />
-            </svg>
-          </div>
-        </div>
-      </div>
+      <button
+        type="button"
+        onClick={() => void logout()}
+        className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-border/50 px-4 text-sm font-semibold text-muted-foreground transition-colors hover:border-danger/40 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+      >
+        <LogOut className="h-4 w-4" aria-hidden="true" />
+        Cerrar sesión
+      </button>
     </div>
   )
 }

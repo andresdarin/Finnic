@@ -31,7 +31,7 @@ export default function DashboardTopBar({ profile }: DashboardTopBarProps) {
     : userInitial
 
   return (
-    <div className="flex items-center justify-between pb-3 pt-1 select-none">
+    <div className="flex items-center justify-between pb-3 select-none">
       {/* Brand logo & name horizontal */}
       <FinnicBrand variant="cream" size="md" />
 
@@ -41,27 +41,27 @@ export default function DashboardTopBar({ profile }: DashboardTopBarProps) {
         <Link
           href="/chat"
           aria-label="Chat con Finnic"
-          className="group flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.06] border border-white/8 backdrop-blur-md transition-all hover:bg-white/[0.12] hover:border-white/15 active:scale-95 focus:outline-none"
+          className="group flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.06] border border-white/8 backdrop-blur-md transition-all hover:bg-white/[0.12] hover:border-white/15 active:scale-95 focus:outline-none"
           title="Copiloto Finnic"
         >
-          <FinnicOwlIcon color="aqua" className="h-4.5 w-4.5 group-hover:scale-110 transition-transform" />
+          <FinnicOwlIcon color="aqua" className="h-5 w-5 group-hover:scale-110 transition-transform" />
         </Link>
 
         {/* Notificaciones */}
         <button
           type="button"
           aria-label="Notificaciones"
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.06] text-[#C0D5D6] border border-white/8 backdrop-blur-md transition-all hover:bg-white/[0.12] hover:text-[#F5F2EE] active:scale-95 focus:outline-none"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.06] text-[#C0D5D6] border border-white/8 backdrop-blur-md transition-all hover:bg-white/[0.12] hover:text-[#F5F2EE] active:scale-95 focus:outline-none"
           title="Notificaciones"
         >
-          <Bell className="h-3.5 w-3.5 stroke-[2]" />
+          <Bell className="h-4 w-4 stroke-[2]" />
         </button>
 
         {/* Profile Avatar */}
         {profile && (
           <div className="relative shrink-0 select-none">
             <div
-              className="flex h-8 w-8 items-center justify-center rounded-full font-bold text-white text-xs shadow-xs overflow-hidden ring-1 ring-white/20"
+              className="flex h-10 w-10 items-center justify-center rounded-full font-bold text-white text-xs shadow-xs overflow-hidden ring-1 ring-white/20"
               style={{
                 background: `linear-gradient(135deg, ${profile.color ?? '#407E8C'}dd, #083A4F)`,
               }}
@@ -74,7 +74,7 @@ export default function DashboardTopBar({ profile }: DashboardTopBarProps) {
                   className="h-full w-full rounded-full object-cover block shrink-0"
                 />
               ) : (
-                <span className="text-[10px] font-bold tracking-wide text-[#F5F2EE]">
+                <span className="text-[11px] font-bold tracking-wide text-[#F5F2EE]">
                   {initials}
                 </span>
               )}

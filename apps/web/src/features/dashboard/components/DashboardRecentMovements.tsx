@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ShoppingBag, ArrowDownLeft, ArrowLeftRight, Plus } from 'lucide-react'
 import { useDashboardData } from '../DashboardData'
 import DashboardDataState from './DashboardDataState'
+import { parseCalendarDate } from '@/lib/dates'
 
 /**
  * Lista de movimientos recientes en el Dashboard.
@@ -65,7 +66,7 @@ export default function DashboardRecentMovements() {
                   </p>
                   <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
                     {transfer ? 'Transferencia' : income ? 'Ingreso' : 'Egreso'} ·{' '}
-                    {new Date(row.date).toLocaleDateString('es-UY', {
+                    {parseCalendarDate(row.date).toLocaleDateString('es-UY', {
                       timeZone: 'UTC',
                       day: 'numeric',
                       month: 'short',

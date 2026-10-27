@@ -116,7 +116,7 @@ export default function ProductMonthlyRanking({ items, currency = 'UYU' }: Produ
   if (ranking.length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 py-6 text-center">
-        <PackageOpen className="h-6 w-6 text-muted-foreground/40" />
+        <PackageOpen className="h-6 w-6 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">No hay productos este mes</p>
       </div>
     )

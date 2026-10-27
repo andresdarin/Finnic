@@ -27,16 +27,16 @@ export function ProfileIdentityHeadline({
       {/* Name — clear and intentional */}
       <h1 className="type-display text-3xl leading-tight text-foreground sm:text-4xl">
         {displayName ?? (
-          <span className="text-muted-foreground/50 italic font-bold">Sin nombre visible</span>
+          <span className="text-muted-foreground italic font-bold">Sin nombre visible</span>
         )}
       </h1>
 
       {/* Metadata row */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-        <span className="text-sm text-muted-foreground/80">{email}</span>
+        <span className="text-sm text-muted-foreground">{email}</span>
 
         {createdAt && (
-          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/60">
+          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
             <Calendar className="h-3 w-3" aria-hidden="true" />
             Miembro desde {formatMemberSince(createdAt)}
           </span>

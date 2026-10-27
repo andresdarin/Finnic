@@ -69,7 +69,19 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     setIsAdmin(claims.isAdmin === true || claims.admin === true || jwtRole?.toUpperCase() === 'ADMIN')
 
     try {
-      await fetchProfile(session.access_token)
+      try {
+        await fetchProfile(session.access_token)
+      } catch (err) {
+        if (!(err instanceof ApiError && err.status === 404)) throw err
+        // Cuenta sin perfil (ensure del login aún en vuelo, OAuth o un ensure fallido): se crea y se reintenta
+        const meta = session.user.user_metadata ?? {}
+        const displayName = meta.display_name ?? meta.full_name ?? meta.name
+        await apiFetch('/api/profiles/ensure', {
+          method: 'POST',
+          body: JSON.stringify(displayName ? { displayName } : {}),
+        }, session.access_token)
+        await fetchProfile(session.access_token)
+      }
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         await supabase.auth.signOut()

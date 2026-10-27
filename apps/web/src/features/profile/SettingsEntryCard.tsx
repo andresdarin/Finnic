@@ -34,11 +34,11 @@ export function SettingsEntryCard({ email, onLogout }: SettingsEntryCardProps) {
           </div>
           <div>
             <h3 className="text-sm font-bold text-foreground">Configuración</h3>
-            <p className="text-[11px] text-muted-foreground/50">Preferencias y cuenta</p>
+            <p className="text-[11px] text-muted-foreground">Preferencias y cuenta</p>
           </div>
         </div>
         <ChevronDown
-          className={`h-4 w-4 text-muted-foreground/40 transition-transform duration-200 ${
+          className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
             expanded ? 'rotate-180' : ''
           }`}
         />
@@ -49,7 +49,7 @@ export function SettingsEntryCard({ email, onLogout }: SettingsEntryCardProps) {
         <div className="mt-4 pt-4 border-t border-border/30 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
           {/* Preferences */}
           <div className="space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40">Preferencias</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Preferencias</p>
             <div className="grid grid-cols-2 gap-2">
               <SettingsRow icon={DollarSign} label="Moneda" value="UYU" />
               <SettingsRow icon={Globe} label="Locale" value="es-UY" />
@@ -60,7 +60,7 @@ export function SettingsEntryCard({ email, onLogout }: SettingsEntryCardProps) {
 
           {/* Account */}
           <div className="space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40">Cuenta</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cuenta</p>
             <div className="grid grid-cols-2 gap-2">
               <SettingsRow icon={Mail} label="Email" value={email ? email.split('@')[0] + '…' : '—'} />
               <SettingsRow icon={ShieldCheck} label="Sesión" value="Activa" valueColor="text-success" />
@@ -96,9 +96,9 @@ function SettingsRow({
 }) {
   return (
     <div className="flex items-center gap-2 rounded-lg border border-border/30 bg-surface-soft/20 px-3 py-2">
-      <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+      <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
       <div className="min-w-0">
-        <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/40">{label}</p>
+        <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
         <p className={`text-xs font-semibold truncate ${valueColor}`}>{value}</p>
       </div>
     </div>

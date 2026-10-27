@@ -24,7 +24,8 @@ export default function ProfilePageClient() {
   const [editOpen, setEditOpen] = useState(false)
 
   const { unlocked, total } = getAchievementCounts()
-  const isComplete = !!profile?.displayName
+  // Coincide con la meta "Completar tu perfil: agregá nombre y foto"
+  const isComplete = Boolean(profile?.displayName && profile?.avatarUrl)
 
   return (
     <div className="space-y-6">
@@ -89,7 +90,7 @@ export default function ProfilePageClient() {
         onSaved={refreshProfile}
       />
 
-      <p className="text-center text-xs text-muted-foreground/40 pt-4">
+      <p className="text-center text-xs text-muted-foreground pt-4">
         v{APP_VERSION}
       </p>
     </div>

@@ -9,6 +9,7 @@ import { apiFetch } from '@/lib/api'
 import { AuthBrand, AuthField, AuthSubmitButton } from '@/features/auth/AuthComponents'
 import { SocialAuthButtons } from '@/features/auth/social/SocialAuthButtons'
 import { TermsConsent } from '@/features/auth/consent/TermsConsent'
+import { translateAuthError } from '@/features/auth/authErrors'
 import { TERMS_VERSION } from '@/features/legal/constants'
 
 /**
@@ -66,7 +67,7 @@ export default function SignUpPage() {
     })
 
     if (signUpError) {
-      setError(signUpError.message)
+      setError(translateAuthError(signUpError.message))
       setLoading(false)
       return
     }
@@ -110,7 +111,7 @@ export default function SignUpPage() {
             {/* 1. Nombre completo */}
             <AuthField
               id="displayName"
-              label="Nombre visible"
+              label="Nombre completo"
               type="text"
               required
               autoFocus
@@ -131,7 +132,7 @@ export default function SignUpPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Correo electrónico"
-              icon={<Mail className="h-5 w-5 text-accent dark:text-accent stroke-[2.2]" />}
+              icon={<Mail className="h-5 w-5 text-accent-ink dark:text-accent stroke-[2.2]" />}
             />
 
             {/* 3. Teléfono (opcional) */}
@@ -210,7 +211,7 @@ export default function SignUpPage() {
         <TermsConsent checked={acceptedTerms} onChange={setAcceptedTerms} />
 
         {error && (
-          <p className="rounded-2xl border border-danger/25 bg-danger/10 px-4 py-3 text-xs font-medium text-danger animate-fade-in backdrop-blur-xs">
+          <p role="alert" className="rounded-2xl border border-danger/25 bg-danger/10 px-4 py-3 text-xs font-medium text-danger animate-fade-in backdrop-blur-xs">
             {error}
           </p>
         )}
@@ -225,11 +226,11 @@ export default function SignUpPage() {
       <div className="flex flex-col gap-4 md:gap-6">
         <SocialAuthButtons verb="Registrarte" dividerLabel="o registrate con" disabled={!acceptedTerms} />
 
-        <p className="text-center text-sm text-navy/60 dark:text-foreground/60">
+        <p className="text-center text-sm text-navy/70 dark:text-foreground/60">
           ¿Ya tenés cuenta?{' '}
           <Link
             href="/login"
-            className="font-semibold text-accent underline-offset-4 transition-colors hover:text-accent-hover hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+            className="font-semibold text-accent-ink underline-offset-4 transition-colors hover:text-accent-hover hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
           >
             Iniciar sesión
           </Link>

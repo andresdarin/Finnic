@@ -15,6 +15,7 @@ interface Props {
  * Soporta geometría dinámica:
  * - 'rounded-full' cuando tiene una sola línea con centrado vertical óptico exacto.
  * - 'rounded-[1.75rem]' cuando el texto se expande a múltiples líneas.
+ * La letra nunca baja de 16px: iOS hace zoom al enfocar campos más chicos.
  */
 export default function MessageComposer({ onSend, disabled }: Props) {
   const [placeholder] = useState(
@@ -69,7 +70,7 @@ export default function MessageComposer({ onSend, disabled }: Props) {
           Mensaje para Finnic
         </label>
         <div
-          className={`relative flex w-full bg-surface/95 p-[var(--chat-composer-shell-p)] shadow-[0_4px_20px_rgba(8,58,79,0.12)] ring-1 ring-black/[0.06] focus-within:ring-primary/40 dark:ring-white/[0.08] transition-[border-radius] duration-200 ${
+          className={`relative flex w-full bg-surface/95 p-[var(--chat-composer-shell-p)] shadow-[0_4px_20px_rgba(8,58,79,0.12)] ring-1 ring-black/[0.06] dark:ring-white/[0.08] transition-[border-radius] duration-200 ${
             isMultiLine
               ? 'items-end rounded-[1.75rem]'
               : 'items-center rounded-full'
@@ -89,7 +90,7 @@ export default function MessageComposer({ onSend, disabled }: Props) {
             placeholder={placeholder}
             rows={1}
             disabled={disabled}
-            className={`min-w-0 flex-1 resize-none bg-transparent pl-4.5 sm:pl-5 pr-13 text-[var(--chat-input-font-size)] [font-weight:var(--chat-input-font-weight)] leading-[var(--chat-input-line-height)] text-foreground outline-none placeholder:text-[var(--chat-placeholder-font-size)] placeholder:leading-[var(--chat-input-line-height)] placeholder:text-muted-foreground disabled:opacity-60 ${
+            className={`chat-composer-input min-w-0 flex-1 resize-none bg-transparent pl-4.5 sm:pl-5 pr-13 text-[max(16px,var(--chat-input-font-size))] [font-weight:var(--chat-input-font-weight)] leading-[var(--chat-input-line-height)] text-foreground outline-none placeholder:text-[max(16px,var(--chat-placeholder-font-size))] placeholder:leading-[var(--chat-input-line-height)] placeholder:text-muted-foreground disabled:opacity-60 ${
               isMultiLine ? 'py-2.5' : 'py-2.5'
             }`}
           />

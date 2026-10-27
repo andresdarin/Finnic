@@ -41,7 +41,7 @@ export function AuthBrand({
       )}
 
       {subtitle && (
-        <p className="mt-1 text-pretty text-[13px] sm:mt-1.5 sm:text-sm lg:mt-2 lg:text-[15px] text-navy/60 dark:text-text-secondary">
+        <p className="mt-1 text-pretty text-[13px] sm:mt-1.5 sm:text-sm lg:mt-2 lg:text-[15px] text-navy/70 dark:text-text-secondary">
           {subtitle}
         </p>
       )}

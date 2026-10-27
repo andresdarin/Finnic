@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { apiFetch } from '@/lib/api'
 import { AuthBrand, AuthField, AuthSubmitButton } from '@/features/auth/AuthComponents'
 import { SocialAuthButtons } from '@/features/auth/social/SocialAuthButtons'
+import { translateAuthError } from '@/features/auth/authErrors'
 
 /**
  * Login de Finnic: encabezado alineado a la izquierda, accesos sociales
@@ -49,7 +50,7 @@ export default function AuthLoginExperience() {
     })
 
     if (signInError) {
-      setError(signInError.message)
+      setError(translateAuthError(signInError.message))
       setLoading(false)
       return
     }
@@ -92,7 +93,7 @@ export default function AuthLoginExperience() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Correo electrónico"
-              icon={<Mail className="h-5 w-5 text-accent dark:text-accent stroke-[2.2]" />}
+              icon={<Mail className="h-5 w-5 text-accent-ink dark:text-accent stroke-[2.2]" />}
             />
 
             <AuthField
@@ -125,13 +126,13 @@ export default function AuthLoginExperience() {
 
         <Link
           href="/forgot-password"
-          className="self-end text-xs lg:text-[13px] font-medium text-navy/60 underline-offset-4 transition-colors hover:text-navy hover:underline dark:text-foreground/60 dark:hover:text-foreground"
+          className="self-end text-xs lg:text-[13px] font-medium text-navy/70 underline-offset-4 transition-colors hover:text-navy hover:underline dark:text-foreground/60 dark:hover:text-foreground"
         >
           ¿Olvidaste tu contraseña?
         </Link>
 
         {error && (
-          <p className="rounded-xl border border-danger/25 bg-danger/10 px-4 py-2.5 text-xs font-medium text-danger animate-fade-in">
+          <p role="alert" className="rounded-xl border border-danger/25 bg-danger/10 px-4 py-2.5 text-xs font-medium text-danger animate-fade-in">
             {error}
           </p>
         )}
@@ -140,11 +141,11 @@ export default function AuthLoginExperience() {
       <div className="flex flex-col gap-5 md:gap-6">
         <SocialAuthButtons verb="Continuar" dividerLabel="o continuá con" />
 
-        <p className="text-center text-sm text-navy/60 dark:text-foreground/60">
+        <p className="text-center text-sm text-navy/70 dark:text-foreground/60">
           ¿No tenés cuenta?{' '}
           <Link
             href="/signup"
-            className="font-semibold text-accent underline-offset-4 transition-colors hover:text-accent-hover hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+            className="font-semibold text-accent-ink underline-offset-4 transition-colors hover:text-accent-hover hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
           >
             Crear cuenta
           </Link>

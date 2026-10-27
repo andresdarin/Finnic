@@ -24,6 +24,8 @@
 
     /* Accent: Gold */
     --accent: #A58D66;
+    /* Dorado para texto: el de relleno no alcanza 4.5:1 sobre arena */
+    --accent-ink: #7E6842;
     --accent-hover: #937C56;
     --accent-soft: #EEE7DC;
     --accent-foreground: #FFFFFF;
@@ -51,9 +53,9 @@
     /* Typography */
     --foreground: #102D38;
     --text-primary: #102D38;
-    --text-secondary: #607078;
+    --text-secondary: #566770;
     --text-tertiary: #607078;
-    --muted-foreground: #607078;
+    --muted-foreground: #566770;
     --muted: #E5E1DD;
 
     /* Two-family system: editorial identity + functional interface. */
@@ -156,6 +158,7 @@
 
     /* Accent in Dark: Gold */
     --accent: #BCA47B;
+    --accent-ink: #BCA47B;
     --accent-hover: #D1BA92;
     --accent-soft: #362F26;
     --accent-foreground: #083A4F;
@@ -522,6 +525,7 @@
   --color-secondary-foreground: var(--secondary-foreground);
 
   --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
   --color-accent-foreground: var(--accent-foreground);
@@ -626,6 +630,9 @@
   outline: 3px solid var(--primary);
   outline-offset: 3px;
 }
+/* El compositor del chat ya muestra el cursor: sin recuadro al enfocar */
+.chat-composer-input:focus,
+.chat-composer-input:focus-visible { outline: none; }
 :where(input, textarea)::placeholder { color: var(--text-secondary); opacity: 1; }
 :where(button, input, textarea, select):disabled { cursor: not-allowed; }
 :where(h1, h2, h3) { text-wrap: balance; }
@@ -636,4 +643,10 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Entrada de la burbuja de InfoHint */
+@keyframes infohint-in {
+  from { opacity: 0; transform: translateY(-2px) scale(0.97); }
+  to { opacity: 1; transform: none; }
 }

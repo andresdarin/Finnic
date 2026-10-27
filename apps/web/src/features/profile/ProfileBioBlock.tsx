@@ -13,7 +13,7 @@ export function ProfileBioBlock({ bio }: ProfileBioBlockProps) {
     <div className="relative rounded-xl border-l-2 border-primary/30 bg-surface-soft/20 px-4 py-3">
       <p
         className={`text-sm leading-relaxed ${
-          hasBio ? 'text-foreground/80 italic' : 'text-muted-foreground/40 italic'
+          hasBio ? 'text-foreground/80 italic' : 'text-muted-foreground italic'
         }`}
       >
         {hasBio

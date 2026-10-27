@@ -22,13 +22,14 @@ export function useExpenseSubmit({
   const [success, setSuccess] = useState<string | null>(null)
   const [createdId, setCreatedId] = useState<string | null>(null)
 
-  const handleSubmit = useCallback(async () => {
+  /** Devuelve true si el gasto se guardó, para que el formulario se pueda limpiar. */
+  const handleSubmit = useCallback(async (): Promise<boolean> => {
     setError(null)
     setSuccess(null)
     setCreatedId(null)
     if (hasBlockingDifference) {
       setError('La diferencia entre el total declarado y los ítems supera $0.05.')
-      return
+      return false
     }
 
     setIsSubmitting(true)
@@ -38,6 +39,7 @@ export function useExpenseSubmit({
       const result = await submitExpense({ token: session.access_token, form, items, declaredTotal })
       setCreatedId(result.id)
       setSuccess('Gasto cargado correctamente.')
+      return true
     } catch (err) {
       if (err instanceof ApiError) {
         setError(Array.isArray(err.message) ? err.message.join(', ') : err.message)
@@ -47,6 +49,7 @@ export function useExpenseSubmit({
     } finally {
       setIsSubmitting(false)
     }
+    return false
   }, [form, items, declaredTotal, hasBlockingDifference, supabase])
 
   const goToMovements = useCallback(() => {

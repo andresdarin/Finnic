@@ -24,7 +24,7 @@ export function EarnXpHints() {
               <p className="text-sm font-medium text-foreground">{hint.label}</p>
               <p className="text-xs text-muted-foreground">{hint.detail}</p>
             </div>
-            <span className="shrink-0 text-xs font-semibold text-emerald-400">{hint.xp}</span>
+            <span className="shrink-0 text-xs font-semibold text-success">{hint.xp}</span>
           </div>
         ))}
       </div>

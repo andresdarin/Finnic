@@ -12,6 +12,8 @@ interface Props {
   className?: string
   required?: boolean
   disabled?: boolean
+  /** Nombre del campo para lectores de pantalla, p. ej. "Fecha del gasto". */
+  label?: string
 }
 
 const triggerBase = 'neu-inset h-11 rounded-xl border border-border bg-surface-soft px-4 text-sm font-medium text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:bg-surface-soft disabled:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20'
@@ -51,7 +53,8 @@ export default function CustomDatePicker({
   placeholder = 'Seleccionar fecha',
   className = '',
   required = false,
-  disabled = false
+  disabled = false,
+  label
 }: Props) {
   const [open, setOpen] = useState(false)
   const btnRef = useRef<HTMLButtonElement>(null)
@@ -179,6 +182,7 @@ export default function CustomDatePicker({
         className={`${triggerBase} ${className} flex items-center justify-between gap-2`}
         aria-haspopup="dialog"
         aria-expanded={open}
+        aria-label={label ? `${label}: ${value ? formatDisplayDate(value) : placeholder ?? 'sin elegir'}` : undefined}
       >
         <span className={value ? 'text-foreground' : 'text-muted-foreground'}>
           {value ? formatDisplayDate(value) : placeholder}
@@ -248,7 +252,7 @@ export default function CustomDatePicker({
                         ? 'border border-primary bg-primary/5 text-primary'
                         : isCurrentMonth
                         ? 'text-foreground hover:bg-surface-soft'
-                        : 'text-muted-foreground/40 hover:bg-surface-soft/50'
+                        : 'text-muted-foreground hover:bg-surface-soft/50'
                     }`}
                   >
                     {dayNum}

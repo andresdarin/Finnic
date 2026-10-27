@@ -18,7 +18,7 @@ export function LegalTopBar({ current }: { current: LegalKey }) {
             href={LEGAL_LINKS[key].href}
             aria-current={key === current ? 'page' : undefined}
             className={`inline-flex min-h-10 items-center rounded-full px-4 font-medium transition-colors ${
-              key === current ? 'bg-navy text-sand' : 'text-navy/60 hover:text-navy'
+              key === current ? 'bg-navy text-sand' : 'text-navy/70 hover:text-navy'
             }`}
           >
             {LEGAL_LINKS[key].short}

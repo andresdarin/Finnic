@@ -102,3 +102,7 @@ export function formatDate(iso: string): string {
   return d.toLocaleDateString('es-UY', { day: 'numeric', month: 'short' })
 }
 
+/** Textos de las "i" de Finanzas. */
+export const FINANZAS_HINTS = {
+  balanceNeto: 'Lo que te entró menos lo que gastaste este mes. No es tu saldo en el banco.',
+} as const

@@ -1,3 +1,3 @@
 # Handoff
-**De:** Planificación → **A:** SDE
-Orden: tareas 1–7 de `status.md`. Empezar por el entorno local (ADR-001). No usar Supabase de producción para pruebas. IA y WhatsApp simulados.
+**De:** Verificación → **A:** DevOps / dueño
+Todo commiteado en local, sin push. Al pushear a main corren los jobs `test` y `e2e` nuevos. Pendientes en `status.md`. Reporte del recorrido en `reviews/2026-10-27-ux-a11y-walkthrough.md`.

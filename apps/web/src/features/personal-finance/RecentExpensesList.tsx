@@ -52,7 +52,7 @@ export default function RecentExpensesList({ expenses }: RecentExpensesListProps
   if (expenses.length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 py-8 text-center bg-transparent">
-        <Receipt className="h-8 w-8 text-muted-foreground/45" />
+        <Receipt className="h-8 w-8 text-muted-foreground" />
         <p className="text-xs text-muted-foreground">No hay movimientos este mes</p>
       </div>
     )

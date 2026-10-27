@@ -6,17 +6,14 @@
 | 1 Estrategia | ✅ | ✅ |
 | 2 Diseño | ✅ ADR-001 | ✅ ADR-002 |
 | 3 Planificación | ✅ | ✅ |
-| 4 Implementación | ⏳ | ⏳ |
-| 5 Verificación | — | — |
-| 6 Entrega | — | — |
+| 4 Implementación | ✅ | ✅ |
+| 5 Verificación | ✅ 44 e2e, 317 unit | ✅ axe 0 serias |
+| 6 Entrega | ⏳ CI listo, sin push | ⏳ sin push |
 
-## Tareas
-1. Levantar Supabase local, migrar y sembrar ⏳
-2. Recorrido e2e manual + hallazgos UX/a11y
-3. Playwright + axe: config, globalSetup, specs por flujo
-4. CI: jobs `test` y `e2e`
-5. `InfoHint` + textos + ubicación
-6. Arreglos UX/a11y alto/medio
-7. Verificación (QA + seguridad) y reportes
-
-**Bloqueos:** Docker Desktop debe estar corriendo.
+## Pendientes (deuda priorizada)
+1. Editar y borrar gastos desde el detalle (alto).
+2. "Egreso" abre el alta manual primero; escaneo como opción (alto).
+3. Rótulos visibles en el menú inferior (medio).
+4. Hoja de detalle con `aria-modal` e inert del fondo (medio).
+5. Respuesta del chat con saltos de línea (bajo). Tono "usted" en Combustible y Perfil (bajo).
+6. Seed de Prisma falla con tsx en Windows (bajo).

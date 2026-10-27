@@ -47,7 +47,7 @@ export default function ExpenseItemList({
       <div>
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-6 text-center bg-transparent gap-2 select-none">
-            <PackageOpen className="h-7 w-7 text-muted-foreground/40" />
+            <PackageOpen className="h-7 w-7 text-muted-foreground" />
             <p className="text-xs font-bold text-foreground">Sin productos discriminados</p>
             <p className="text-[11px] text-muted-foreground max-w-[260px]">
               Podés registrar el egreso con el total general o agregar ítems manualmente.

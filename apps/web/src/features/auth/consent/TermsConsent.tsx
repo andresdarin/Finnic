@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Check } from 'lucide-react'
 import { LEGAL_LINKS } from '@/features/legal/constants'
 
-const link = 'font-medium text-accent underline-offset-4 transition-colors hover:text-accent-hover hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent'
+const link = 'font-medium text-accent-ink underline-offset-4 transition-colors hover:text-accent-hover hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent'
 
 /**
  * Aceptación obligatoria de términos y privacidad para el registro.
@@ -18,7 +18,7 @@ export function TermsConsent({ checked, onChange }: { checked: boolean; onChange
       className={`flex cursor-pointer items-center gap-3 rounded-2xl border px-3.5 py-2.5 text-[13px] sm:px-4 sm:py-3 leading-snug lg:px-5 lg:py-3.5 transition-colors ${
         checked
           ? 'border-navy/20 bg-navy/[0.03] text-navy/80 dark:border-aqua/25 dark:bg-aqua/[0.04] dark:text-foreground/85'
-          : 'border-navy/10 bg-[#F5F2EE]/60 text-navy/60 hover:border-navy/20 dark:border-white/10 dark:bg-surface/50 dark:text-foreground/60 dark:hover:border-white/20'
+          : 'border-navy/10 bg-[#F5F2EE]/60 text-navy/70 hover:border-navy/20 dark:border-white/10 dark:bg-surface/50 dark:text-foreground/60 dark:hover:border-white/20'
       }`}
     >
       <span className="relative flex h-5 w-5 shrink-0 items-center justify-center">

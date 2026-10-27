@@ -22,7 +22,7 @@ export function SocialAuthButtons({ verb, dividerLabel, disabled = false }: { ve
 
   return (
     <div className="flex flex-col gap-3 md:gap-4 lg:gap-5">
-      <div className="flex items-center gap-3 text-xs text-navy/45 dark:text-foreground/40">
+      <div className="flex items-center gap-3 text-xs text-navy/70 dark:text-foreground/40">
         <span className="h-px flex-1 bg-navy/10 dark:bg-white/10" />
         {dividerLabel}
         <span className="h-px flex-1 bg-navy/10 dark:bg-white/10" />

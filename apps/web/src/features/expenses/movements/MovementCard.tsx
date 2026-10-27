@@ -87,7 +87,7 @@ export default function MovementCard({ movement, onClick }: Props) {
         <span className={`text-right text-xs sm:text-sm font-bold tabular-nums ${amountClass}`}>
           {amountDisplay}
         </span>
-        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5" />
+        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
       </span>
     </button>
   )

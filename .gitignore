@@ -11,3 +11,9 @@ coverage/
 .agents/
 
 .slim/deepwork/
+
+# Build y reportes de la suite e2e
+apps/web/.next-e2e/
+apps/web/playwright-report/
+apps/web/test-results/
+apps/web/e2e/.auth/

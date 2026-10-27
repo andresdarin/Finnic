@@ -30,7 +30,7 @@ export default function ExpenseItemsTable({
           <col className="w-[10%]" />
         </colgroup>
         <thead className="sticky top-0 z-10 bg-surface/95 backdrop-blur-md">
-          <tr className="border-b border-border text-xs font-bold text-muted-foreground/80">
+          <tr className="border-b border-border text-xs font-bold text-muted-foreground">
             <th className="border-b border-border px-3 py-3.5 text-left font-bold tracking-wide">Producto</th>
             <th className="border-b border-border px-3 py-3.5 text-left font-bold tracking-wide">Categoría</th>
             <th className="border-b border-border px-3 py-3.5 text-right font-bold tracking-wide">Cantidad</th>

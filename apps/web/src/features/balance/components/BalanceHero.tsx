@@ -7,13 +7,16 @@ import type { BalanceProps } from '../types'
 import { accountTotals, money, totalsFromSnapshot } from '../utils'
 import BannerFeatherPattern from '@/components/ui/BannerFeatherPattern'
 import FinnicBrand from '@/components/ui/FinnicBrand'
+import { InfoHint } from '@/components/ui/InfoHint'
+import { BALANCE_HINTS } from '../constants'
 
-function Metric({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
+function Metric({ label, value, icon: Icon, hint }: { label: string; value: string; icon: LucideIcon; hint: string }) {
   return (
     <div className="rounded-2xl border border-white/[0.05] bg-white/[0.03] p-2.5 sm:p-3">
       <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#C0D5D6]/70">
-        <Icon className="h-3 w-3" />
+        <Icon className="h-3 w-3" aria-hidden="true" />
         {label}
+        <InfoHint label={label} className="ml-auto">{hint}</InfoHint>
       </div>
       <p className="mt-1.5 truncate text-sm font-bold tabular-nums text-[#F5F2EE]">{value}</p>
     </div>
@@ -99,9 +102,10 @@ export default function BalanceHero({ accounts, snapshot }: BalanceProps) {
         </div>
 
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-[#C0D5D6]/70">
-            {estimatedAmount != null ? 'Patrimonio estimado' : 'Patrimonio disponible'}
-          </p>
+          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#C0D5D6]/70">
+            <p>{estimatedAmount != null ? 'Patrimonio estimado' : 'Patrimonio disponible'}</p>
+            <InfoHint label="tu patrimonio">{BALANCE_HINTS.patrimonio}</InfoHint>
+          </div>
           <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
             <strong className="financial-number text-3xl sm:text-5xl text-[#F5F2EE]">
               {estimatedAmount != null
@@ -125,9 +129,9 @@ export default function BalanceHero({ accounts, snapshot }: BalanceProps) {
 
         {/* 3. Métricas */}
         <div className="grid grid-cols-3 gap-2 border-t border-white/[0.08] pt-3.5 sm:gap-3">
-          <Metric label="Disponible" value={availableLabel} icon={ArrowDownLeft} />
-          <Metric label="Por pagar" value={debtLabel} icon={ArrowUpRight} />
-          <Metric label="A favor" value="—" icon={CircleDollarSign} />
+          <Metric label="Disponible" value={availableLabel} icon={ArrowDownLeft} hint={BALANCE_HINTS.disponible} />
+          <Metric label="Por pagar" value={debtLabel} icon={ArrowUpRight} hint={BALANCE_HINTS.porPagar} />
+          <Metric label="A favor" value="—" icon={CircleDollarSign} hint={BALANCE_HINTS.aFavor} />
         </div>
       </div>
     </section>

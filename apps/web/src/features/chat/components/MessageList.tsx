@@ -203,7 +203,7 @@ export default function MessageList({
                 >
                   {/* Remitente: Vos a la derecha, Finnic a la izquierda */}
                   <p
-                    className={`mb-0.5 text-[var(--chat-sender-font-size)] font-medium text-muted-foreground/75 ${
+                    className={`mb-0.5 text-[var(--chat-sender-font-size)] font-medium text-muted-foreground ${
                       user ? 'text-right mr-1' : 'text-left ml-1'
                     }`}
                   >
@@ -261,7 +261,7 @@ export default function MessageList({
                             <FinnicMarkdown content={msg.content} />
                           </div>
                           {msg.createdAt && (
-                            <span className="self-end text-[var(--chat-meta-font-size)] [font-weight:var(--chat-meta-font-weight)] leading-[var(--chat-meta-line-height)] text-muted-foreground/60 tabular-nums select-none mt-0.5">
+                            <span className="self-end text-[var(--chat-meta-font-size)] [font-weight:var(--chat-meta-font-weight)] leading-[var(--chat-meta-line-height)] text-muted-foreground tabular-nums select-none mt-0.5">
                               {formatMessageTime(msg.createdAt)}
                             </span>
                           )}

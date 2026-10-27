@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Search, SlidersHorizontal, X, RotateCcw, Calendar, DollarSign, Wallet, Layers } from 'lucide-react'
 import MovementsMonthPicker from './MovementsMonthPicker'
 import type { MovementFilters } from './types'
+import { formatMonthLabel } from './utils'
 
 interface Props {
   filters: MovementFilters
@@ -98,16 +99,16 @@ export default function MovementsFilters({ filters, onChange, onClear }: Props) 
             {filters.month && (
               <span className="inline-flex items-center gap-1 rounded-full bg-surface border border-border/80 px-2.5 py-0.5 text-[11px] font-semibold text-foreground">
                 <Calendar className="h-3 w-3 text-muted-foreground" />
-                {filters.month}
-                <button type="button" onClick={() => onChange('month', '')} className="hover:text-danger">
+                {formatMonthLabel(filters.month)}
+                <button type="button" onClick={() => onChange('month', '')} aria-label={`Quitar filtro de ${formatMonthLabel(filters.month)}`} className="relative -mr-1 rounded-full p-0.5 hover:text-danger before:absolute before:-inset-2.5 before:content-['']">
                   <X className="h-3 w-3" />
                 </button>
               </span>
             )}
             {filters.currency && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-surface border border-border/80 px-2.5 py-0.5 text-[11px] font-bold text-[#A58D66]">
+              <span className="inline-flex items-center gap-1 rounded-full bg-surface border border-border/80 px-2.5 py-0.5 text-[11px] font-bold text-accent-ink">
                 {filters.currency}
-                <button type="button" onClick={() => onChange('currency', '')} className="hover:text-danger">
+                <button type="button" onClick={() => onChange('currency', '')} aria-label={`Quitar filtro de moneda ${filters.currency}`} className="relative -mr-1 rounded-full p-0.5 hover:text-danger before:absolute before:-inset-2.5 before:content-['']">
                   <X className="h-3 w-3" />
                 </button>
               </span>
@@ -115,7 +116,7 @@ export default function MovementsFilters({ filters, onChange, onClear }: Props) 
             {filters.financialType && (
               <span className="inline-flex items-center gap-1 rounded-full bg-surface border border-border/80 px-2.5 py-0.5 text-[11px] font-bold text-primary">
                 {TYPE_OPTIONS.find((t) => t.value === filters.financialType)?.label ?? filters.financialType}
-                <button type="button" onClick={() => onChange('financialType', '')} className="hover:text-danger">
+                <button type="button" onClick={() => onChange('financialType', '')} aria-label="Quitar filtro de tipo" className="relative -mr-1 rounded-full p-0.5 hover:text-danger before:absolute before:-inset-2.5 before:content-['']">
                   <X className="h-3 w-3" />
                 </button>
               </span>

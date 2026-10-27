@@ -5,6 +5,7 @@ import { parseAmount, sumItems, toCents } from '../constants'
 import type { ExpenseForm, ExpenseItemForm } from '../types'
 import { useExpenseItems } from './useExpenseItems'
 import { useExpenseSubmit } from './useExpenseSubmit'
+import { todayLocalISO } from '@/lib/dates'
 
 const ROUNDING_TOLERANCE = 5
 const INITIAL_FORM: ExpenseForm = {
@@ -13,7 +14,7 @@ const INITIAL_FORM: ExpenseForm = {
   merchant: '',
   category: 'Compras de súper',
   amount: '',
-  date: new Date().toISOString().slice(0, 10),
+  date: todayLocalISO(),
   paymentMethod: '',
   notes: '',
 }
@@ -43,7 +44,8 @@ export function useExpenseForm(_profileName: string) {
   const updateForm = useCallback((field: keyof ExpenseForm, value: string) => {
     if (field === 'amount') setAmountTouched(true)
     setForm((current) => ({ ...current, [field]: value }))
-  }, [])
+    submit.setSuccess(null)
+  }, [submit])
 
   const useItemsTotalAsAmount = useCallback(() => {
     setAmountTouched(false)
@@ -75,7 +77,15 @@ export function useExpenseForm(_profileName: string) {
     submit.setSuccess(null)
   }, [itemState, submit])
 
+  // Tras guardar se limpia el formulario: evita cargar el mismo gasto dos veces
+  const handleSubmit = useCallback(async () => {
+    if (!(await submit.handleSubmit())) return
+    setAmountTouched(false)
+    itemState.setItems([])
+    setForm({ ...INITIAL_FORM, date: todayLocalISO() })
+  }, [submit, itemState])
+
   return { form, ...itemState, itemsTotal, declaredTotal, difference, hasBlockingDifference,
-    isSupermarketExpense, canSubmit: canSubmit && !submit.isSubmitting, ...submit,
+    isSupermarketExpense, canSubmit: canSubmit && !submit.isSubmitting, ...submit, handleSubmit,
     updateForm, useItemsTotalAsAmount, loadExample, populateFromScan }
 }

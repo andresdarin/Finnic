@@ -1,5 +1,6 @@
 import { KIND_LABELS, KIND_SHORT_LABELS, KIND_TONES, SCOPE_LABELS } from './constants'
 import type { Movement } from './types'
+import { parseCalendarDate } from '@/lib/dates'
 
 const currencyFormat = new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU', minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
@@ -16,13 +17,13 @@ const dateFormat = new Intl.DateTimeFormat('es-UY', { day: 'numeric', month: 'lo
 const dateFormatShort = new Intl.DateTimeFormat('es-UY', { day: 'numeric', month: 'long', year: 'numeric' })
 
 export function formatDate(dateStr: string): string {
-  const d = new Date(dateStr)
+  const d = parseCalendarDate(dateStr)
   if (isNaN(d.getTime())) return dateStr
   return dateFormatShort.format(d)
 }
 
 export function formatDateGroup(dateStr: string): string {
-  const d = new Date(dateStr)
+  const d = parseCalendarDate(dateStr)
   if (isNaN(d.getTime())) return dateStr
 
   const now = new Date()
@@ -103,4 +104,12 @@ export function groupByDate(movements: Movement[]): Record<string, Movement[]> {
     groups[key].push(m)
   }
   return groups
+}
+
+/** "2026-10" → "Octubre 2026" para los chips de filtro. */
+export function formatMonthLabel(month: string): string {
+  const match = /^(\d{4})-(\d{2})$/.exec(month)
+  if (!match) return month
+  const label = new Intl.DateTimeFormat('es-UY', { month: 'long', year: 'numeric' }).format(new Date(Number(match[1]), Number(match[2]) - 1, 1))
+  return label.charAt(0).toUpperCase() + label.slice(1).replace(' de ', ' ')
 }

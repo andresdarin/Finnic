@@ -41,7 +41,7 @@ export function NextGoalsCard() {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-semibold text-foreground truncate">{goal.label}</p>
-              <p className="text-[10px] text-muted-foreground/50 truncate">{goal.description}</p>
+              <p className="text-[10px] text-muted-foreground truncate">{goal.description}</p>
             </div>
           </div>
         ))}

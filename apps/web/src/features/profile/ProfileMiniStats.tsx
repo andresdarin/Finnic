@@ -47,7 +47,7 @@ export function ProfileMiniStats({
           key={s.label}
           className="flex flex-col items-center gap-0.5 rounded-xl border border-border/40 bg-surface-soft/25 px-3 py-3 backdrop-blur-sm"
         >
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             {s.label}
           </span>
           <span

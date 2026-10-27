@@ -6,6 +6,8 @@ import { monthLabel, formatCurrency } from './constants'
 import type { MonthlySummary } from './types'
 import BannerFeatherPattern from '@/components/ui/BannerFeatherPattern'
 import FinnicBrand from '@/components/ui/FinnicBrand'
+import { InfoHint } from '@/components/ui/InfoHint'
+import { FINANZAS_HINTS } from './constants'
 
 interface FinanzasHeroProps {
   profile: {
@@ -153,8 +155,9 @@ export default function FinanzasHero({
 
           {/* Cifra Principal: Balance Neto del Mes */}
           <div className="mt-3 flex flex-col items-center justify-center text-center">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#C0D5D6]/70">
+            <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#C0D5D6]/70">
               Balance neto del mes
+              <InfoHint label="el balance neto del mes">{FINANZAS_HINTS.balanceNeto}</InfoHint>
             </span>
             <div className="mt-1 flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1">
               <span className="text-3xl font-extrabold tracking-tight text-[#F5F2EE] sm:text-4xl tabular-nums">

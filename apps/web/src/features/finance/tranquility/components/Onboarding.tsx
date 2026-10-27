@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button, Card, Field, SectionTitle, SelectField } from './Primitives'
 import type { SetupValues } from '../types'
 import { moneyFields, moneyFieldKeys, normalizeSetup, suggestedContribution } from './onboardingUtils'
+import { TRANQUILITY_FIELD_HINTS } from '../constants'
 
 const initial: SetupValues = {
   currency: 'UYU', netMonthlyIncome: '0.00', essentialExpenses: '0.00', monthlyContribution: '0.00',
@@ -50,7 +51,7 @@ export function Onboarding({ onSubmit, saving, error }: Props) {
         </SelectField>
         {moneyFields.map(([key, label]) => (
           <div key={key}>
-            <Field label={label} inputMode="decimal" value={value[key]} onChange={event => set(key, event.target.value)} />
+            <Field label={label} hint={TRANQUILITY_FIELD_HINTS[key]} inputMode="decimal" value={value[key]} onChange={event => set(key, event.target.value)} />
             {key === 'monthlyContribution' && hint && <p className="mt-1 text-xs text-muted-foreground">Sugerido: {value.futureBps / 100}% del ingreso. Podés cambiarlo.</p>}
           </div>
         ))}

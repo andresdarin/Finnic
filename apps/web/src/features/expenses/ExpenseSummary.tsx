@@ -88,10 +88,17 @@ export default function ExpenseSummary({
         </div>
       )}
 
+      {!canSubmit && !isSubmitting && !success && (
+        <p id="expense-submit-hint" className="text-center text-xs text-muted-foreground">
+          Completá los campos marcados con <span aria-hidden="true" className="text-danger">*</span><span className="sr-only">asterisco</span> para confirmar.
+        </p>
+      )}
+
       {/* CTA Principal: Confirmar Egreso (Navy Sólido Finnic) */}
       <button
         type="submit"
         disabled={!canSubmit || isSubmitting}
+        aria-describedby={!canSubmit && !success ? 'expense-submit-hint' : undefined}
         onClick={onSubmit}
         className="w-full flex items-center justify-center gap-2 h-12 rounded-2xl bg-[#083A4F] hover:bg-[#062c3c] text-white dark:bg-[#C0D5D6] dark:hover:bg-[#a8c6c8] dark:text-[#083A4F] text-xs sm:text-sm font-extrabold shadow-sm transition-all focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] cursor-pointer"
       >

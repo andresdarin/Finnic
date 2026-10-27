@@ -32,7 +32,7 @@ export function RankProgressCompact({ data, loading }: RankProgressCompactProps)
 
   if (!data) {
     return (
-      <p className="text-xs text-muted-foreground/40">Progreso no disponible</p>
+      <p className="text-xs text-muted-foreground">Progreso no disponible</p>
     )
   }
 
@@ -57,7 +57,7 @@ export function RankProgressCompact({ data, loading }: RankProgressCompactProps)
           <h3 className="text-xl font-extrabold text-foreground tracking-tight mt-0.5">
             {currentRank.name}
           </h3>
-          <p className="text-xs text-muted-foreground/70 mt-0.5 leading-relaxed">
+          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
             {currentRank.description}
           </p>
         </div>
@@ -75,7 +75,7 @@ export function RankProgressCompact({ data, loading }: RankProgressCompactProps)
           <div className="flex items-center justify-between">
             <span className="text-sm font-bold text-foreground tabular-nums">
               {totalXp.toLocaleString('es-UY')}
-              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50 ml-1">XP total</span>
+              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground ml-1">XP total</span>
             </span>
             <span className="text-xs font-semibold text-primary/90 tabular-nums">{progress.percent}%</span>
           </div>
@@ -93,10 +93,10 @@ export function RankProgressCompact({ data, loading }: RankProgressCompactProps)
 
           {/* XP remaining + link */}
           <div className="flex items-center justify-between text-xs">
-            <span className="tabular-nums text-muted-foreground/70">
+            <span className="tabular-nums text-muted-foreground">
               {progress.currentXpInRank.toLocaleString('es-UY')} / {progress.requiredXpForNextRank.toLocaleString('es-UY')} XP
             </span>
-            <span className="tabular-nums text-muted-foreground/70">
+            <span className="tabular-nums text-muted-foreground">
               Faltan <strong className="text-foreground/80 font-semibold">{progress.xpRemaining.toLocaleString('es-UY')} XP</strong>
             </span>
           </div>

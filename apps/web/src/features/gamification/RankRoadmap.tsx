@@ -39,14 +39,14 @@ export function RankRoadmap({ profile }: RankRoadmapProps) {
               <div className="min-w-0 flex-1">
                 <p
                   className={`text-sm font-medium ${
-                    unlocked ? 'text-foreground' : 'text-muted-foreground/40'
+                    unlocked ? 'text-foreground' : 'text-muted-foreground'
                   }`}
                 >
                   {rank.name}
                 </p>
                 <p
                   className={`text-xs ${
-                    unlocked ? 'text-muted-foreground' : 'text-muted-foreground/30'
+                    unlocked ? 'text-muted-foreground' : 'text-muted-foreground'
                   }`}
                 >
                   {rank.minXp.toLocaleString('es-UY')} XP

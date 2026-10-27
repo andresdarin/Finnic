@@ -1,7 +1,16 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from 'react'
+import { InfoHint } from '@/components/ui/InfoHint'
+import { useId } from 'react'
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) { return <section className={`rounded-2xl border border-border bg-surface p-4 shadow-sm sm:p-5 ${className}`}>{children}</section> }
 export function SectionTitle({ eyebrow, title, detail }: { eyebrow?: string; title: string; detail?: string }) { return <div className="mb-4"><p className="text-[11px] font-bold uppercase tracking-[.16em] text-primary">{eyebrow}</p><h2 className="mt-1 text-lg font-semibold text-foreground">{title}</h2>{detail && <p className="mt-1 text-sm text-muted-foreground">{detail}</p>}</div> }
 export function Button({ children, variant = 'primary', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'quiet' }) { return <button type="button" {...props} className={`min-h-11 rounded-xl px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50 ${variant === 'primary' ? 'bg-primary text-primary-foreground hover:bg-primary-hover' : 'border border-border bg-transparent text-foreground hover:bg-surface-soft'} ${props.className ?? ''}`}>{children}</button> }
-export function Field({ label, error, ...props }: InputHTMLAttributes<HTMLInputElement> & { label: string; error?: string }) { return <label className="grid gap-1.5 text-sm font-medium text-foreground">{label}<input {...props} aria-invalid={Boolean(error)} className="min-h-11 rounded-xl border border-border bg-background px-3 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/30" />{error && <span className="text-xs text-danger" role="alert">{error}</span>}</label> }
+export function Field({ label, error, hint, ...props }: InputHTMLAttributes<HTMLInputElement> & { label: string; error?: string; hint?: string }) {
+  const generatedId = useId()
+  if (hint) {
+    const id = props.id ?? generatedId
+    return <div className="grid gap-1.5 text-sm font-medium text-foreground"><div className="flex items-center gap-2"><label htmlFor={id}>{label}</label><InfoHint label={label}>{hint}</InfoHint></div><input {...props} id={id} aria-invalid={Boolean(error)} className="min-h-11 rounded-xl border border-border bg-background px-3 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/30" />{error && <span className="text-xs text-danger" role="alert">{error}</span>}</div>
+  }
+  return <label className="grid gap-1.5 text-sm font-medium text-foreground">{label}<input {...props} aria-invalid={Boolean(error)} className="min-h-11 rounded-xl border border-border bg-background px-3 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/30" />{error && <span className="text-xs text-danger" role="alert">{error}</span>}</label>
+}
 export function SelectField({ label, children, ...props }: SelectHTMLAttributes<HTMLSelectElement> & { label: string }) { return <label className="grid gap-1.5 text-sm font-medium text-foreground">{label}<select {...props} className="min-h-11 rounded-xl border border-border bg-background px-3 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/30">{children}</select></label> }

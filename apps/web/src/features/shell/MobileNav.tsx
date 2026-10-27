@@ -99,7 +99,7 @@ export default function MobileNav({ onAddClick }: MobileNavProps) {
               padding: isCompact ? '3px' : '5px',
             }}
             transition={SYNC_SPRING}
-            className="pointer-events-auto flex-1 h-full bg-surface/90 border border-border/60 shadow-xl shadow-black/15 backdrop-blur-md rounded-full flex items-center justify-between gap-1"
+            className="pointer-events-auto flex-1 h-full bg-surface/90 border border-border/60 shadow-xl shadow-black/15 backdrop-blur-md rounded-full flex items-center justify-around gap-1"
           >
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon

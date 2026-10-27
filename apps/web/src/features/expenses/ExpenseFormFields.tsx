@@ -60,7 +60,7 @@ export default function ExpenseFormFields({
         <label className="block">
           <span className="flex items-center gap-1.5 text-xs font-bold text-foreground mb-1.5">
             <DollarSign className="h-3.5 w-3.5 text-[#A58D66]" />
-            Total del egreso
+            Total del egreso <span aria-hidden="true" className="text-danger">*</span>
           </span>
           <div className="relative">
             <input
@@ -95,7 +95,7 @@ export default function ExpenseFormFields({
           <label className="block">
             <span className="flex items-center gap-1.5 text-xs font-bold text-foreground mb-1.5">
               <Receipt className="h-3.5 w-3.5 text-primary" />
-              Concepto / Título
+              Concepto / Título <span aria-hidden="true" className="text-danger">*</span>
             </span>
             <input
               type="text"
@@ -113,7 +113,7 @@ export default function ExpenseFormFields({
           <label className="block">
             <span className="flex items-center gap-1.5 text-xs font-bold text-foreground mb-1.5">
               <Tag className="h-3.5 w-3.5 text-[#407E8C]" />
-              Categoría
+              Categoría <span aria-hidden="true" className="text-danger">*</span>
             </span>
             <input
               type="text"
@@ -144,12 +144,13 @@ export default function ExpenseFormFields({
         <div className="block">
           <span className="flex items-center gap-1.5 text-xs font-bold text-foreground mb-1.5">
             <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-            Fecha del gasto
+            Fecha del gasto <span aria-hidden="true" className="text-danger">*</span>
           </span>
           <CustomDatePicker
             className="neu-inset w-full text-base sm:text-sm font-medium h-11 rounded-2xl border border-border/50 bg-surface-soft/60 px-3.5 text-foreground focus:border-primary focus:bg-surface focus:outline-none transition-all"
             value={form.date}
             onChange={(v) => onUpdate('date', v)}
+            label="Fecha del gasto"
             required
           />
         </div>

@@ -16,7 +16,7 @@ const link = 'underline-offset-4 transition-colors hover:text-navy hover:underli
 /** Sello de seguridad y enlaces legales debajo del marco de autenticación. */
 export function AuthLegalFooter() {
   return (
-    <footer className="mx-auto mt-4 flex w-full max-w-[1260px] flex-col items-center gap-2 px-2 text-center text-[11px] sm:mt-6 sm:gap-3 sm:text-xs text-navy/50 dark:text-foreground/45">
+    <footer className="mx-auto mt-4 flex w-full max-w-[1260px] flex-col items-center gap-2 px-2 text-center text-[11px] sm:mt-6 sm:gap-3 sm:text-xs text-navy/70 dark:text-foreground/45">
       <ul className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 sm:gap-x-5 sm:gap-y-2">
         {TRUST.map(({ Icon, label, short }) => (
           <li key={label} className="flex items-center gap-1.5">

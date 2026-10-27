@@ -1,9 +1,10 @@
 import { Trophy, ShoppingCart, Receipt, Clock, CalendarCheck, Sparkles, Lock, CheckCircle2 } from 'lucide-react'
 import LiquidGlass from '@/components/ui/LiquidGlass'
 
+// Todavía no hay cálculo real de logros en el backend: ninguno se muestra como obtenido
 const PLACEHOLDER_BADGES = [
-  { icon: Trophy, label: 'Primer movimiento', unlocked: true, desc: 'Registraste tu primer gasto.' },
-  { icon: Receipt, label: 'Primer ticket', unlocked: true, desc: 'Subiste tu primer ticket.' },
+  { icon: Trophy, label: 'Primer movimiento', unlocked: false, desc: 'Registraste tu primer gasto.' },
+  { icon: Receipt, label: 'Primer ticket', unlocked: false, desc: 'Subiste tu primer ticket.' },
   { icon: Clock, label: 'Gastos fijos al día', unlocked: false, desc: 'Pagaste todos tus gastos recurrentes.' },
   { icon: CalendarCheck, label: 'Mes bajo control', unlocked: false, desc: 'Terminaste un mes dentro del presupuesto.' },
   { icon: ShoppingCart, label: 'Supermercado', unlocked: false, desc: 'Registraste una compra de supermercado.' },
@@ -26,16 +27,10 @@ export function FeaturedAchievements() {
       <div className="flex items-end justify-between mb-5">
         <div>
           <h2 className="text-lg font-bold text-foreground">Logros destacados</h2>
-          <p className="text-xs text-muted-foreground/70 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             {unlocked.length} de {PLACEHOLDER_BADGES.length} desbloqueados
           </p>
         </div>
-        <button
-          className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-md px-2 py-1"
-          aria-label="Ver todos los logros"
-        >
-          Ver todos
-        </button>
       </div>
 
       {/* Badges grid — unlocked first, locked with lower contrast */}
@@ -54,7 +49,7 @@ export function FeaturedAchievements() {
                 className={`relative flex h-16 w-16 items-center justify-center rounded-full border transition-all duration-300 ${
                   badge.unlocked
                     ? 'border-gold/40 bg-gold/10 text-gold group-hover:scale-105 group-hover:border-gold/70 group-hover:bg-gold/15 group-hover:shadow-md group-hover:shadow-gold/10'
-                    : 'border-border/60 bg-surface-soft/40 text-muted-foreground/60 group-hover:border-border group-hover:bg-surface-soft'
+                    : 'border-border/60 bg-surface-soft/40 text-muted-foreground group-hover:border-border group-hover:bg-surface-soft'
                 }`}
               >
                 <Icon className="h-6 w-6" aria-hidden="true" />
@@ -64,14 +59,14 @@ export function FeaturedAchievements() {
                   </div>
                 ) : (
                   <div className="absolute -right-1 -top-0.5 rounded-full bg-surface-soft border-2 border-background p-0.5 shadow-xs">
-                    <Lock className="h-2.5 w-2.5 text-muted-foreground/60" aria-hidden="true" />
+                    <Lock className="h-2.5 w-2.5 text-muted-foreground" aria-hidden="true" />
                   </div>
                 )}
               </div>
 
               <p
                 className={`text-[11px] font-bold leading-tight max-w-[90px] ${
-                  badge.unlocked ? 'text-foreground' : 'text-muted-foreground/70'
+                  badge.unlocked ? 'text-foreground' : 'text-muted-foreground'
                 }`}
               >
                 {badge.label}
@@ -81,7 +76,7 @@ export function FeaturedAchievements() {
         })}
       </div>
 
-      <p className="mt-5 text-center text-[10px] text-muted-foreground/40">
+      <p className="mt-5 text-center text-[10px] text-muted-foreground">
         Próximamente — más desafíos y recompensas en camino
       </p>
     </LiquidGlass>

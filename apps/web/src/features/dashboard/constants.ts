@@ -26,3 +26,8 @@ export const ONBOARDING_STEP_DEFINITIONS = [
     href: '/chat',
   },
 ] satisfies Omit<OnboardingStep, 'done'>[]
+
+/** Textos de las "i" del dashboard. */
+export const DASHBOARD_HINTS = {
+  categorias: 'Tus egresos del mes agrupados por categoría, para ver en qué se te va la plata.',
+} as const

@@ -5,6 +5,8 @@ import { useDashboardData } from '../DashboardData'
 import { computeSummary } from '@/features/personal-finance/utils'
 import { CATEGORY_LABELS } from '@/features/personal-finance/constants'
 import DashboardDataState from './DashboardDataState'
+import { InfoHint } from '@/components/ui/InfoHint'
+import { DASHBOARD_HINTS } from '../constants'
 
 /**
  * Resumen de gastos por categoría para el Dashboard.
@@ -20,9 +22,12 @@ export default function DashboardCategorySummary() {
     <section className="w-full min-w-0 overflow-hidden rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-xs">
       {/* Header con título y selector de moneda */}
       <div className="flex items-center justify-between gap-2 min-w-0">
-        <h2 className="text-base font-semibold text-foreground truncate min-w-0">
-          Dónde se va tu dinero
-        </h2>
+        <div className="flex min-w-0 items-center gap-2">
+          <h2 className="text-base font-semibold text-foreground truncate min-w-0">
+            Dónde se va tu dinero
+          </h2>
+          <InfoHint label="Dónde se va tu dinero" className="text-muted-foreground">{DASHBOARD_HINTS.categorias}</InfoHint>
+        </div>
         <div className="flex shrink-0 gap-1" role="group" aria-label="Moneda de categorías">
           {(['UYU', 'USD'] as const).map(value => (
             <button
