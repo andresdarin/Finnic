@@ -6,6 +6,7 @@ import { applyDraftAnswer } from './draft-answer'
 import { DraftRepository, type StoredDraft } from './draft.repository'
 import { ExpenseIntakeService } from './expense-intake.service'
 import type { IntakeProfileContext } from './intake-context.service'
+import { correctReceiptItem } from './receipt-item-correction'
 
 type WhichExpense = { pending: { action: 'correct' | 'undo'; request?: CorrectionRequest }; options: string[] }
 
@@ -25,6 +26,11 @@ export class DraftResponder {
     }
     if (draft.pendingField === 'which_expense') return this.whichExpense(ctx, draft, profile)
     if (draft.pendingField === 'receipt_confirmation' && /^revisar$/i.test(ctx.text.trim())) return this.expenses.continue(ctx, { ...draft.proposal, receiptConfirmed: false }, profile, draft)
+    if (draft.pendingField === 'receipt_confirmation') {
+      const correction = correctReceiptItem(ctx.text, draft.proposal)
+      if (correction?.kind === 'ask') return { reply: correction.question, intent: 'clarification', result: { draftId: draft.id } }
+      if (correction?.kind === 'updated') return this.expenses.continue(ctx, correction.proposal, profile, draft, ['Corregí el detalle. Revisá que los productos y el total coincidan con el ticket.'])
+    }
     const answer = applyDraftAnswer(draft.pendingField, ctx.text, draft.proposal, draft.meta, ctx.localDate)
     if (answer.kind === 'cancel') {
       await this.drafts.close(draft.id, ctx.profileId, 'cancelled')

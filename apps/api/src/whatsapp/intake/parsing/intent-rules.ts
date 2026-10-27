@@ -13,9 +13,11 @@ export function ruleIntent(raw: string): IntakeIntent | null {
   if (/^(ayuda|help|menu|que podes hacer)$/.test(text)) return 'help'
   if (/\b(deshace|deshacer|deshacelo|borra|borralo|borrar|anula|anulalo|elimina|eliminalo)\b/.test(text) && /\b(gasto|eso|ese|ultimo|lo)\b|lo$/.test(text)) return 'undo_last'
   if (/^(no\s*,?\s*)?(eran|era|fueron|fue|son|en realidad)\b/.test(text) || /^(cambia|corregi|corrige)\b/.test(text) || /^cotizacion\b/.test(text)) return 'correct_last'
+  // Explanations, hypothetical examples and difficulty paying need context, not a purchase verdict.
+  if (/\b(hipotetico|ejemplo|por que|como (?:se |lo )?calcul|impuestos|no puedo pagar|no me alcanza|prioriz)\b/.test(text)) return null
   if (/\bcuanto (gaste|llevo gastado|gastamos)\b/.test(text)) return 'query_month_spending'
   if (/\bpuedo comprar\b|\bme alcanza para\b|\bpuedo pagar\b/.test(text)) return 'query_can_afford'
-  if (/\bcuanto puedo gastar\b|\bcuanto me queda\b|\bque puedo gastar\b/.test(text)) return 'query_spending_capacity'
+  if (/^(?:y )?(?:cuanto puedo gastar|cuanto me queda|que puedo gastar)\b/.test(text)) return 'query_spending_capacity'
   if (/\bcomo voy\b.*\b(ahorro|ahorros|metas?|plan)\b|\bcuanto (ahorre|llevo ahorrado)\b/.test(text)) return 'query_savings'
   if (/^(anota|registra|agrega|carga)(me)? (un |el |este )?gasto\b/.test(text)) return 'register_expense'
   if (/\b(gaste|pague|compre|abone|gastamos|pagamos)\b/.test(text) && moneyCandidates(raw).length > 0) return 'register_expense'

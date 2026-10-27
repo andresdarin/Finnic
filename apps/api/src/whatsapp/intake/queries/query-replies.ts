@@ -6,10 +6,20 @@ import { formatDate, formatMoney } from '../reply/format'
 
 const WINDOW_LABEL = { today: 'hoy', weekend: 'este fin de semana', restOfMonth: 'el resto del mes' } as const
 
-export function capacityReply(outlook: SpendingOutlook, compact = false) {
+export function capacityReply(outlook: SpendingOutlook, compact = false, detailed = false) {
   const m = (value: string) => formatMoney(value, outlook.currency)
   if (!outlook.hasAccounts) return 'No tengo saldos cargados, así que no puedo calcular cuánto podés gastar. Registrá tus cuentas en Balance.'
   const lines = compact ? [] : [`Podés gastar ${m(outlook.recommendedSpend)} ${WINDOW_LABEL[outlook.window]}.`]
+  if (!detailed) {
+    if (Number(outlook.freeBalance) < 0) lines.push(`Tu saldo libre registrado es ${m(outlook.freeBalance)}.`)
+    if (Number(outlook.creditDebt) > 0) lines.push(`Ya desconté ${m(outlook.creditDebt)} de deuda de tarjetas.`)
+    if (Number(outlook.pendingObligations) > 0) lines.push(`Pagos pendientes: ${m(outlook.pendingObligations)}.`)
+    if (Number(outlook.plannedSavingsReserve) > 0) lines.push(`Ahorro planificado aún sin apartar este mes: ${m(outlook.plannedSavingsReserve)}.`)
+    if (Number(outlook.minimumBuffer) > 0) lines.push(`Colchón mínimo protegido: ${m(outlook.minimumBuffer)}.`)
+    if (outlook.excludedCurrencies.length) lines.push(`No incluyo ${outlook.excludedCurrencies.join(', ')} sin una cotización cargada.`)
+    if (!compact) lines.push('No incluye fondos de emergencia ni inversiones.')
+    return lines.join('\n')
+  }
   lines.push(
     'Cómo lo calculo:',
     `• Dinero libre en cuentas gastables: ${m(outlook.freeBalance)}${outlook.creditDebt !== '0.00' ? ` (ya descuenta ${m(outlook.creditDebt)} de deuda de tarjetas)` : ''}`,
@@ -24,7 +34,7 @@ export function capacityReply(outlook: SpendingOutlook, compact = false) {
 }
 
 export function savingsReply(d: TranquilityDashboard, goals: TranquilityGoal[], today: string) {
-  if (!d.config) return 'Todavía no configuraste Tranquilidad Financiera. Entrá a /tranquilidad-financiera para cargar tus ingresos y tu plan.'
+  if (!d.config) return 'Todavía no configuraste Tranquilidad Financiera. Entrá a Balance → Tranquilidad Financiera para cargar tus ingresos y tu plan.'
   const m = (value: string) => formatMoney(value, d.currency)
   const lines = ['Tu ahorro este mes:']
   const totals = d.summary.totals

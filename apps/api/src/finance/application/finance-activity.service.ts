@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { formatMoney, parseMoney } from '@lovehold/shared'
 import { PrismaService } from '../../prisma/prisma.service'
+import { monthlyProducts } from './monthly-products'
 
 /** Read-only personal activity. Money is summed in minor units, never converted. */
 @Injectable()
@@ -31,12 +32,14 @@ export class FinanceActivityService {
       // Decimal#toString drops trailing zeros ("850"); money parsing needs exactly two decimals.
       currency[row.movementType] = (currency[row.movementType] || 0n) + parseMoney(row._sum.amount ? row._sum.amount.toFixed(2) : '0.00')
     }
+    const products = await monthlyProducts(this.prisma, profileId, monthKey, groups.filter(row => row.movementType === 'EXPENSE').reduce((sum, row) => sum + row._count, 0))
     return {
       source: '/finanzas', scope: 'personal', monthKey, timeZone, asOf: new Date().toISOString(),
       totalsByCurrency: Object.fromEntries(Object.entries(totals).map(([currency, types]) => [currency, Object.fromEntries(Object.entries(types).map(([type, amount]) => [type, formatMoney(amount)]))])),
       categories: groups.filter(row => row.movementType === 'EXPENSE').map(row => ({ currency: row.currency, category: row.category, amount: row._sum.amount ? row._sum.amount.toFixed(2) : '0.00', count: row._count })),
       movements: recent.map(row => ({ ...row, amount: String(row.amount) })),
       largestExpensesByCurrency: largest.flatMap(row => row ? [{ ...row, amount: row.amount.toFixed(2) }] : []),
+      ...products,
       totalCount: groups.reduce((count, row) => count + row._count, 0),
       detailLimit: 30, note: 'Totales y gasto de mayor importe por moneda del mes completo. Solo el detalle reciente se limita a 30 movimientos. Transferencias separadas, sin conversión de moneda. No incluye gastos compartidos del hogar.',
     }

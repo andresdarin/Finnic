@@ -33,6 +33,7 @@ export type ExpenseProposal = {
   receipt?: { sha256: string | null; subtotal: string | null; confidence: number | null; discounts?: string | null }
   duplicateAcknowledged?: boolean
   receiptConfirmed?: boolean
+  receiptItemsEdited?: boolean
 }
 
 export type PendingField = 'amount' | 'currency' | 'account' | 'date' | 'duplicate' | 'receipt_confirmation' | 'which_expense'

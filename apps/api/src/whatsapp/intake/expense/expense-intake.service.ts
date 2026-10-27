@@ -41,13 +41,18 @@ export class ExpenseIntakeService {
       }
     }
 
+    const reconciled = receiptItems(proposal)
+    if (proposal.inputMethod === 'RECEIPT_SCAN' && proposal.receiptItemsEdited && !reconciled.matches) {
+      const question = `El detalle corregido no coincide con el total del ticket (${formatMoney(proposal.amount, proposal.currency)}). Revisá el total o el descuento: podés decir "El total es…" o "El descuento es…". No guardé nada.`
+      const saved = await this.drafts.save({ profileId: ctx.profileId, sourceInboundId: origin.inboundId, sourceWamid: origin.wamid, field: 'receipt_confirmation', question, proposal: { ...proposal, receiptConfirmed: false }, meta: draft?.meta })
+      return { reply: question, intent: 'clarification', result: { draftId: saved.id, pendingField: 'receipt_confirmation' } }
+    }
     if (proposal.inputMethod === 'RECEIPT_SCAN' && !proposal.receiptConfirmed) {
       const question = [...notes, receiptReview(proposal, step.account?.name ?? null)].join('\n')
       const saved = await this.drafts.save({ profileId: ctx.profileId, sourceInboundId: origin.inboundId, sourceWamid: origin.wamid, field: 'receipt_confirmation', question, proposal, meta: draft?.meta })
       return { reply: question, intent: 'clarification', result: { draftId: saved.id, pendingField: 'receipt_confirmation' } }
     }
 
-    const reconciled = receiptItems(proposal)
     const keepItems = reconciled.matches
     const noteParts = [ctx.channel === 'app' ? 'Registrado por el chat de Finnic' : 'Registrado por WhatsApp', proposal.inputMethod === 'RECEIPT_SCAN' ? 'desde foto de ticket' : null, proposal.paymentMethod ? `medio: ${PAYMENT_LABELS[proposal.paymentMethod]}` : null, proposal.accountless ? 'sin cuenta asignada' : null].filter(Boolean)
     const created = await this.createExpense.execute({

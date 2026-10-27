@@ -19,12 +19,15 @@ import { FinanceActivityService } from './application/finance-activity.service'
 import { CorrectExpenseUseCase } from './application/correct-expense.usecase'
 import { UndoExpenseUseCase } from './application/undo-expense.usecase'
 import { SpendingOutlookUseCase } from './application/spending-outlook.usecase'
+import { FinanceMetricsService } from './application/finance-metrics.service'
+import { TranquilityModule } from './tranquility/tranquility.module'
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, TranquilityModule],
   controllers: [FinanceController],
   providers: [
     FinanceActivityService,
+    FinanceMetricsService,
     CreateExpenseUseCase,
     CorrectExpenseUseCase,
     UndoExpenseUseCase,
@@ -44,6 +47,7 @@ import { SpendingOutlookUseCase } from './application/spending-outlook.usecase'
     { provide: FX_ADAPTER, useFactory: () => new ConfigurableFxAdapter() },
   ],
   exports: [
+    FinanceMetricsService,
     FinanceActivityService,
     CreateExpenseUseCase,
     CorrectExpenseUseCase,

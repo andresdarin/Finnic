@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Optional } from '@nestjs/common'
 import { parseMoney } from '@lovehold/shared'
 import { FinanceActivityService } from '../../../finance/application/finance-activity.service'
 import { SpendingOutlookUseCase } from '../../../finance/application/spending-outlook.usecase'
@@ -11,8 +11,10 @@ import { currencySignal, normalizeText } from '../parsing/signals'
 import type { HandlerResult, InboundContext } from '../types'
 import { formatMoney } from '../reply/format'
 import { capacityReply, savingsReply } from './query-replies'
-
-const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre']
+import { queryPeriod, monthLabel } from '../parsing/query-period'
+import { comparisonReply, productReply } from './monthly-replies'
+import { FinanceMetricsService } from '../../../finance/application/finance-metrics.service'
+import { financialQuestionKind, metricAnswer } from './metric-answers'
 
 /** Read-only answers built from the same use cases as the app. Currencies are never summed together. */
 @Injectable()
@@ -22,13 +24,23 @@ export class QueryIntakeService {
     private readonly activity: FinanceActivityService,
     private readonly outlook: SpendingOutlookUseCase,
     private readonly tranquility: TranquilityReadService,
+    @Optional() private readonly metrics?: FinanceMetricsService,
   ) {}
 
   async monthSpending(ctx: InboundContext): Promise<HandlerResult> {
-    const data = await this.activity.monthly(ctx.profileId)
+    const current = await this.activity.monthly(ctx.profileId)
+    const period = queryPeriod(ctx.text, current.monthKey)
+    if (period.unsupported) return { reply: 'Qué mes querés consultar? Puedo revisar un mes calendario o comparar dos meses.', intent: 'other' }
+    const requested = currencySignal(ctx.text)
+    const currency = requested === 'UYU' || requested === 'USD' ? requested : null
+    if (period.comparison) {
+      const [first, second] = await Promise.all(period.months.map(month => month === current.monthKey ? current : this.activity.monthly(ctx.profileId, month)))
+      return { reply: comparisonReply(first!, second!, currency), intent: 'query_month_spending' }
+    }
+    const data = period.month === current.monthKey ? current : await this.activity.monthly(ctx.profileId, period.month)
     const month = data.monthKey
-    const label = `${MONTHS[Number(month.slice(5)) - 1]} ${month.slice(0, 4)}`
-    const totals = Object.entries(data.totalsByCurrency).filter(([, types]) => types.EXPENSE && types.EXPENSE !== '0.00')
+    const label = monthLabel(month)
+    const totals = Object.entries(data.totalsByCurrency).filter(([value, types]) => (!currency || value === currency) && types.EXPENSE && types.EXPENSE !== '0.00')
     if (!totals.length) return { reply: `No tengo gastos personales registrados en ${label}.`, intent: 'query_month_spending' }
     const lines = [`Gastos personales de ${label}:`]
     for (const [currency, types] of totals) {
@@ -42,20 +54,39 @@ export class QueryIntakeService {
   }
 
   async largestExpense(ctx: InboundContext): Promise<HandlerResult> {
-    const data = await this.activity.monthly(ctx.profileId)
+    const current = await this.activity.monthly(ctx.profileId)
+    const period = queryPeriod(ctx.text, current.monthKey)
+    if (period.unsupported) return { reply: 'Qué mes querés revisar para buscar el gasto más alto?', intent: 'other' }
+    const data = period.month === current.monthKey ? current : await this.activity.monthly(ctx.profileId, period.month)
     const signal = currencySignal(ctx.text)
     const requestedCurrency = signal === 'UYU' || signal === 'USD' ? signal : null
     const expenses = data.largestExpensesByCurrency.filter(row => !requestedCurrency || row.currency === requestedCurrency)
-    if (!expenses.length) return { reply: 'No tengo gastos personales registrados este mes' + (requestedCurrency ? ` en ${requestedCurrency}.` : '.'), intent: 'other' }
+    if (!expenses.length) return { reply: `No tengo gastos personales registrados en ${monthLabel(data.monthKey)}` + (requestedCurrency ? ` en ${requestedCurrency}.` : '.'), intent: 'other' }
     const lines = expenses.map(row => `Tu gasto más alto${expenses.length > 1 ? ` en ${row.currency}` : ''} fue ${row.title}: ${formatMoney(row.amount, row.currency)}${row.merchant && normalizeText(row.merchant) !== normalizeText(row.title) ? ` en ${row.merchant}` : ''}, el ${new Intl.DateTimeFormat('es-UY', { timeZone: data.timeZone, day: 'numeric', month: 'numeric' }).format(row.date)}.`)
     if (lines.length > 1) lines.push('Las monedas van por separado.')
     return { reply: lines.join('\n'), intent: 'other', result: { monthKey: data.monthKey, source: 'largest_expenses_full_month' } }
   }
 
+  async financialQuestion(ctx: InboundContext): Promise<HandlerResult | null> {
+    const kind = financialQuestionKind(ctx.text)
+    if (!kind) return null
+    if (kind === 'monthly') return this.monthSpending(ctx)
+    if (kind === 'largest_expense') return this.largestExpense(ctx)
+    if (kind === 'product') {
+      const current = await this.activity.monthly(ctx.profileId)
+      const period = queryPeriod(ctx.text, current.monthKey)
+      if (period.unsupported) return { reply: 'Qué mes querés revisar para comparar los productos?', intent: 'other' }
+      const data = period.month === current.monthKey ? current : await this.activity.monthly(ctx.profileId, period.month)
+      const currency = currencySignal(ctx.text)
+      return { reply: productReply(data, currency === 'CONFLICT' ? null : currency), intent: 'other' }
+    }
+    return { reply: await metricAnswer(kind, ctx, this.activity, this.metrics), intent: 'other' }
+  }
+
   async capacity(ctx: InboundContext, ai: TextExtraction | null): Promise<HandlerResult> {
     const window = ai?.window ?? (/fin de semana|finde/i.test(ctx.text) ? 'weekend' : /\bmes\b/i.test(ctx.text) ? 'restOfMonth' : 'today')
     const outlook = await this.outlook.execute(ctx.profileId, window)
-    return { reply: capacityReply(outlook), intent: 'query_spending_capacity', result: { window } }
+    return { reply: capacityReply(outlook, false, /desglose|detalle|c[oó]mo (?:lo )?calcul/i.test(ctx.text)), intent: 'query_spending_capacity', result: { window } }
   }
 
   async canAfford(ctx: InboundContext, ai: TextExtraction | null): Promise<HandlerResult> {
@@ -74,8 +105,8 @@ export class QueryIntakeService {
     if (!outlook.hasAccounts) verdict = `No puedo responderlo: no tengo saldos cargados. Registrá tus cuentas en Balance.`
     else if (value <= recommended) verdict = `Sí: ${price} entra en lo recomendado para hoy (${formatMoney(outlook.recommendedSpend, currency)}) sin tocar obligaciones ni ahorro reservado.`
     else if (value <= protectedCapacity) verdict = `Podés, pero con cuidado: ${price} supera lo recomendado para hoy (${formatMoney(outlook.recommendedSpend, currency)}) y achica el margen del resto del mes. Después te quedarían ${formatMoney(centsToMoney(protectedCapacity - value), currency)} libres hasta fin de mes.`
-    else verdict = `No te lo recomiendo: ${price} supera tu margen libre (${formatMoney(outlook.protectedCapacity, currency)}) y comprometería obligaciones pendientes o el ahorro reservado.`
-    return { reply: `${verdict}\n${capacityReply(outlook, true)}`, intent: 'query_can_afford', result: { amount, currency } }
+    else verdict = `No te lo recomiendo: ${price} supera tu margen libre registrado (${formatMoney(outlook.protectedCapacity, currency)}).`
+    return { reply: !outlook.hasAccounts ? verdict : [verdict, capacityReply(outlook, true)].filter(Boolean).join('\n'), intent: 'query_can_afford', result: { amount, currency } }
   }
 
   async savings(ctx: InboundContext): Promise<HandlerResult> {
