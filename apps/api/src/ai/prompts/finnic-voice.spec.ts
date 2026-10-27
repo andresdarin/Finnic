@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { finnicText, withFinnicVoice } from './finnic-voice'
 
+it('keeps amounts but removes unsupported double-asterisk markup only in WhatsApp', () => {
+  expect(finnicText('Te quedan **$U 45.000**, lo revisamos?', 'whatsapp')).toBe('Te quedan $U 45.000, lo revisamos?')
+  expect(finnicText('Te quedan **$U 45.000**', 'app')).toBe('Te quedan **$U 45.000**')
+})
+
 describe('Finnic conversational voice', () => {
   it('overrides old stored style instructions and stays idempotent', () => {
     const prompt = withFinnicVoice('[finnic-voice:v1] Respuestas extensas. Confirmación obligatoria.')

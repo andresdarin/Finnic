@@ -104,7 +104,7 @@ export class AgentOrchestrator {
     return confirmAction({ pending: this.pending, executor: this.executor, conversations: this.conversations, observability: this.observability }, req, await this.resolveConfig(), !!this.resolver)
   }
   private async complete(id: string, req: AgentRequest, text: string, toolCalls: AgentResponse['toolCalls'], kind: NonNullable<AgentResponse['kind']>) {
-    text = finnicText(text)
+    text = finnicText(text, req.channel)
     await this.conversations.createMessage({ conversationId: req.conversationId, role: AiMessageRole.ASSISTANT, content: text, metadata: { kind } })
     await this.observability.endRun(id, { status: kind === 'error' ? 'failed' : 'completed', ...(kind === 'error' ? { error: 'agent_response_unavailable' } : {}) })
     await this.conversations.touch(req.conversationId)

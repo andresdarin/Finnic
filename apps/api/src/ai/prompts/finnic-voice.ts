@@ -55,8 +55,9 @@ export function withFinnicVoice(prompt: string) {
 }
 
 /** Shared presentation rule; never shorten by slicing away amounts or confirmations. */
-export function finnicText(text: string) {
-  return text.replace(/[¿¡]/g, '')
+export function finnicText(text: string, channel?: 'app' | 'whatsapp') {
+  const casual = text.replace(/[¿¡]/g, '')
+  return channel === 'whatsapp' ? casual.replace(/\*\*([^*]+)\*\*/g, '$1') : casual
 }
 
 export function finnicChannelVoice(channel: 'app' | 'whatsapp' = 'app') {
