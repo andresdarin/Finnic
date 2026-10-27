@@ -20,14 +20,21 @@ const makePending = (action: any = { id: 'a1', profileId: 'p', conversationId: '
     markFailed: vi.fn(async () => { current = { ...current, status: 'failed' } }),
   }
 }
-const makeSubject = (gemini: any, registry: any, executor: any, conversations = makeConversations(), pending = makePending(), context: any = {}) => new AgentOrchestrator(
+const makeSubject = (gemini: any, registry: any, executor: any, conversations = makeConversations(), pending = makePending(), context: any = {}, styleMemory?: { instruction: (profileId: string, conversationId: string, message: string) => Promise<string> }) => new AgentOrchestrator(
   gemini, registry, executor, { get: vi.fn(() => prompt) } as any, conversations as any, pending as any,
   { startRun: vi.fn(async () => ({ id: 'run-1' })), endRun: vi.fn(async () => undefined), logToolCall: vi.fn(async () => undefined) } as any,
-  { assertConversationOwnership: vi.fn(async () => undefined), ...context } as any,
+  { assertConversationOwnership: vi.fn(async () => undefined), ...context } as any, undefined, undefined, styleMemory as never,
 )
 const request = { profileId: 'p', conversationId: 'c1' }
 
 describe('AgentOrchestrator', () => {
+  it('applies profile style at the real model boundary after checking conversation ownership', async () => {
+    const instruction = vi.fn(async () => '\nESTILO PERSONAL APRENDIDO: breve')
+    const gemini = { chat: vi.fn(async () => ({ text: 'Dale.' })) }
+    await makeSubject(gemini, makeRegistry(), makeExecutor(), makeConversations(), makePending(), {}, { instruction }).run({ ...request, message: 'Más corto' })
+    expect(instruction).toHaveBeenCalledWith('p', 'c1', 'Más corto')
+    expect((gemini.chat.mock.calls[0] as unknown as [{ systemInstruction: string }])[0].systemInstruction).toContain('ESTILO PERSONAL APRENDIDO: breve')
+  })
   it('uses the shared personality and channel guidance at the actual model boundary', async () => {
     const gemini = { chat: vi.fn(async () => ({ text: 'Buenas.' })) }
     await makeSubject(gemini, makeRegistry(), makeExecutor()).run({ ...request, message: 'Hola', channel: 'whatsapp' })

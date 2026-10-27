@@ -23,6 +23,7 @@ export const testDatabaseUrl = () => {
 /** External edges only: Gemini answers from a script and Meta's Graph API is recorded. */
 export class Edges {
   sent: Array<{ to: string; body: string }> = []
+  stickersSent: Array<{ to: string; bytes: Buffer }> = []
   failNextSends = 0
   failNextDownloads = 0
   textReplies: Array<{ match: RegExp; json: Record<string, unknown> }> = []
@@ -30,6 +31,9 @@ export class Edges {
   geminiDown = false
 
   install() {
+    vi.spyOn(WhatsAppClient.prototype, 'sendSticker').mockImplementation(async ({ to, bytes }) => {
+      this.stickersSent.push({ to, bytes }); return { wamid: `wamid.sticker.${randomUUID()}` }
+    })
     vi.spyOn(GeminiClient.prototype, 'generateContent').mockImplementation(async (opts: any) => {
       if (this.geminiDown) throw new Error('Gemini no disponible temporalmente')
       const parts = opts.contents?.[0]?.parts ?? []

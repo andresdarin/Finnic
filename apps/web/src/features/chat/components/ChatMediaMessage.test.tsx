@@ -6,6 +6,12 @@ import type { AiMessage } from '../types'
 const message = (kind: string, dataUrl = 'data:image/webp;base64,UklGRg=='): AiMessage => ({ id: 'm', conversationId: 'c', role: 'USER', content: kind === 'sticker' ? 'Sticker' : 'Foto de ticket', createdAt: '2026-10-26T22:00:00Z', metadata: { attachment: { kind, dataUrl } } })
 
 describe('Chat attachments', () => {
+  it('shows Finnic stickers on the assistant side without exposing placeholder text', () => {
+    const html = renderToStaticMarkup(<ChatMediaMessage message={{ ...message('sticker'), role: 'ASSISTANT', content: 'Sticker de Finnic' }} />)
+    expect(html).toContain('mr-auto')
+    expect(html).toContain('Finnic</p>')
+    expect(html).not.toContain('Sticker de Finnic')
+  })
   it('renders stickers without a photo frame, bubble background or cropping', () => {
     const html = renderToStaticMarkup(<ChatMediaMessage message={message('sticker')} />)
     expect(html).toContain('alt="Sticker"')

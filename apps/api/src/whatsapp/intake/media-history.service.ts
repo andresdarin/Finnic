@@ -3,11 +3,12 @@ import { PrismaService } from '../../prisma/prisma.service'
 import { WhatsAppChannelService } from '../../ai/whatsapp/whatsapp-channel.service'
 import { WhatsAppClient } from '../whatsapp-client.service'
 import type { HandlerResult, InboundContext } from './types'
+import { FinnicStickersService, isFinnicSticker } from '../../ai/personality/finnic-stickers.service'
 
 /** Private attachments stay in the owner's authenticated conversation, never public URLs. */
 @Injectable()
 export class MediaHistoryService {
-  constructor(private readonly prisma: PrismaService, private readonly channel: WhatsAppChannelService, private readonly client: WhatsAppClient) {}
+  constructor(private readonly prisma: PrismaService, private readonly channel: WhatsAppChannelService, private readonly client: WhatsAppClient, private readonly stickers: FinnicStickersService) {}
 
   async prepare(ctx: InboundContext) {
     if (ctx.type !== 'sticker' || ctx.attachment) return
@@ -22,6 +23,7 @@ export class MediaHistoryService {
       kind: ctx.type, mimeType: ctx.attachment.mimeType,
       dataUrl: `data:${ctx.attachment.mimeType};base64,${ctx.attachment.bytes.toString('base64')}`,
     } : undefined
+    const outbound = isFinnicSticker(outcome.result?.outboundSticker) ? await this.stickers.attachment(outcome.result.outboundSticker) : null
     await this.prisma.$transaction([
       this.prisma.aiMessage.upsert({
         where: { id: `intake:${ctx.inboundId}:user` }, update: {},
@@ -29,7 +31,7 @@ export class MediaHistoryService {
       }),
       this.prisma.aiMessage.upsert({
         where: { id: `intake:${ctx.inboundId}:reply` }, update: {},
-        create: { id: `intake:${ctx.inboundId}:reply`, conversationId: conversation.id, role: 'ASSISTANT', content: outcome.reply },
+        create: { id: `intake:${ctx.inboundId}:reply`, conversationId: conversation.id, role: 'ASSISTANT', content: outcome.reply, ...(outbound ? { metadata: { attachment: outbound } } : {}) },
       }),
       this.prisma.aiConversation.update({ where: { id: conversation.id }, data: { updatedAt: new Date() } }),
     ])

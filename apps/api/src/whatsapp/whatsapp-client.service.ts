@@ -61,6 +61,20 @@ export class WhatsAppClient {
     return { bytes, mimeType, sha256 }
   }
 
+  async sendSticker({ to, bytes, phoneNumberId }: { to: string; bytes: Buffer; phoneNumberId: string }): Promise<{ wamid: string | null }> {
+    if (bytes.length > 100 * 1024 || !matchesMagic(bytes, 'image/webp')) throw new BadRequestException('Sticker inválido')
+    const form = new FormData()
+    form.set('messaging_product', 'whatsapp'); form.set('type', 'image/webp')
+    form.set('file', new Blob([new Uint8Array(bytes)], { type: 'image/webp' }), 'finnic.webp')
+    const base = `${GRAPH_HOST}/${this.apiVersion()}/${encodeURIComponent(phoneNumberId)}`
+    const upload = await this.request(`${base}/media`, { method: 'POST', body: form }, 'sticker_upload')
+    const media = await upload.json() as { id?: string }
+    if (!media.id || !/^[A-Za-z0-9_-]+$/.test(media.id)) throw new ServiceUnavailableException('WhatsApp no recibió el sticker')
+    const response = await this.request(`${base}/messages`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messaging_product: 'whatsapp', to, type: 'sticker', sticker: { id: media.id } }) }, 'sticker_send')
+    const payload = await response.json() as { messages?: Array<{ id?: string }> }
+    return { wamid: payload.messages?.[0]?.id ?? null }
+  }
+
   private apiVersion() { return this.config.get<string>('WHATSAPP_API_VERSION') || 'v21.0' }
 
   private async request(url: string, init: RequestInit, operation: string): Promise<Response> {

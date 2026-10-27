@@ -17,6 +17,7 @@ import { AiConfigResolver } from '../config/ai-config.resolver'
 import type { EffectiveAiConfig } from '../config/ai-config.types'
 import { actionDescription, agentHistory } from './agent-history'
 import { confirmAction } from './confirm-action'
+import { StyleMemoryService } from '../personality/style-memory.service'
 
 export type AgentRequest = { profileId: string; conversationId: string; message: string; channel?: 'app' | 'whatsapp' }
 export type AgentResponse = {
@@ -37,6 +38,7 @@ export class AgentOrchestrator {
     private readonly observability: AiObservabilityService, private readonly context: AiContextService,
     @Optional() private readonly resolver?: AiConfigResolver,
     @Optional() private readonly config?: ConfigService,
+    @Optional() private readonly styleMemory?: StyleMemoryService,
   ) {}
   async run(req: AgentRequest): Promise<AgentResponse> {
     await this.context.assertConversationOwnership(req.profileId, req.conversationId)
@@ -53,8 +55,9 @@ export class AgentOrchestrator {
       const history = agentHistory(await this.conversations.getRecentWindow(req.conversationId, 20))
       await this.conversations.createMessage({ conversationId: req.conversationId, role: AiMessageRole.USER, content: req.message })
       history.push({ role: 'user', parts: [{ text: req.message }] })
+      const personalStyle = await this.styleMemory?.instruction(req.profileId, req.conversationId, req.message) ?? ''
       for (let i = 0; i < Math.min(effective.policy.limits.maxIterations, MAX_ITERATIONS); i++) {
-        const result = await this.gemini.chat({ model: effective.model.model, systemInstruction: withFinnicVoice(effective.prompt.content) + runtimeKnowledge(req.channel) + finnicChannelVoice(req.channel), history, tools, generationConfig: { temperature: effective.model.temperature, maxOutputTokens: effective.model.maxTokens, responseMimeType: effective.model.responseMimeType } })
+        const result = await this.gemini.chat({ model: effective.model.model, systemInstruction: withFinnicVoice(effective.prompt.content) + personalStyle + runtimeKnowledge(req.channel) + finnicChannelVoice(req.channel), history, tools, generationConfig: { temperature: effective.model.temperature, maxOutputTokens: effective.model.maxTokens, responseMimeType: effective.model.responseMimeType } })
         if (!result.functionCalls?.length) {
           const kind = calls.some(call => !call.success) || !result.text ? 'error' : calls.length ? 'query' : 'explanation'
           return this.complete(run.id, req, result.text || FALLBACK, calls, kind)

@@ -20,9 +20,24 @@ deterministas. Se redactan con la misma voz, sin pasar por otra llamada al model
 que pueda alterar cifras o el estado de una operación.
 
 No se agregaron embeddings: la recuperación semántica de documentos no define
-una personalidad. El agente sigue usando su ventana de conversación reciente y
-las herramientas autorizadas para consultar datos reales. Esto no agrega memoria
-permanente ni sincroniza automáticamente la historia de distintos canales.
+una personalidad. El agente mantiene una memoria privada de estilo por perfil:
+extensión, cercanía y uso de emojis, aprendidos de hasta 60 mensajes propios.
+Solo se incorporan dimensiones cerradas al prompt, nunca instrucciones copiadas
+ni importes del historial. Las preferencias explícitas prevalecen sobre inferencias.
+Se comparte entre app y WhatsApp sin alterar permisos ni reglas financieras.
+
+Comandos: «respondeme más corto», «hablame con más detalle», «no uses emojis»,
+«olvidá mi estilo», «no te adaptes a mi estilo», «volvé a adaptarte».
+«No mandes stickers» conserva los stickers solo a pedido; «stickers ocasionales»
+vuelve a habilitar las reacciones espontáneas.
+El reinicio descarta el perfil aprendido y deja de usar mensajes anteriores para
+reaprender; no borra el historial de conversación ni agrega memoria financiera.
+
+Finnic tiene tres stickers propios WebP derivados de sus assets de marca.
+Los envía a pedido o como respuesta ocasional a saludos/agradecimientos simples.
+No reemplazan confirmaciones, aclaraciones, errores ni conversaciones de deuda.
+Hay un intervalo de al menos 12 respuestas sin stickers entre envíos espontáneos.
+La app los muestra del lado de Finnic y WhatsApp los envía como stickers nativos.
 
 Comprobación de calidad: saludo contextual; respuesta a preocupación por gastos;
 consulta financiera respaldada por herramientas; explicación honesta de identidad;

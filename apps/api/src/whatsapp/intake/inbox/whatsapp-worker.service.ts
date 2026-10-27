@@ -1,8 +1,9 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { WhatsAppClient } from '../../whatsapp-client.service'
 import { WhatsAppMessageProcessor } from '../whatsapp-message.processor'
 import { WhatsAppInboxService } from './whatsapp-inbox.service'
+import { FinnicStickersService, isFinnicSticker } from '../../../ai/personality/finnic-stickers.service'
 
 const DEAD_REPLY = 'No pude procesar tu mensaje después de varios intentos y no registré nada. Probá enviarlo de nuevo en unos minutos.'
 const POLL_MS = 5_000
@@ -21,6 +22,7 @@ export class WhatsAppWorker implements OnModuleInit, OnModuleDestroy {
     private readonly processor: WhatsAppMessageProcessor,
     private readonly client: WhatsAppClient,
     private readonly config: ConfigService,
+    @Optional() private readonly stickers?: FinnicStickersService,
   ) {}
 
   private get disabled() { return this.config.get('WHATSAPP_WORKER_DISABLED') === 'true' }
@@ -58,7 +60,11 @@ export class WhatsAppWorker implements OnModuleInit, OnModuleDestroy {
       const reply = await this.inbox.claimReply().catch(() => null)
       if (!reply) break
       try {
-        const sent = await this.client.sendText({ to: reply.from, body: reply.replyText ?? '', phoneNumberId: reply.phoneNumberId ?? this.config.get<string>('WHATSAPP_PHONE_NUMBER_ID') ?? '' })
+        const options = { to: reply.from, phoneNumberId: reply.phoneNumberId ?? this.config.get<string>('WHATSAPP_PHONE_NUMBER_ID') ?? '' }
+        const sticker = (reply.result as { outboundSticker?: unknown } | null)?.outboundSticker
+        const sent = this.stickers && isFinnicSticker(sticker)
+          ? await this.client.sendSticker({ ...options, bytes: await this.stickers.bytes(sticker) })
+          : await this.client.sendText({ ...options, body: reply.replyText ?? '' })
         await this.inbox.replySent(reply.id, sent.wamid)
       } catch (error) {
         await this.inbox.replyFailed(reply, error)

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { api, Edges, JPEG, makeUser, startApp, testDatabaseUrl, webhook } from './e2e.harness'
+import { StyleMemoryService } from '../../../ai/personality/style-memory.service'
 
 const url = testDatabaseUrl()
 const WEBP = Buffer.from('524946461000000057454250565038200000000000000000', 'hex')
@@ -65,5 +66,28 @@ describe.skipIf(!url)('App chat media, ownership and receipt confirmation', () =
     expect(conversation.messages).toHaveLength(2)
     expect(conversation.messages.find(message => message.role === 'USER')?.metadata).toMatchObject({ attachment: { kind: 'sticker' } })
     expect(edges.lastTo(other.phone)).toContain('Te leo')
+  })
+  it('sends its own sticker in the app and through Meta without creating an expense', async () => {
+    const before = await ctx.prisma.personalExpense.count({ where: { profileId: owner.profile.id } })
+    expect((await request({ message: 'Mandame un sticker' })).status).toBe(201)
+    const message = await ctx.prisma.aiMessage.findFirstOrThrow({ where: { conversationId, role: 'ASSISTANT' }, orderBy: { createdAt: 'desc' } })
+    expect(message.metadata).toMatchObject({ attachment: { kind: 'sticker', stickerId: 'finnic' } })
+    await webhook(ctx.base)({ id: `wamid.${randomUUID()}`, from: other.phone, type: 'text', text: { body: 'Mandame un sticker' } })
+    await ctx.worker.drain()
+    expect(edges.stickersSent.some(sticker => sticker.to === other.phone && sticker.bytes.length < 100 * 1024)).toBe(true)
+    expect(await ctx.prisma.personalExpense.count({ where: { profileId: owner.profile.id } })).toBe(before)
+  })
+  it('keeps learned style private to its profile across conversations and resets previous inference', async () => {
+    const memory = ctx.app.get(StyleMemoryService)
+    await memory.instruction(owner.profile.id, conversationId, 'Respondeme con detalle, usá emojis')
+    const second = await ctx.prisma.aiConversation.create({ data: { profileId: owner.profile.id, title: 'Otra charla' } })
+    expect(await memory.instruction(owner.profile.id, second.id, 'hola')).toContain('explicaciones con detalle útil')
+    const otherConversation = await ctx.prisma.aiConversation.findFirstOrThrow({ where: { profileId: other.profile.id } })
+    const otherStyle = await memory.instruction(other.profile.id, otherConversation.id, 'hola')
+    expect(otherStyle).toContain('equilibrada')
+    expect(otherStyle).toContain('no usar')
+    const reset = await memory.instruction(owner.profile.id, second.id, 'Olvidá mi estilo')
+    expect(reset).toContain('equilibrada')
+    expect(reset).toContain('no usar')
   })
 })

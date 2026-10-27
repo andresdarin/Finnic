@@ -13,6 +13,14 @@ const file = (bytes: Buffer, length = bytes.length) => ({ ok: true, status: 200,
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks() })
 
 describe('WhatsAppClient', () => {
+  it('uploads a private WebP and sends it with the native sticker type', async () => {
+    const fetch = vi.fn().mockResolvedValueOnce(json({ id: '12345' })).mockResolvedValueOnce(json({ messages: [{ id: 'wamid.sticker' }] }))
+    vi.stubGlobal('fetch', fetch)
+    const bytes = Buffer.from('524946461000000057454250565038200000000000000000', 'hex')
+    await expect(client().sendSticker({ to: '59899123456', phoneNumberId: '123', bytes })).resolves.toEqual({ wamid: 'wamid.sticker' })
+    expect(fetch.mock.calls[0]![1].body).toBeInstanceOf(FormData)
+    expect(JSON.parse(fetch.mock.calls[1]![1].body)).toMatchObject({ type: 'sticker', sticker: { id: '12345' } })
+  })
   it('no expone el access token en errores ni logs', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 500, text: async () => `failed ${token}` })))
     const logs = [vi.spyOn(console, 'error').mockImplementation(() => undefined), vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined)]
