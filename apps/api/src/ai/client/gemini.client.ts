@@ -1,7 +1,8 @@
+import { chatWithFallback, type ChatOptions } from './chat-fallback'
 import { BadRequestException, Injectable, ServiceUnavailableException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import type { AiConfig } from '../config/ai.config'
-import type { ChatGenerateResponse, ChatMessage, FunctionCall, FunctionDeclaration, GeminiGenerateContentResponse, ModelConfig } from './gemini.types'
+import type { ChatGenerateResponse, GeminiGenerateContentResponse, ModelConfig } from './gemini.types'
 
 export interface GeminiContentPart {
   text?: string
@@ -43,6 +44,7 @@ export class GeminiClient {
 
     for (const currentModel of models) {
       for (let attempt = 1; attempt <= GeminiClient.MAX_RETRIES_PER_MODEL; attempt++) {
+        if (opts.signal?.aborted) throw new ServiceUnavailableException('Tiempo de espera agotado al contactar Gemini')
         const controller = opts.signal ? undefined : new AbortController()
         const timeout = controller ? setTimeout(() => controller.abort(), opts.timeoutMs ?? config.GEMINI_TIMEOUT_MS) : undefined
 
@@ -77,8 +79,8 @@ export class GeminiClient {
           )
 
           if (!response.ok) {
-            const rawBody = await response.text().catch(() => 'Unknown error')
-            console.error(`[GeminiClient] Request failed (${response.status}) on model ${currentModel}: ${rawBody.slice(0, 300)}`)
+            await response.body?.cancel()
+            console.warn(`[GeminiClient] Request HTTP ${response.status} on ${currentModel}`)
 
             if (GeminiClient.RETRYABLE_STATUS_CODES.has(response.status)) {
               hadDemandIssue = true
@@ -105,7 +107,7 @@ export class GeminiClient {
         } catch (error) {
           lastError = error
           if (error instanceof BadRequestException) throw error
-          if (controller && (error as { name?: string })?.name === 'AbortError') {
+          if (opts.signal?.aborted || (controller && (error as { name?: string })?.name === 'AbortError')) {
             throw new ServiceUnavailableException('Tiempo de espera agotado al contactar Gemini')
           }
 
@@ -129,98 +131,11 @@ export class GeminiClient {
     throw new ServiceUnavailableException('Gemini no disponible temporalmente')
   }
 
-  async chat(opts: {
-    systemInstruction?: string
-    history: ChatMessage[]
-    tools?: FunctionDeclaration[]
-    generationConfig?: ModelConfig
-    model?: string
-    signal?: AbortSignal
-  }): Promise<ChatGenerateResponse> {
+  async chat(opts: ChatOptions): Promise<ChatGenerateResponse> {
     const config = this.getConfig()
     if (!config.GEMINI_API_KEY) throw new ServiceUnavailableException('Gemini no disponible temporalmente')
-
-    const models = this.getModelChain(opts.model, config)
-    let lastError: unknown = null
-    let hadDemandIssue = false
-
-    for (const currentModel of models) {
-      for (let attempt = 1; attempt <= GeminiClient.MAX_RETRIES_PER_MODEL; attempt++) {
-        const controller = opts.signal ? undefined : new AbortController()
-        const timeout = controller ? setTimeout(() => controller.abort(), config.GEMINI_TIMEOUT_MS) : undefined
-
-        try {
-          const contents = opts.history.map((m) => ({
-            role: m.role,
-            parts: m.parts,
-          }))
-
-          const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(currentModel)}:generateContent`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'x-goog-api-key': config.GEMINI_API_KEY },
-              signal: opts.signal || controller?.signal,
-              body: JSON.stringify({
-                systemInstruction: opts.systemInstruction ? { parts: [{ text: opts.systemInstruction }] } : undefined,
-                contents,
-                tools: opts.tools?.length ? [{ functionDeclarations: opts.tools }] : undefined,
-                generationConfig: opts.generationConfig,
-              }),
-            },
-          )
-
-          if (!response.ok) {
-            const rawBody = await response.text().catch(() => 'Unknown error')
-            console.error(`[GeminiClient] Chat request failed (${response.status}) on model ${currentModel}: ${rawBody.slice(0, 300)}`)
-
-            if (GeminiClient.RETRYABLE_STATUS_CODES.has(response.status)) {
-              hadDemandIssue = true
-              if (attempt < GeminiClient.MAX_RETRIES_PER_MODEL) {
-                const backoffMs = Math.pow(2, attempt - 1) * 1000
-                await this.sleep(backoffMs)
-                continue
-              }
-              break
-            }
-
-            throw new ServiceUnavailableException('Gemini no disponible temporalmente')
-          }
-
-          const candidate = ((await response.json()) as { candidates?: Array<{ content?: ChatMessage; finishReason?: string }> }).candidates?.[0]
-          const parts = candidate?.content?.parts || []
-          if (!parts.length || (candidate?.finishReason && candidate.finishReason !== 'STOP')) {
-            throw new ServiceUnavailableException('Finnic no pudo completar la respuesta.')
-          }
-
-          return {
-            modelContent: candidate?.content,
-            text: parts.filter((p) => !p.thought).map((p) => p.text || '').join(''),
-            functionCalls: parts.filter((p) => p.functionCall).map((p) => p.functionCall as FunctionCall),
-            finishReason: candidate?.finishReason,
-          }
-        } catch (error) {
-          lastError = error
-          if (controller && (error as { name?: string })?.name === 'AbortError') {
-            throw new ServiceUnavailableException('Tiempo de espera agotado al contactar Gemini')
-          }
-          if (error instanceof ServiceUnavailableException && !hadDemandIssue) {
-            throw error
-          }
-        } finally {
-          if (timeout) clearTimeout(timeout)
-        }
-      }
-    }
-
-    if (hadDemandIssue) {
-      throw new ServiceUnavailableException('El modelo de IA tiene mucha demanda en este momento. Por favor, reintentá en unos instantes.')
-    }
-
-    if (lastError instanceof ServiceUnavailableException) throw lastError
-    throw new ServiceUnavailableException('Gemini no disponible temporalmente')
+    return chatWithFallback(opts, { key: config.GEMINI_API_KEY, models: this.getModelChain(opts.model, config), timeoutMs: config.GEMINI_TIMEOUT_MS })
   }
-
   private extractCandidateText(result: GeminiGenerateContentResponse): string | undefined {
     const parts = result.candidates?.[0]?.content?.parts
     if (!parts?.length) return undefined
@@ -259,4 +174,3 @@ export class GeminiClient {
     }
   }
 }
-

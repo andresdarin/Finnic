@@ -28,10 +28,11 @@ describe('conversational WhatsApp routing', () => {
     expect(expenses.continue).not.toHaveBeenCalled()
   })
   it('keeps open financial questions conversational even if the classifier labels them help', async () => {
-    const { processor, chat, expenses, message } = setup()
+    const { processor, chat, extractor, expenses, message } = setup()
     const result = await processor.handle(message('Buenas. Quiero ordenar mis gastos y no sé por dónde arrancar.') as never)
     expect(result.reply).toBe('Veamos por dónde empezar.')
     expect(chat.reply).toHaveBeenCalledOnce()
+    expect(extractor.extractText).not.toHaveBeenCalled()
     expect(expenses.continue).not.toHaveBeenCalled()
   })
   it('still shows the deterministic menu when the user explicitly requests it', async () => {

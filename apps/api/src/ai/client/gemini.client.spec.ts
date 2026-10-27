@@ -6,6 +6,11 @@ const config = { get: (key: string) => ({ GEMINI_API_KEY: 'secret', GEMINI_API_M
 const success = (text: string) => new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text }] } }] }))
 
 describe('GeminiClient', () => {
+  it('honors an upstream extraction deadline without starting more retries', async () => {
+    const request = vi.spyOn(globalThis, 'fetch')
+    await expect(new GeminiClient(config as never).generateContent({ ...options, signal: AbortSignal.abort() })).rejects.toThrow('Tiempo de espera')
+    expect(request).not.toHaveBeenCalled()
+  })
   it('rejects truncated JSON instead of treating a partial receipt as a valid reading', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ candidates: [{ finishReason: 'MAX_TOKENS', content: { parts: [{ text: '{"total":"12' }] } }] })))
     await expect(new GeminiClient(config as never).generateContent(options)).rejects.toThrow('quedó incompleta')

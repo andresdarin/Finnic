@@ -18,6 +18,7 @@ import type { EffectiveAiConfig } from '../config/ai-config.types'
 import { actionDescription, agentHistory } from './agent-history'
 import { confirmAction } from './confirm-action'
 import { StyleMemoryService } from '../personality/style-memory.service'
+import { ChatUnavailableError } from '../client/chat-fallback'
 
 export type AgentRequest = { profileId: string; conversationId: string; message: string; channel?: 'app' | 'whatsapp' }
 export type AgentResponse = {
@@ -56,8 +57,9 @@ export class AgentOrchestrator {
       await this.conversations.createMessage({ conversationId: req.conversationId, role: AiMessageRole.USER, content: req.message })
       history.push({ role: 'user', parts: [{ text: req.message }] })
       const personalStyle = await this.styleMemory?.instruction(req.profileId, req.conversationId, req.message) ?? ''
+      const signal = AbortSignal.timeout(45_000)
       for (let i = 0; i < Math.min(effective.policy.limits.maxIterations, MAX_ITERATIONS); i++) {
-        const result = await this.gemini.chat({ model: effective.model.model, systemInstruction: withFinnicVoice(effective.prompt.content) + personalStyle + runtimeKnowledge(req.channel) + finnicChannelVoice(req.channel), history, tools, generationConfig: { temperature: effective.model.temperature, maxOutputTokens: effective.model.maxTokens, responseMimeType: effective.model.responseMimeType } })
+        const result = await this.gemini.chat({ model: effective.model.model, systemInstruction: withFinnicVoice(effective.prompt.content) + personalStyle + runtimeKnowledge(req.channel) + finnicChannelVoice(req.channel), history, tools, signal, generationConfig: { temperature: effective.model.temperature, maxOutputTokens: effective.model.maxTokens, responseMimeType: effective.model.responseMimeType } })
         if (!result.functionCalls?.length) {
           const kind = calls.some(call => !call.success) || !result.text ? 'error' : calls.length ? 'query' : 'explanation'
           return this.complete(run.id, req, result.text || FALLBACK, calls, kind)
@@ -93,8 +95,8 @@ export class AgentOrchestrator {
         await this.conversations.createMessage({ conversationId: req.conversationId, role: AiMessageRole.ASSISTANT, content: 'Consulta de datos.', metadata: { internal: true, modelContent, toolResponse: responses } })
       }
       return this.complete(run.id, req, FALLBACK, calls, 'error')
-    } catch {
-      return this.complete(run.id, req, FALLBACK, calls, 'error')
+    } catch (error) {
+      return this.complete(run.id, req, error instanceof ChatUnavailableError ? error.message : FALLBACK, calls, 'error')
     }
   }
   async confirmPending(req: { profileId: string; pendingActionId: string }): Promise<AgentResponse> {
@@ -103,7 +105,7 @@ export class AgentOrchestrator {
   private async complete(id: string, req: AgentRequest, text: string, toolCalls: AgentResponse['toolCalls'], kind: NonNullable<AgentResponse['kind']>) {
     text = finnicText(text)
     await this.conversations.createMessage({ conversationId: req.conversationId, role: AiMessageRole.ASSISTANT, content: text, metadata: { kind } })
-    await this.observability.endRun(id, { status: kind === 'error' ? 'failed' : 'completed' })
+    await this.observability.endRun(id, { status: kind === 'error' ? 'failed' : 'completed', ...(kind === 'error' ? { error: 'agent_response_unavailable' } : {}) })
     await this.conversations.touch(req.conversationId)
     return { text, conversationId: req.conversationId, toolCalls, kind }
   }

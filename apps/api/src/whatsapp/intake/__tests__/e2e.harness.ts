@@ -31,6 +31,10 @@ export class Edges {
   geminiDown = false
 
   install() {
+    vi.spyOn(GeminiClient.prototype, 'chat').mockImplementation(async () => {
+      if (this.geminiDown) throw new Error('Gemini no disponible temporalmente')
+      return { text: 'Dale, seguimos con tus gastos.' }
+    })
     vi.spyOn(WhatsAppClient.prototype, 'sendSticker').mockImplementation(async ({ to, bytes }) => {
       this.stickersSent.push({ to, bytes }); return { wamid: `wamid.sticker.${randomUUID()}` }
     })
@@ -55,6 +59,7 @@ export class Edges {
 }
 
 export async function startApp(url: string) {
+  if (testDatabaseUrl() !== url) throw new Error('Refusing to start outside the explicitly configured local test database')
   Object.assign(process.env, {
     DATABASE_URL: url, DIRECT_URL: url, META_APP_SECRET: APP_SECRET, SUPABASE_JWT_SECRET: JWT_SECRET,
     WHATSAPP_WORKER_DISABLED: 'true', WHATSAPP_ACCESS_TOKEN: 'e2e-token', GEMINI_API_KEY: 'e2e-key', AI_ENV: 'TEST',
@@ -67,7 +72,9 @@ export async function startApp(url: string) {
   const prisma = app.get(PrismaService)
   // Hard stop if the app is not connected to the isolated test database.
   const [db] = await prisma.$queryRaw<Array<{ name: string; host: string }>>`SELECT current_database() AS name, inet_server_addr()::text AS host`
-  if (!db?.name.startsWith('tranquility_') || !String(db.host).startsWith('127.0.0.1')) throw new Error(`Refusing to run against ${db?.name}`)
+  // Docker publishes a loopback endpoint but PostgreSQL reports its container IP.
+  const expected = new URL(url).pathname.slice(1)
+  if (!db?.name.startsWith('tranquility_') || db.name !== expected) throw new Error(`Refusing to run against ${db?.name}`)
   return { app, prisma, worker: app.get(WhatsAppWorker), base: `${await app.getUrl()}/api` }
 }
 
