@@ -33,7 +33,7 @@ describe.skipIf(!url)('Local Docker: financial answers and explicit memory acros
       { ...base, title: 'Compra mayor fuera de los últimos treinta', amount: '999.99', date: new Date(`${month}-01T15:00:00Z`) },
       ...Array.from({ length: 35 }, (_, i) => ({ ...base, title: `Gasto reciente ${i}`, amount: '1.00', date: new Date(`${month}-02T15:${String(i).padStart(2, '0')}:00Z`) })),
       { ...base, title: 'Ingreso que no es gasto', amount: '999999.00', movementType: 'INCOME', date: new Date(`${month}-03T15:00:00Z`) },
-      { ...base, title: 'Compra USD', amount: '1500.00', currency: 'USD', date: new Date(`${month}-03T15:00:00Z`) },
+      { ...base, title: 'Compra USD', merchant: 'Compra USD', amount: '1500.00', currency: 'USD', date: new Date(`${month}-03T15:00:00Z`) },
       { ...base, profileId: other.profile.id, title: 'Gasto privado de otra persona', amount: '99999.00', date: new Date(`${month}-03T15:00:00Z`) },
     ] })
   }, 60000)
@@ -54,6 +54,7 @@ describe.skipIf(!url)('Local Docker: financial answers and explicit memory acros
     expect(reply).toContain('999,99')
     expect(reply).toContain('1.500,00')
     expect(reply).toContain('monedas van por separado')
+    expect(reply).not.toContain('en Compra USD')
   })
   it('persists explicit defaults from app to WhatsApp and never changes another profile', async () => {
     expect(await appSay('Mi cuenta habitual es Banco habitual')).toContain('Banco habitual')
