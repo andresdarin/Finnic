@@ -7,7 +7,7 @@ import { PrismaService } from '../../../prisma/prisma.service'
 import { EXPENSE_CATEGORIES, type ExpenseCategoryKey } from '../constants'
 import type { TextExtraction } from '../ai/extraction.schemas'
 import { aiAmountToCents, centsToMoney, moneyCandidates } from '../parsing/money-text'
-import { currencySignal } from '../parsing/signals'
+import { currencySignal, normalizeText } from '../parsing/signals'
 import type { HandlerResult, InboundContext } from '../types'
 import { formatMoney } from '../reply/format'
 import { capacityReply, savingsReply } from './query-replies'
@@ -47,7 +47,7 @@ export class QueryIntakeService {
     const requestedCurrency = signal === 'UYU' || signal === 'USD' ? signal : null
     const expenses = data.largestExpensesByCurrency.filter(row => !requestedCurrency || row.currency === requestedCurrency)
     if (!expenses.length) return { reply: 'No tengo gastos personales registrados este mes' + (requestedCurrency ? ` en ${requestedCurrency}.` : '.'), intent: 'other' }
-    const lines = expenses.map(row => `Tu gasto más alto${expenses.length > 1 ? ` en ${row.currency}` : ''} fue ${row.title}: ${formatMoney(row.amount, row.currency)}${row.merchant ? ` en ${row.merchant}` : ''}, el ${new Intl.DateTimeFormat('es-UY', { timeZone: data.timeZone, day: 'numeric', month: 'numeric' }).format(row.date)}.`)
+    const lines = expenses.map(row => `Tu gasto más alto${expenses.length > 1 ? ` en ${row.currency}` : ''} fue ${row.title}: ${formatMoney(row.amount, row.currency)}${row.merchant && normalizeText(row.merchant) !== normalizeText(row.title) ? ` en ${row.merchant}` : ''}, el ${new Intl.DateTimeFormat('es-UY', { timeZone: data.timeZone, day: 'numeric', month: 'numeric' }).format(row.date)}.`)
     if (lines.length > 1) lines.push('Las monedas van por separado.')
     return { reply: lines.join('\n'), intent: 'other', result: { monthKey: data.monthKey, source: 'largest_expenses_full_month' } }
   }
