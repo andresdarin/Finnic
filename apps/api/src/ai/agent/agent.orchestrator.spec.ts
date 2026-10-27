@@ -39,7 +39,7 @@ describe('AgentOrchestrator', () => {
     const gemini = { chat: vi.fn(async () => ({ text: 'Buenas.' })) }
     await makeSubject(gemini, makeRegistry(), makeExecutor()).run({ ...request, message: 'Hola', channel: 'whatsapp' })
     const instruction = (gemini.chat.mock.calls[0] as unknown as [{ systemInstruction: string }])[0].systemInstruction
-    expect(instruction).toContain('[finnic-voice:v2]')
+    expect(instruction).toContain('[finnic-voice:v3]')
     expect(instruction).toContain('CANAL WHATSAPP')
     expect(instruction).toContain('confirmación explícita')
     expect(instruction).toContain('No te presentes como una persona')
