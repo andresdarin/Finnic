@@ -43,7 +43,7 @@ export class DraftResponder {
     const answer = applyDraftAnswer(draft.pendingField, ctx.text, draft.proposal, draft.meta, ctx.localDate)
     if (answer.kind === 'cancel') {
       await this.drafts.close(draft.id, ctx.profileId, 'cancelled')
-      return { reply: 'Listo, no registré ese gasto.', intent: 'cancel' }
+      return { reply: `Listo, no registré ese ${draft.proposal.transferDocument ? 'movimiento' : 'gasto'}.`, intent: 'cancel' }
     }
     if (answer.kind === 'not_understood') return { reply: `Me falta aclarar esto: ${draft.question ?? ''}\nSi preferís dejarlo, decime "cancelar".`.trim(), intent: 'clarification', result: { draftId: draft.id } }
     return this.expenses.continue(ctx, answer.proposal, profile, draft)

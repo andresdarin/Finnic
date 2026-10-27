@@ -40,7 +40,13 @@ export class ReceiptIntakeService {
     await this.prisma.whatsAppInboundMessage.update({ where: { id: ctx.inboundId }, data: { mediaSha256: media.sha256, mediaSize: media.bytes.length, mediaMimeType: media.mimeType } })
     ctx.attachment = media
 
-    const reading = await this.extractor.extractReceipt({ image: media.bytes, mimeType: media.mimeType, caption: ctx.text, today: ctx.localDate })
+    let reading: Awaited<ReturnType<WhatsAppExtractorService['extractReceipt']>>
+    try {
+      reading = await this.extractor.extractReceipt({ image: media.bytes, mimeType: media.mimeType, caption: ctx.text, today: ctx.localDate })
+    } catch (error) {
+      if (ctx.type === 'document' && error instanceof BadRequestException) return { reply: 'No pude abrir ese PDF. Probá una copia sin contraseña o una foto legible del comprobante. No guardé nada.', intent: 'other' }
+      throw error
+    }
     if (reading?.documentKind === 'financial') return { reply: reading.summary || 'Es un documento financiero. Qué querés revisar de él? No registré ningún movimiento.', intent: 'other' }
     if (reading?.documentKind === 'transfer') {
       if (reading.paymentStatus === 'pending' || reading.paymentStatus === 'failed') return { reply: 'El comprobante indica una transferencia pendiente o rechazada. No la registré como un movimiento realizado; mandame el comprobante cuando esté completada.', intent: 'other' }

@@ -1,4 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto'
+import { BadRequestException } from '@nestjs/common'
+import { WhatsAppExtractorService } from '../ai/whatsapp-extractor.service'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { WhatsAppClient } from '../../whatsapp-client.service'
 import { api, Edges, JPEG, makeUser, startApp, testDatabaseUrl, textMessage, webhook } from './e2e.harness'
@@ -101,5 +103,11 @@ describe.skipIf(!url)('Financial PDF and transfer proof: real HTTP, worker and P
     const income = (await rows()).find(r => r.movementType === 'INCOME' && r.amount.toFixed(2) === '200.00')
     expect(income).toMatchObject({ source: 'web', inputMethod: 'RECEIPT_SCAN' })
     expect(await balance()).toBe('11000.00')
+  })
+  it('does not retry a password-protected or invalid PDF as a successful payment', async () => {
+    queue(proof())
+    vi.spyOn(WhatsAppExtractorService.prototype, 'extractReceipt').mockRejectedValueOnce(new BadRequestException('Invalid PDF'))
+    expect(await send(document())).toContain('sin contraseña')
+    expect(await rows()).toHaveLength(4)
   })
 })
