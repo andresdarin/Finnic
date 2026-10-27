@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { apiFetch } from '@/lib/api'
 import { createClient } from '@/lib/supabase/client'
 import type { SavedSimulatorScenario } from '../simulatorTypes'
+import { tranquilityApiPath } from '../utils'
 
 const money = z.string().regex(/^\d+\.\d{2}$/)
 const scenarioSchema = z.object({ id: z.string().min(1), name: z.string().min(1).max(80), initialCapital: money, monthlyContribution: money, annualReturnPct: z.number().finite().gt(-100).lte(100000), annualInflationPct: z.number().finite().gt(-100).lte(100000), years: z.number().int().min(0).max(100), contributionGrowthPct: z.number().finite().gt(-100).lte(100000), targetCapital: money }).strict()
@@ -12,7 +13,7 @@ const scenarioSchema = z.object({ id: z.string().min(1), name: z.string().min(1)
 async function authorized<T>(path: string, options?: RequestInit) {
   const { data: { session } } = await createClient().auth.getSession()
   if (!session?.access_token) throw new Error('Tu sesión expiró. Volvé a iniciar sesión.')
-  return apiFetch<T>(path, options, session.access_token)
+  return apiFetch<T>(tranquilityApiPath(path), options, session.access_token)
 }
 
 export function useSimulatorScenarios() {

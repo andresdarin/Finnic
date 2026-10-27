@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { usePathname } from 'next/navigation'
-import { NAV_ITEMS, useAnimatedIndicator } from './hooks'
+import { NAV_ITEMS, useAnimatedIndicator, navHrefFor } from './hooks'
 import SidebarHeader from './SidebarHeader'
 import SidebarNav from './SidebarNav'
 import SidebarFooter from './SidebarFooter'
@@ -23,7 +23,7 @@ interface SidebarProps {
 export default function Sidebar({ profile, onLogout, collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname()
   const activeHref = NAV_ITEMS.filter((item) => item.href !== '/ai' || profile?.isAdmin === true)
-    .find((item) => pathname === item.href)?.href ?? '/dashboard'
+    .find((item) => navHrefFor(pathname) === item.href)?.href ?? '/dashboard'
   const { navRef, itemRefs, indicator, hoveredHref, setHoveredHref } = useAnimatedIndicator(collapsed, activeHref)
 
   return (

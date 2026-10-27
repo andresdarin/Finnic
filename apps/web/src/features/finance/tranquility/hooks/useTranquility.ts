@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { apiFetch, ApiError } from '@/lib/api'
 import type { TranquilityDashboard } from '../types'
+import { tranquilityApiPath } from '../utils'
 
 export function useTranquility(month: string) {
   const [data, setData] = useState<TranquilityDashboard | null>(null)
@@ -44,7 +45,7 @@ export function useTranquility(month: string) {
     try {
       const { data: { session } } = await createClient().auth.getSession()
       if (!session) throw new Error('Sesión expirada')
-      const result = await apiFetch<T>(path, { method, body: body === undefined ? undefined : JSON.stringify(body) }, session.access_token)
+      const result = await apiFetch<T>(tranquilityApiPath(path), { method, body: body === undefined ? undefined : JSON.stringify(body) }, session.access_token)
       await load()
       return result
     } catch (cause) {

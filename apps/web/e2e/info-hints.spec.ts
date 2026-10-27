@@ -11,9 +11,18 @@ test.describe('Íconos de info', () => {
     await expect(page.getByRole('note')).toHaveCount(0)
   })
 
-  test('los campos de Tranquilidad explican qué cargar', async ({ page }) => {
+  test('Tranquilidad explica sus cifras y campos', async ({ page }) => {
     await page.goto('/tranquilidad-financiera')
-    await page.getByRole('button', { name: 'Qué es Gasto mensual futuro' }).click()
-    await expect(page.getByRole('note')).toContainText('libertad financiera')
+    // Sin configurar muestra el primer paso; configurada, el tablero
+    const field = page.getByRole('button', { name: 'Qué es Gasto mensual futuro' })
+    const hero = page.getByRole('button', { name: 'Qué es Disponible para gastar' })
+    await expect(field.or(hero)).toBeVisible()
+    if (await field.isVisible()) {
+      await field.click()
+      await expect(page.getByRole('note')).toContainText('libertad financiera')
+    } else {
+      await hero.click()
+      await expect(page.getByRole('note')).toContainText('necesidades y deseos')
+    }
   })
 })

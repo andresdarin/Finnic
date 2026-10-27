@@ -9,3 +9,15 @@ export const TRANQUILITY_FIELD_HINTS: Record<string, string> = {
   emergencyInitial: 'Lo que ya tenés guardado para imprevistos.',
   investmentInitial: 'Lo que ya tenés invertido hoy.',
 }
+
+/** Textos de las "i" del encabezado. */
+export const HERO_HINTS = {
+  disponible: 'Lo que te queda para necesidades y deseos este mes: lo presupuestado menos lo que ya gastaste.',
+  ingreso: 'El ingreso que usaste como referencia para armar el presupuesto del mes.',
+  aportes: 'Lo que efectivamente moviste este mes a tus fondos de emergencia e inversión.',
+  invertido: 'El capital que aportaste a tus inversiones, sin contar ganancias.',
+  emergencia: 'Tu fondo para imprevistos y cuántos meses de gastos esenciales cubre.',
+} as const
+
+/** Pestañas de la página: qué hacer con la plata. */
+export const TAB_LABELS = { gastar: 'Gastar', guardar: 'Guardar', llegar: 'Llegar' } as const

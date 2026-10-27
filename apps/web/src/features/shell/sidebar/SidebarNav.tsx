@@ -4,7 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { NAV_ITEMS } from './hooks'
+import { NAV_ITEMS, navHrefFor } from './hooks'
 import type { MutableRefObject } from 'react'
 
 interface SidebarNavProps {
@@ -30,7 +30,7 @@ export default function SidebarNav({ collapsed, profile, navRef, itemRefs, indic
     (item) => (item.href !== '/finanzas' || profile) && (item.href !== '/ai' || profile?.isAdmin === true)
   )
 
-  const activeHref = visibleItems.find((item) => pathname === item.href)?.href ?? '/dashboard'
+  const activeHref = visibleItems.find((item) => navHrefFor(pathname) === item.href)?.href ?? '/dashboard'
   const targetHref = hoveredHref ?? activeHref
 
   return (
@@ -49,7 +49,7 @@ export default function SidebarNav({ collapsed, profile, navRef, itemRefs, indic
       </motion.div>
 
       {visibleItems.map((item) => {
-        const isActive = pathname === item.href
+        const isActive = navHrefFor(pathname) === item.href
         const isTarget = targetHref === item.href
         const Icon = item.icon
         return (

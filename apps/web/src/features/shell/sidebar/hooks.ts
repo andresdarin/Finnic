@@ -6,7 +6,6 @@ import { Home, Wallet, TrendingUp, Fuel, Target, Settings, BadgeDollarSign, Brai
 export const NAV_ITEMS = [
   { label: 'Inicio', href: '/dashboard', icon: Home },
   { label: 'Finanzas Personales', href: '/finanzas', icon: BadgeDollarSign },
-  { label: 'Tranquilidad Financiera', href: '/tranquilidad-financiera', icon: BadgeDollarSign },
   { label: 'Movimientos', href: '/expenses', icon: Wallet },
   { label: 'Balance', href: '/balance', icon: TrendingUp },
   { label: 'Nafta', href: '/fuel', icon: Fuel },
@@ -14,6 +13,15 @@ export const NAV_ITEMS = [
   { label: 'Ajustes', href: '/settings', icon: Settings },
   { label: 'Finnic AI', href: '/ai', icon: Brain },
 ] as const
+
+/** Pantallas que viven dentro de otra sección: Tranquilidad se abre desde Balance. */
+const SECTION_ALIASES: Record<string, string> = { '/tranquilidad-financiera': '/balance' }
+
+/** href del ítem de navegación que corresponde a la ruta actual. */
+export function navHrefFor(pathname: string): string {
+  const alias = Object.entries(SECTION_ALIASES).find(([path]) => pathname.startsWith(path))
+  return alias ? alias[1] : pathname
+}
 
 export function useAnimatedIndicator(collapsed: boolean, activeHref: string) {
   const navRef = useRef<HTMLElement | null>(null)

@@ -27,7 +27,6 @@ interface NavItem {
 const NAV_ITEMS: readonly NavItem[] = [
   { id: 'dashboard', label: 'Inicio', href: '/dashboard', icon: Home },
   { id: 'finanzas', label: 'Finanzas', href: '/finanzas', icon: CircleDollarSign },
-  { id: 'tranquilidad', label: 'Tranquilidad', href: '/tranquilidad-financiera', icon: CircleDollarSign },
   { id: 'balance', label: 'Balance', href: '/balance', icon: TrendingUp },
   { id: 'expenses', label: 'Movimientos', href: '/expenses', icon: WalletCards },
 ]
@@ -67,6 +66,8 @@ export default function MobileNav({ onAddClick }: MobileNavProps) {
     if (href === '/dashboard') {
       return pathname === '/dashboard' || pathname === '/'
     }
+    // Tranquilidad financiera vive dentro de Balance
+    if (href === '/balance' && pathname.startsWith('/tranquilidad-financiera')) return true
     return pathname.startsWith(href) && (href !== '/expenses' || pathname !== '/expenses/new')
   }
 

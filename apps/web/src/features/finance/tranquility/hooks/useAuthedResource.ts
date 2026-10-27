@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { apiFetch, ApiError } from '@/lib/api'
+import { tranquilityApiPath } from '../utils'
 
 export async function authedFetch<T>(path: string, method = 'GET', body?: unknown) {
   const { data: { session } } = await createClient().auth.getSession()
   if (!session) throw new Error('Sesión expirada')
-  return apiFetch<T>(path, { method, body: body === undefined ? undefined : JSON.stringify(body) }, session.access_token)
+  return apiFetch<T>(tranquilityApiPath(path), { method, body: body === undefined ? undefined : JSON.stringify(body) }, session.access_token)
 }
 
 /** Loads one authenticated resource and exposes a mutation that reloads it. */

@@ -25,7 +25,7 @@ interface AppShellProps {
 export default function AppShell({ children, profile, onLogout }: AppShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const pathname = usePathname()
-  const isFullBleedHero = pathname === '/dashboard' || pathname === '/' || pathname === '/finanzas' || pathname === '/balance' || pathname === '/expenses' || pathname === '/expenses/new' || pathname === '/chat'
+  const isFullBleedHero = pathname === '/dashboard' || pathname === '/' || pathname === '/finanzas' || pathname === '/balance' || pathname === '/expenses' || pathname === '/expenses/new' || pathname === '/chat' || pathname === '/tranquilidad-financiera'
 
   const isChat = pathname === '/chat'
 

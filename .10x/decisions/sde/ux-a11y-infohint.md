@@ -3,3 +3,8 @@
 - Contraste: token `accent-ink` (#7E6842 claro) para dorado como texto; `muted-foreground` claro #566770; pisos de opacidad (`text-navy/70`, `text-muted-foreground` sin opacidad). axe: 0 violaciones serias/críticas en 12 pantallas.
 - Arreglos del recorrido: cerrar sesión en el perfil (mobile), perfil sin datos hardcodeados, logros placeholder bloqueados, "Perfil completo" = nombre + foto, fechas de calendario en hora local (`lib/dates.ts`), errores de Auth en español (`authErrors.ts`) con `role="alert"`, alta de gasto con obligatorios marcados, motivo del botón deshabilitado y limpieza tras guardar (sin doble envío), nombre accesible del selector de fecha, chips de filtro con nombre y mes legible, perfil autocreado si falta (`ProfileProvider`).
 - Deuda: editar/borrar gastos desde el detalle (requiere UX + endpoints), alta manual primero en "Egreso", menú inferior sin rótulos, hoja de detalle sin `aria-modal`/inert, respuesta del chat sin saltos de línea, tono "usted" en Combustible/Perfil.
+
+## Tranquilidad dentro de Balance (2026-10-27)
+- Sale del menú inferior y de la barra lateral; entrada desde Balance (`BalanceTranquilityLink`). `navHrefFor` marca "Balance" como activo dentro de Tranquilidad.
+- Rediseño: `TranquilityHero` (navy de borde a borde con plumas, volver a Balance, mes, ajustes, "Disponible para gastar" + métricas con InfoHint), `TranquilityTabs` (píldora), `Primitives` al sistema (tarjetas con relieve, botón navy, campos hundidos), `WarningList` plegable sin códigos crudos, paleta de marca en gráficos y barras, estado vacío del gráfico.
+- Bug: las escrituras de Tranquilidad iban sin el prefijo `/api` (configurar, presupuestos, categorías, movimientos, escenarios fallaban con 404). `tranquilityApiPath` lo normaliza.

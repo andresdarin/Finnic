@@ -87,3 +87,6 @@ export function categorySpending(dashboard: TranquilityDashboard) {
   }
   return { rows: [...rows.values()].sort((a, b) => b.amount - a.amount), missingFx }
 }
+
+/** La API usa el prefijo global `/api`; algunas rutas de Tranquilidad se escribían sin él. */
+export const tranquilityApiPath = (path: string) => (path.startsWith('/api/') ? path : `/api${path.startsWith('/') ? '' : '/'}${path}`)

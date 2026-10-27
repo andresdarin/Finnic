@@ -5,7 +5,6 @@ const SCREENS = [
   { path: '/dashboard', heading: /Buen (día|tarde|noche)|Buenas/ },
   { path: '/finanzas', text: 'Balance neto del mes' },
   { path: '/balance', text: 'Patrimonio estimado' },
-  { path: '/tranquilidad-financiera', text: /tranquilidad/i },
   { path: '/expenses', text: 'Movimientos' },
   { path: '/goals', text: 'Metas' },
   { path: '/profile', text: 'Perfil' },
