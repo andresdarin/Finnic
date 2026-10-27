@@ -22,7 +22,7 @@ describe('password changes', () => {
     await act(async () => { await result.current.update('new-password', 'new-password', 'current-password') })
     expect(auth.signInWithPassword).toHaveBeenCalledWith({ email: 'owner@example.com', password: 'current-password' })
     expect(auth.updateUser).toHaveBeenCalledWith({ password: 'new-password' })
-    expect(auth.signInWithPassword.mock.invocationCallOrder[0]).toBeLessThan(auth.updateUser.mock.invocationCallOrder[0])
+    expect(auth.signInWithPassword.mock.invocationCallOrder[0]!).toBeLessThan(auth.updateUser.mock.invocationCallOrder[0]!)
     expect(result.current.success).toBe(true)
   })
   it('does not update after a wrong current password', async () => {
