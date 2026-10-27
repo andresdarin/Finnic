@@ -13,6 +13,12 @@ function setup() {
 }
 
 describe('conversational WhatsApp routing', () => {
+  it('routes text-style requests directly to chat and applies punctuation before returning', async () => {
+    const { processor, chat, extractor, message } = setup()
+    chat.reply.mockResolvedValue({ reply: '¡Dale! ¿Seguimos?', intent: 'other' })
+    expect((await processor.handle(message('Quiero los textos más cortos y amigables') as never)).reply).toBe('Dale! Seguimos?')
+    expect(extractor.extractText).not.toHaveBeenCalled()
+  })
   it('accepts a sticker without invoking financial extraction, receipt scanning or draft confirmation', async () => {
     const { processor, chat, extractor, expenses, message } = setup()
     const result = await processor.handle({ ...message(''), type: 'sticker' } as never)

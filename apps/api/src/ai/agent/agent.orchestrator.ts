@@ -5,7 +5,7 @@ import { GeminiClient } from '../client/gemini.client'
 import { ChatMessage } from '../client/gemini.types'
 import { FINNIC_PROMPT_ID } from '../prompts/finnic.prompt'
 import { runtimeKnowledge } from '../prompts/product-knowledge'
-import { finnicChannelVoice, withFinnicVoice } from '../prompts/finnic-voice'
+import { finnicChannelVoice, finnicText, withFinnicVoice } from '../prompts/finnic-voice'
 import { PromptRegistry } from '../prompts/prompt.registry'
 import { ToolExecutor } from '../tools/tool.executor'
 import { ToolRegistry } from '../tools/tool.registry'
@@ -77,7 +77,7 @@ export class AgentOrchestrator {
           }
           if (definition.risk !== 'read') {
             const args = { ...parsed.data, ...(call.name === 'create_expense' && !parsed.data.date ? { date: new Date().toISOString() } : {}) }
-            const text = definition.describe ? await definition.describe(args, { profileId: req.profileId }) : actionDescription(call.name, args, definition.description)
+            const text = finnicText(definition.describe ? await definition.describe(args, { profileId: req.profileId }) : actionDescription(call.name, args, definition.description))
             const action = await this.pending.create({ profileId: req.profileId, conversationId: req.conversationId, toolName: call.name, args, risk: 'write' })
             await this.conversations.createMessage({ conversationId: req.conversationId, role: AiMessageRole.ASSISTANT, content: text, metadata: { kind: 'action', pendingActionId: action.id, actionStatus: 'pending' } })
             await this.observability.endRun(run.id, { status: 'pending_confirmation' })
@@ -101,6 +101,7 @@ export class AgentOrchestrator {
     return confirmAction({ pending: this.pending, executor: this.executor, conversations: this.conversations, observability: this.observability }, req, await this.resolveConfig(), !!this.resolver)
   }
   private async complete(id: string, req: AgentRequest, text: string, toolCalls: AgentResponse['toolCalls'], kind: NonNullable<AgentResponse['kind']>) {
+    text = finnicText(text)
     await this.conversations.createMessage({ conversationId: req.conversationId, role: AiMessageRole.ASSISTANT, content: text, metadata: { kind } })
     await this.observability.endRun(id, { status: kind === 'error' ? 'failed' : 'completed' })
     await this.conversations.touch(req.conversationId)

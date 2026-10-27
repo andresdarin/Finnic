@@ -39,7 +39,7 @@ describe('AgentOrchestrator', () => {
     const gemini = { chat: vi.fn(async () => ({ text: 'Buenas.' })) }
     await makeSubject(gemini, makeRegistry(), makeExecutor()).run({ ...request, message: 'Hola', channel: 'whatsapp' })
     const instruction = (gemini.chat.mock.calls[0] as unknown as [{ systemInstruction: string }])[0].systemInstruction
-    expect(instruction).toContain('[finnic-voice:v1]')
+    expect(instruction).toContain('[finnic-voice:v2]')
     expect(instruction).toContain('CANAL WHATSAPP')
     expect(instruction).toContain('confirmación explícita')
     expect(instruction).toContain('No te presentes como una persona')
@@ -51,6 +51,14 @@ describe('AgentOrchestrator', () => {
   it('1. responde una conversación sin tools', async () => {
     const result = await makeSubject({ chat: vi.fn(async () => ({ text: 'Hola' })) }, makeRegistry(), makeExecutor()).run({ ...request, message: 'Hola' })
     expect(result.text).toBe('Hola')
+  })
+  it('persists and returns the same casual punctuation in both channels', async () => {
+    for (const channel of ['app', 'whatsapp'] as const) {
+      const conversations = makeConversations()
+      const result = await makeSubject({ chat: vi.fn(async () => ({ text: '¡Dale! ¿Qué querés revisar?' })) }, makeRegistry(), makeExecutor(), conversations).run({ ...request, message: 'hola', channel })
+      expect(result.text).toBe('Dale! Qué querés revisar?')
+      expect(conversations.createMessage).toHaveBeenCalledWith(expect.objectContaining({ role: 'ASSISTANT', content: result.text }))
+    }
   })
 
   it('2. ejecuta automáticamente una read tool', async () => {

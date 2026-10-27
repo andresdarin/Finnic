@@ -1,7 +1,22 @@
 import { describe, expect, it } from 'vitest'
-import { initialStyle, learnStyle, styleInstruction } from './style-profile'
+import { initialStyle, isStyleRequest, learnStyle, styleInstruction } from './style-profile'
 
 describe('Learned communication style', () => {
+  it('stays short when the user writes long messages, unless detail was explicitly requested', () => {
+    const samples = Array(8).fill('Hoy te cuento todo lo que pasó con mis gastos. '.repeat(15))
+    expect(learnStyle(initialStyle(), samples, 'dale').brevity).toBe('short')
+    expect(styleInstruction({ ...initialStyle(), brevity: 'detailed' })).toContain('una o dos frases')
+    const explicit = learnStyle(initialStyle(), [], 'Respondeme con detalle')
+    expect(learnStyle(explicit, samples, 'dale').brevity).toBe('detailed')
+  })
+  it('remembers requests for shorter friendly texts and does not invert negative requests', () => {
+    const request = 'quiero los textos más cortos y amigables, no mandes textos largos'
+    expect(isStyleRequest(request)).toBe(true)
+    const style = learnStyle(initialStyle(), [], request)
+    expect(style).toMatchObject({ brevity: 'short', tone: 'relaxed', explicit: { brevity: 'short', tone: 'relaxed' } })
+    expect(learnStyle(style, [], 'No quiero respuestas largas').explicit?.brevity).toBe('short')
+    expect(isStyleRequest('sin signos de apertura')).toBe(true)
+  })
   it('adapts gradually and does not infer a personality from one message', () => {
     expect(learnStyle(initialStyle(), ['bo dale'], 'bo dale').tone).toBe('neutral')
     expect(learnStyle(initialStyle(), Array(6).fill('Bo, dale jajaja'), 'bien')).toMatchObject({ brevity: 'short', tone: 'relaxed' })
