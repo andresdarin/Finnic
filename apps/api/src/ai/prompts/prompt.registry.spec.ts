@@ -7,7 +7,7 @@ describe('PromptRegistry', () => {
     const resolver = { resolve: async () => ({ prompt: { content: 'Regla del negocio: confirmación obligatoria.' }, model: { temperature: 0.2, maxTokens: 1500 } }) }
     const prompt = await new PromptRegistry(resolver as never).getEffectivePrompt()
     expect(prompt.systemPrompt).toContain('Regla del negocio: confirmación obligatoria.')
-    expect(prompt.systemPrompt).toContain('[finnic-voice:v2]')
+    expect(prompt.systemPrompt).toContain('[finnic-voice:v3]')
     expect(prompt.systemPrompt).toContain('No te presentes como una persona')
     expect(withFinnicVoice(prompt.systemPrompt)).toBe(prompt.systemPrompt)
     expect(prompt.generationConfig).toMatchObject({ temperature: 0.2, maxOutputTokens: 1500 })
