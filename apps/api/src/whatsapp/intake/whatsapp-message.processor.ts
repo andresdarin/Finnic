@@ -21,6 +21,7 @@ import type { HandlerResult, InboundContext, IntakeIntent } from './types'
 import { MediaHistoryService } from './media-history.service'
 import { asksForSticker, FinnicStickersService } from '../../ai/personality/finnic-stickers.service'
 import { isStyleRequest } from '../../ai/personality/style-profile'
+import { finnicText } from '../../ai/prompts/finnic-voice'
 
 export type ProcessorOutcome = HandlerResult & { profileId: string | null }
 
@@ -75,6 +76,7 @@ export class WhatsAppMessageProcessor {
     const profile = await this.context.load(profileId)
     const replay = await this.replay(ctx, profile)
     const outcome = replay ?? await this.route(ctx, profile)
+    outcome.reply = finnicText(outcome.reply)
     await this.history?.save(ctx, outcome)
     return { ...outcome, profileId }
   }
