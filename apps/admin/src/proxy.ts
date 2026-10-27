@@ -36,5 +36,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt|icon.png).*)'],
+  // /auth/* son los POST de login y logout: validan credenciales y rol por su cuenta.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt|icon.png|auth/).*)'],
 }

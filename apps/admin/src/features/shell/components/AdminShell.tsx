@@ -1,6 +1,5 @@
-import { LogOut } from 'lucide-react'
-import { signOut } from '@/features/auth/actions'
 import { NavLink } from './NavLink'
+import { SignOutButton } from './SignOutButton'
 
 export function AdminShell({ email, children }: { email: string; children: React.ReactNode }) {
   return (
@@ -16,11 +15,7 @@ export function AdminShell({ email, children }: { email: string; children: React
           </nav>
           <div className="ml-auto flex items-center gap-3">
             <span className="hidden max-w-[220px] truncate text-sm text-muted-foreground md:inline" title={email}>{email}</span>
-            <form action={signOut}>
-              <button type="submit" className="inline-flex h-9 items-center gap-2 rounded-full border border-border px-3 text-sm font-medium hover:bg-surface-alt">
-                <LogOut aria-hidden size={15} /> Salir
-              </button>
-            </form>
+            <SignOutButton />
           </div>
         </div>
       </header>
