@@ -1,4 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { randomUUID } from 'node:crypto'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
+import { latencySummary } from '../inbox/latency-summary'
 import { GeminiClient } from '../../../ai/client/gemini.client'
 import { WhatsAppClient } from '../../whatsapp-client.service'
 import { Edges, makeUser, startApp, testDatabaseUrl, textMessage, webhook } from './e2e.harness'
@@ -9,7 +13,8 @@ describe.skipIf(!url)('Voice note through signed webhook and worker', () => {
   const edges = new Edges()
   let transcript = 'Gasté 850 pesos en supermercado sin cuenta'
   const count = () => ctx.prisma.personalExpense.count({ where: { profileId: user.profile.id } })
-  const voice = (id: string) => ({ id, from: user.phone, type: 'audio', audio: { id: 'voice-media', mime_type: 'audio/ogg; codecs=opus' } })
+  const runId = randomUUID()
+  const voice = (id: string) => ({ id: `${id}.${runId}`, from: user.phone, type: 'audio', audio: { id: 'voice-media', mime_type: 'audio/ogg; codecs=opus' } })
   const send = async (message: Record<string, unknown>) => { expect(await webhook(ctx.base)(message)).toBe(200); await ctx.worker.drain(); return edges.lastTo(user.phone) }
   beforeAll(async () => {
     edges.install(); ctx = await startApp(url!); user = await makeUser(ctx.prisma)
@@ -20,7 +25,20 @@ describe.skipIf(!url)('Voice note through signed webhook and worker', () => {
       return JSON.stringify({ intent: 'register_expense', amount: '850', currency: 'UYU', title: 'Supermercado', category: 'supermercado' })
     })
   }, 60000)
-  afterAll(async () => { if (user) await ctx.prisma.profile.delete({ where: { id: user.profile.id } }); await ctx?.app.close(); vi.restoreAllMocks() })
+  afterAll(async () => {
+    if (user) {
+      const rows = await ctx.prisma.whatsAppInboundMessage.findMany({ where: { from: user.phone } })
+      const folder = resolve('../../tmp/whatsapp-setup'); await mkdir(folder, { recursive: true })
+      await writeFile(resolve(folder, 'audio-local-latency.json'), JSON.stringify({ environment: 'Local HTTP + PostgreSQL; Meta/Gemini mocked, not production model latency', ...latencySummary(rows) }, null, 2))
+      await ctx.prisma.profile.delete({ where: { id: user.profile.id } })
+    }
+    await ctx?.app.close(); vi.restoreAllMocks()
+  })
+  it('checks database readiness through HTTP without returning personal records', async () => {
+    const response = await fetch(`${ctx.base}/health/database`)
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ status: 'ok', database: 'ok', durationMs: expect.any(Number), uptimeSeconds: expect.any(Number) })
+  })
   it('proposes a voice expense, requires written confirmation, and deduplicates delivery', async () => {
     const message = voice('wamid.voice-expense')
     const reply = await send(message)
@@ -42,6 +60,18 @@ describe.skipIf(!url)('Voice note through signed webhook and worker', () => {
   it('applies financial scope to a spoken recipe request', async () => {
     transcript = 'Cómo se hace una torta de papas?'
     expect(await send(voice('wamid.voice-recipe'))).toContain('Con la receta no te puedo ayudar')
+    expect(await count()).toBe(1)
+  })
+  it('answers a spoken financial query from the same recorded movements', async () => {
+    transcript = 'Cuánto gasté este mes?'
+    expect(await send(voice('wamid.voice-query'))).toContain('850,00')
+    expect(await count()).toBe(1)
+  })
+  it('never offers cash or debit for a spoken credit payment without a card', async () => {
+    transcript = 'Gasté 850 pesos en supermercado con crédito'
+    const reply = await send(voice('wamid.voice-credit'))
+    expect(reply).toContain('tarjeta de crédito')
+    expect(reply).not.toContain('1) Efectivo')
     expect(await count()).toBe(1)
   })
 })

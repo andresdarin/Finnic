@@ -3,6 +3,7 @@ import type { WhatsAppInboundMessage } from '@prisma/client'
 import { PrismaService } from '../../../prisma/prisma.service'
 import type { NormalizedWhatsAppMessage } from '../../../webhooks/whatsapp/whatsapp-webhook.service'
 import { MAX_PROCESSING_ATTEMPTS, MAX_REPLY_ATTEMPTS, PROCESSING_LEASE_MS, RETRY_BACKOFF_MS } from '../constants'
+import { latencySummary } from './latency-summary'
 
 const backoff = (attempt: number) => RETRY_BACKOFF_MS[Math.min(attempt - 1, RETRY_BACKOFF_MS.length - 1)]!
 const safeError = (error: unknown) => (error instanceof Error ? error.message : 'Error de procesamiento').slice(0, 300)
@@ -77,8 +78,8 @@ export class WhatsAppInboxService {
       where: { id: row.id, status: 'processing' },
       data: {
         status: 'failed', leaseUntil: null, error: safeError(error), nextAttemptAt: new Date(Date.now() + backoff(attempts)),
-        ...(row.type === 'image' && attempts === 1 ? {
-          replyText: 'Recibí la foto, pero la lectura está demorando. Voy a reintentar; todavía no registré ningún gasto.',
+        ...(attempts === 1 ? {
+          replyText: row.type === 'image' ? 'Recibí la foto, pero la lectura está demorando. Voy a reintentar; todavía no registré ningún gasto.' : 'Estoy demorando más de lo normal. Voy a reintentar este mismo mensaje; no hace falta que lo mandes de nuevo.',
           replyStatus: 'pending', replyNextAttemptAt: new Date(),
         } : {}),
       },
@@ -113,13 +114,15 @@ export class WhatsAppInboxService {
 
   /** Observable state for operators: counts per processing and reply status. */
   async health() {
-    const [processing, replies] = await Promise.all([
+    const [processing, replies, rows] = await Promise.all([
       this.prisma.whatsAppInboundMessage.groupBy({ by: ['status'], _count: true }),
       this.prisma.whatsAppInboundMessage.groupBy({ by: ['replyStatus'], _count: true }),
+      this.prisma.whatsAppInboundMessage.findMany({ take: 100, orderBy: { createdAt: 'desc' }, select: { createdAt: true, processingStartedAt: true, completedAt: true, replySentAt: true, attempts: true } }),
     ])
     return {
       processing: Object.fromEntries(processing.map(row => [row.status, row._count])),
       replies: Object.fromEntries(replies.map(row => [row.replyStatus ?? 'none', row._count])),
+      latency: latencySummary(rows),
     }
   }
 }

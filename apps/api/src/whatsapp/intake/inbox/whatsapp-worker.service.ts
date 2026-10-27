@@ -5,7 +5,7 @@ import { WhatsAppMessageProcessor } from '../whatsapp-message.processor'
 import { WhatsAppInboxService } from './whatsapp-inbox.service'
 import { FinnicStickersService, isFinnicSticker } from '../../../ai/personality/finnic-stickers.service'
 
-const DEAD_REPLY = 'No pude procesar tu mensaje después de varios intentos y no registré nada. Probá enviarlo de nuevo en unos minutos.'
+const DEAD_REPLY = 'No pude terminar de procesar tu mensaje. Revisá tus últimos movimientos antes de volver a mandarlo, por si el gasto llegó a guardarse.'
 const POLL_MS = 5_000
 const MAX_PER_TICK = 25
 
