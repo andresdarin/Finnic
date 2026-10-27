@@ -2,6 +2,8 @@
 export function financialFocus(message: string): string {
   const text = message.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
   const rules: string[] = []
+  if (/jubil|retiro/.test(text)) rules.push('Revisá BPS/AFAP, horizonte y brecha estimada, sin inventar derechos ni requisitos. El aporte complementario debe ser sostenible después de esenciales y obligaciones: no lo llames innegociable. No asumas género de la persona.')
+  if (/aument|aguinaldo/.test(text)) rules.push('No impongas mitad, 50/50 ni otro reparto como ideal. Primero necesidades, deuda costosa y reserva; luego acordá ahorro y disfrute según metas. Si das un porcentaje, marcá que es solo ejemplo ajustable.')
   if (/ahorr/.test(text) && /diferencia|invertir|inversion/.test(text)) rules.push('Ahorrar es separar ingreso no consumido y también sirve a largo plazo; invertir es asignar capital a un activo esperando rendimiento con riesgo. No son opuestos. El efectivo pierde poder adquisitivo con inflación; plazo, liquidez y riesgos dependen del instrumento, no afirmes que toda inversión tiene menos liquidez.')
   if (/fondo.*emergencia/.test(text)) rules.push('Tres a seis meses de gastos esenciales es una referencia flexible según ingresos, dependientes y riesgos, no un ideal universal. Priorizar liquidez y bajo riesgo no garantiza conservar poder adquisitivo.')
   if (/presupuesto|ordenar.*plata|por donde.*(?:arranc|empez)/.test(text)) rules.push('Separá presupuesto estimado de movimientos efectivos: no pidas registrar estimaciones como ingresos o gastos ya ocurridos. Con ingresos variables usá una base conservadora, sin suponer que existe un mínimo garantizado.')
