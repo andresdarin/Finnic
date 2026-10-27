@@ -16,6 +16,8 @@ describe('Learned communication style', () => {
     expect(style).toMatchObject({ brevity: 'short', tone: 'relaxed', explicit: { brevity: 'short', tone: 'relaxed' } })
     expect(learnStyle(style, [], 'No quiero respuestas largas').explicit?.brevity).toBe('short')
     expect(isStyleRequest('sin signos de apertura')).toBe(true)
+    expect(isStyleRequest('Respondeme cortito')).toBe(true)
+    expect(learnStyle(initialStyle(), [], 'Respondeme cortito').explicit?.brevity).toBe('short')
   })
   it('adapts gradually and does not infer a personality from one message', () => {
     expect(learnStyle(initialStyle(), ['bo dale'], 'bo dale').tone).toBe('neutral')
