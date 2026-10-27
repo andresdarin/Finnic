@@ -13,7 +13,7 @@ export function paymentPreference(text: string, profile: IntakeProfileContext): 
   if (currencyRequest && !/cuenta/.test(currencyRequest[1]!)) {
     const currency = currencySignal(currencyRequest[1]!)
     if (!currency || currency === 'CONFLICT') return { reply: 'Preferís pesos uruguayos o dólares como moneda habitual?' }
-    return { input: { defaultCurrency: currency }, reply: `Dale, voy a usar ${currency === 'UYU' ? 'pesos uruguayos' : 'dólares'} cuando no indiques la moneda. Igual te muestro el gasto antes de guardarlo.` }
+    return { input: { defaultCurrency: currency }, reply: `Dale, voy a usar ${currency === 'UYU' ? 'pesos uruguayos' : 'dólares'} cuando no indiques la moneda.` }
   }
   const accountRequest = /^mi cuenta habitual es (.+)$/.exec(value) || /^usa (?:la )?cuenta (.+) por defecto$/.exec(value)
   if (!accountRequest) return null
@@ -23,5 +23,5 @@ export function paymentPreference(text: string, profile: IntakeProfileContext): 
   const matches = exact.length ? exact : accounts.filter(account => normalizeText(account.name).includes(wanted))
   if (matches.length !== 1) return { reply: matches.length ? 'Hay varias cuentas con ese nombre. Decime el nombre completo de la que querés usar.' : 'No encontré esa cuenta activa. Decime el nombre tal como aparece en Balance.' }
   const account = matches[0]!
-  return { input: { defaultAccountId: account.id, defaultCurrency: account.currency }, reply: `Dale, tu cuenta habitual queda en ${account.name} (${account.currency}). Si pagás de otra forma, uso solo una cuenta compatible y te muestro el detalle antes de guardar.` }
+  return { input: { defaultAccountId: account.id, defaultCurrency: account.currency }, reply: `Dale, tu cuenta habitual queda en ${account.name} (${account.currency}). La uso cuando sea compatible con el medio de pago.` }
 }
