@@ -71,7 +71,7 @@ suite('WhatsApp → Finnic E2E (HTTP + PostgreSQL real, Gemini/Meta simulados en
   it('registra un gasto de texto directo y responde con lo guardado', async () => {
     edges.textReplies.unshift({ match: /súper con débito/, json: ai({ amount: '850', currency: 'UYU', merchant: 'Súper', title: 'Súper', category: 'supermercado', budgetCategory: 'Alimentación', paymentMethod: 'DEBIT' }) })
     const { reply } = await say(userA.phone, 'Gasté 850 pesos en el súper con débito')
-    expect(reply).toContain('✅ Registré $U 850,00')
+    expect(reply).toContain('Listo, anoté $U 850,00')
     expect(reply).toContain('Disponible')
     expect(reply).toContain('Presupuesto: Alimentación')
     expect(await balance(accounts.bank)).toBe('49150.00')
@@ -112,7 +112,7 @@ suite('WhatsApp → Finnic E2E (HTTP + PostgreSQL real, Gemini/Meta simulados en
   it('corrige el importe y el medio de pago revirtiendo saldos, y deshace', async () => {
     const before = { bank: await balance(accounts.bank), cash: await balance(accounts.cash) }
     edges.textReplies.unshift({ match: /eran 180/, json: ai({ intent: 'correct_last', amount: '180' }) })
-    expect((await say(userA.phone, 'eran 180')).reply).toContain('✏️ Corregido: $U 180,00')
+    expect((await say(userA.phone, 'eran 180')).reply).toContain('Listo, corregí $U 180,00')
     expect(await balance(accounts.bank)).toBe((Number(before.bank) + 20).toFixed(2))
     expect((await say(userA.phone, 'fue en efectivo')).reply).toContain('Efectivo')
     expect(await balance(accounts.bank)).toBe((Number(before.bank) + 200).toFixed(2))
@@ -125,7 +125,7 @@ suite('WhatsApp → Finnic E2E (HTTP + PostgreSQL real, Gemini/Meta simulados en
   it('compra con crédito suma deuda una sola vez y pagar la tarjeta no vuelve a contar el gasto', async () => {
     edges.textReplies.unshift({ match: /farmacia con crédito/, json: ai({ amount: '1200', currency: 'UYU', title: 'Farmacia', category: 'farmacia', budgetCategory: 'Salud', paymentMethod: 'CREDIT' }) })
     const bankBefore = await balance(accounts.bank)
-    expect((await say(userA.phone, 'Pagué 1200 pesos en la farmacia con crédito')).reply).toContain('suma a la deuda de la tarjeta')
+    expect((await say(userA.phone, 'Pagué 1200 pesos en la farmacia con crédito')).reply).toContain('Lo sumé a la deuda de')
     expect(await balance(accounts.credit)).toBe('1200.00')
     expect(await balance(accounts.bank)).toBe(bankBefore)
     const needsAfterPurchase = (await callA(`/finance/tranquility?month=${month}`)).body.summary.totals.needs.executed
@@ -145,7 +145,7 @@ suite('WhatsApp → Finnic E2E (HTTP + PostgreSQL real, Gemini/Meta simulados en
     expect(saved.reply).toContain('US$ 20,00')
     expect(saved.reply).toContain('cotización')
     expect((await callA(`/finance/tranquility?month=${month}`)).body.summary.status).toBe('MISSING_FX')
-    expect((await say(userA.phone, 'cotización 40,25')).reply).toContain('Corregido')
+    expect((await say(userA.phone, 'cotización 40,25')).reply).toContain('Listo, corregí')
     const usd = await ctx.prisma.personalExpense.findFirstOrThrow({ where: { profileId: userA.profile.id, currency: 'USD' } })
     expect(usd.tranquilityFxSnapshot).toMatchObject({ toCurrency: 'UYU', rate: '40.25', convertedAmount: '805.00' })
     expect((await callA(`/finance/tranquility?month=${month}`)).body.summary.status).toBe('COMPLETE')
@@ -157,7 +157,7 @@ suite('WhatsApp → Finnic E2E (HTTP + PostgreSQL real, Gemini/Meta simulados en
     expect((await say(userA.phone, '640')).reply).toContain('pesos o en dólares')
     expect((await say(userA.phone, 'pesos')).reply).toContain('¿Con qué cuenta')
     const done = await say(userA.phone, '1')
-    expect(done.reply).toContain('✅ Registré $U 640,00')
+    expect(done.reply).toContain('Listo, anoté $U 640,00')
     expect(await ctx.prisma.whatsAppExpenseDraft.count({ where: { profileId: userA.profile.id, status: 'awaiting' } })).toBe(0)
   })
 
@@ -168,7 +168,7 @@ suite('WhatsApp → Finnic E2E (HTTP + PostgreSQL real, Gemini/Meta simulados en
     const ask = await say(userA.phone, 'eran 55')
     expect(ask.reply).toContain('¿A cuál gasto te referís?')
     expect(ask.reply).toMatch(/1\) \$U 60,00[\s\S]*2\) \$U 50,00/)
-    expect((await say(userA.phone, '2')).reply).toContain('✏️ Corregido: $U 55,00')
+    expect((await say(userA.phone, '2')).reply).toContain('Listo, corregí $U 55,00')
     const rows = await ctx.prisma.personalExpense.findMany({ where: { sourceMessageId: { in: [pan.id, diario.id] } }, orderBy: { amount: 'asc' } })
     expect(rows.map(row => row.amount.toFixed(2))).toEqual(['55.00', '60.00'])
   })
@@ -178,9 +178,9 @@ suite('WhatsApp → Finnic E2E (HTTP + PostgreSQL real, Gemini/Meta simulados en
     edges.receiptQueue.push(ticket)
     await send(imageMessage(userA.phone)); await ctx.worker.drain(); await age()
     expect(edges.lastTo(userA.phone)).toContain('importe entregado')
-    expect((await say(userA.phone, '1850')).reply).toContain('¿Confirmás este gasto?')
+    expect((await say(userA.phone, '1850')).reply).toContain('¿Lo guardo?')
     expect(await ctx.prisma.personalExpense.count({ where: { profileId: userA.profile.id, inputMethod: 'RECEIPT_SCAN' } })).toBe(0)
-    expect((await say(userA.phone, 'sí')).reply).toContain('✅ Registré $U 1.850,00')
+    expect((await say(userA.phone, 'sí')).reply).toContain('Listo, anoté $U 1.850,00')
     const scanned = await ctx.prisma.personalExpense.findMany({ where: { profileId: userA.profile.id, inputMethod: 'RECEIPT_SCAN' } })
     expect(scanned).toHaveLength(1) // one movement; items never become separate expenses
     edges.receiptQueue.push({ ...ticket, total: '1850.00', amountTendered: null, change: null, totalCandidates: [] })
@@ -202,7 +202,7 @@ suite('WhatsApp → Finnic E2E (HTTP + PostgreSQL real, Gemini/Meta simulados en
     await ctx.worker.drain(); await age()
     expect(edges.lastTo(userA.phone)).toContain('$U 310,00')
     expect(await ctx.prisma.personalExpense.count({ where: { sourceMessageId: message.id } })).toBe(0)
-    expect((await say(userA.phone, 'sí')).reply).toContain('✅ Registré $U 310,00')
+    expect((await say(userA.phone, 'sí')).reply).toContain('Listo, anoté $U 310,00')
     expect(await ctx.prisma.personalExpense.count({ where: { sourceMessageId: message.id } })).toBe(1)
   })
 
@@ -211,9 +211,9 @@ suite('WhatsApp → Finnic E2E (HTTP + PostgreSQL real, Gemini/Meta simulados en
     vi.mocked((await import('../../whatsapp-client.service')).WhatsAppClient.prototype.downloadMedia).mockResolvedValueOnce({ bytes: JPEG, mimeType: 'image/jpeg', sha256: 'discount-ticket' })
     const message = imageMessage(userA.phone)
     await send(message); await ctx.worker.drain()
-    expect(edges.lastTo(userA.phone)).toContain('distribuiré el descuento proporcionalmente')
+    expect(edges.lastTo(userA.phone)).toContain('reparto el descuento entre los productos')
     expect(await ctx.prisma.personalExpense.count({ where: { sourceMessageId: message.id } })).toBe(0)
-    expect((await say(userA.phone, 'sí')).reply).toContain('✅ Registré $U 153,00')
+    expect((await say(userA.phone, 'sí')).reply).toContain('Listo, anoté $U 153,00')
     await send(message); await ctx.worker.drain()
     const rows = await ctx.prisma.personalExpense.findMany({ where: { sourceMessageId: message.id }, include: { items: true } })
     expect(rows).toHaveLength(1)

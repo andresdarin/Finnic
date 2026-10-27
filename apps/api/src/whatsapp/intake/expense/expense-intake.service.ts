@@ -79,11 +79,11 @@ export class ExpenseIntakeService {
     })
     if (!row) return 'Registré el gasto, pero no pude leerlo de vuelta. Revisalo en Finanzas.'
     const category = EXPENSE_CATEGORIES[row.category as ExpenseCategoryKey] ?? row.category
-    const account = row.financeAccount ? `Cuenta: ${row.financeAccount.name}${row.financeAccount.type === 'CREDIT' ? ' (suma a la deuda de la tarjeta)' : ''}` : 'Sin cuenta asignada (no mueve saldos)'
+    const account = row.financeAccount ? row.financeAccount.type === 'CREDIT' ? `Lo sumé a la deuda de ${row.financeAccount.name}.` : `Lo cargué a ${row.financeAccount.name}.` : 'Quedó sin cuenta, sin cambiar tus saldos.'
     const budget = row.tranquilityCategory ? `Presupuesto: ${row.tranquilityCategory.name} (${row.tranquilityCategory.bucket === 'NEEDS' ? 'esenciales' : 'gustos'})` : null
     const lines = [
-      `✅ Registré ${formatMoney(row.amount.toFixed(2), row.currency)} · ${category} · ${formatDate(localDay(row.date))}`,
-      `${row.title}${row.merchant && row.merchant !== row.title ? ` (${row.merchant})` : ''}`,
+      `Listo, anoté ${formatMoney(row.amount.toFixed(2), row.currency)} en ${row.title}${row.merchant && row.merchant !== row.title ? ` (${row.merchant})` : ''}.`,
+      `${formatDate(localDay(row.date))} · ${category}`,
       account,
       ...(budget ? [budget] : []),
       ...notes,

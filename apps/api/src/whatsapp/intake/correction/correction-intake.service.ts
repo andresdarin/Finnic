@@ -90,7 +90,7 @@ export class CorrectionIntakeService {
       if (error instanceof BadRequestException || error instanceof NotFoundException) return { reply: `No pude corregirlo: ${error.message} No cambié nada.`, intent: 'correct_last' }
       throw error
     }
-    return { reply: (await this.expenses.confirmation(expense.id, ctx.profileId, profile)).replace('✅ Registré', '✏️ Corregido:'), intent: 'correct_last', result: { expenseId: expense.id } }
+    return { reply: (await this.expenses.confirmation(expense.id, ctx.profileId, profile)).replace('Listo, anoté', 'Listo, corregí'), intent: 'correct_last', result: { expenseId: expense.id } }
   }
 
   async applyUndo(ctx: InboundContext, expense: PersonalExpense): Promise<HandlerResult> {
@@ -115,6 +115,6 @@ export class CorrectionIntakeService {
   private isDuplicateAction(error: unknown) { return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002' }
 
   private async replay(ctx: InboundContext, expenseId: string, profile: IntakeProfileContext): Promise<HandlerResult> {
-    return { reply: (await this.expenses.confirmation(expenseId, ctx.profileId, profile)).replace('✅ Registré', '✏️ Corregido:'), intent: 'correct_last', result: { expenseId } }
+    return { reply: (await this.expenses.confirmation(expenseId, ctx.profileId, profile)).replace('Listo, anoté', 'Listo, corregí'), intent: 'correct_last', result: { expenseId } }
   }
 }

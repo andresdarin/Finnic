@@ -123,7 +123,7 @@ export class WhatsAppMessageProcessor {
     if (action.kind === 'undo') return { reply: 'Ese gasto ya fue deshecho.', intent: 'undo_last', result: { undoneExpenseId: action.expenseId } }
     const reply = await this.expenses.confirmation(action.expenseId!, ctx.profileId, profile)
     return action.kind === 'correct'
-      ? { reply: reply.replace('✅ Registré', '✏️ Corregido:'), intent: 'correct_last', result: { expenseId: action.expenseId } }
+      ? { reply: reply.replace('Listo, anoté', 'Listo, corregí'), intent: 'correct_last', result: { expenseId: action.expenseId } }
       : { reply, intent: 'register_expense', result: { expenseId: action.expenseId } }
   }
 
