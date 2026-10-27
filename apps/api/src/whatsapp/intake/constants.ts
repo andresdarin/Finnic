@@ -35,6 +35,7 @@ export const HELP_TEXT = [
   'Podés escribirme, por ejemplo:',
   '• "Gasté 850 pesos en el súper con débito"',
   '• Una foto del ticket (con o sin texto)',
+  '• Una nota de voz con el gasto o tu consulta; para guardar, confirmás por escrito',
   '• "Eran 580", "fue en efectivo" o "deshacé ese gasto"',
   '• "¿Cuánto gasté este mes?", "¿Cuánto puedo gastar este fin de semana?"',
   '• "¿Cómo voy con mi ahorro?", "¿Puedo comprar algo de 3.000 pesos?"',

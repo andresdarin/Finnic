@@ -88,7 +88,8 @@ describe('WhatsApp webhook', () => {
     expect(service.parseMetaPayload(payload())[0]).toMatchObject({ wamid: 'wamid.xxx', from: '59899123456', phoneNumberId: '123', type: 'text', text: 'Hola' })
     expect(service.parseMetaPayload(payload('image'))[0]).toMatchObject({ type: 'image', text: 'súper', media: { id: 'image-1', mimeType: 'image/jpeg' } })
     expect(service.parseMetaPayload(payload('text', { context: { id: 'wamid.reply' } }))[0]?.contextWamid).toBe('wamid.reply')
-    expect(service.parseMetaPayload(payload('audio'))[0]?.type).toBe('unsupported')
+    expect(service.parseMetaPayload(payload('audio', { audio: { id: 'voice-1', mime_type: 'audio/ogg; codecs=opus' } }))[0]).toMatchObject({ type: 'audio', media: { id: 'voice-1' } })
+    expect(service.parseMetaPayload(payload('video'))[0]?.type).toBe('unsupported')
     expect(service.parseMetaPayload({ object: 'whatsapp_business_account', entry: [{ changes: [{ value: { metadata: { phone_number_id: '1' }, statuses: [{}] } }] }] })).toEqual([])
   })
 

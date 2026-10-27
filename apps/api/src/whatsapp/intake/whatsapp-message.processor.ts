@@ -25,6 +25,7 @@ import { finnicText } from '../../ai/prompts/finnic-voice'
 import { paymentPreference } from './parsing/payment-preferences'
 import { moneyCandidates } from './parsing/money-text'
 import { offTopicReply } from '../../ai/prompts/financial-scope'
+import { AudioIntakeService } from './audio/audio-intake.service'
 
 export type ProcessorOutcome = HandlerResult & { profileId: string | null }
 
@@ -55,6 +56,7 @@ export class WhatsAppMessageProcessor {
     private readonly chat: ChatFallback,
     @Optional() private readonly history?: MediaHistoryService,
     @Optional() private readonly stickers?: FinnicStickersService,
+    @Optional() private readonly audio?: AudioIntakeService,
   ) {}
 
   async handle(row: WhatsAppInboundMessage): Promise<ProcessorOutcome> {
@@ -65,7 +67,7 @@ export class WhatsAppMessageProcessor {
     const profileId = linked.id
     const ctx: InboundContext = {
       inboundId: row.id, wamid: row.wamid, profileId, text,
-      type: row.type === 'image' || row.type === 'sticker' || row.type === 'text' ? row.type : 'unsupported',
+      type: row.type === 'image' || row.type === 'sticker' || row.type === 'text' || row.type === 'audio' ? row.type : 'unsupported',
       localDate: localDateOf(row.messageTimestamp ?? row.createdAt), contextWamid: row.contextWamid,
       media: row.mediaId ? { id: row.mediaId, mimeType: row.mediaMimeType, sha256: row.mediaSha256 } : null,
     }
@@ -85,9 +87,16 @@ export class WhatsAppMessageProcessor {
   }
 
   private async route(ctx: InboundContext, profile: IntakeProfileContext): Promise<HandlerResult> {
+    if (ctx.type === 'audio') {
+      const reading = await this.audio?.transcribe(ctx)
+      if (!reading || 'reply' in reading) return { reply: reading?.reply ?? 'No pude escuchar el audio. Escribime el mensaje y lo vemos.', intent: 'other' }
+      ctx.text = reading.text; ctx.type = 'text'; ctx.fromAudio = true
+      // Voice recognition must never confirm an existing action or alter earlier records.
+      if (await this.drafts.findOpen(ctx.profileId) || /^(si|sí|dale|ok|confirmo|no|cancelar)$/i.test(ctx.text.trim()) || /^(?:correg|cambi|borra|elimina|deshace|eran|fue|eran)/i.test(ctx.text.trim())) return { reply: `Entendí: “${ctx.text}”. Para confirmar o cambiar algo pendiente, respondeme por escrito. No cambié nada.`, intent: 'other' }
+    }
     if (LINK_COMMAND.test(ctx.text)) return { reply: 'Este número ya está vinculado a tu cuenta de Finnic.', intent: 'link' }
     if (ctx.type === 'sticker') return { reply: 'Te leo. Cuando quieras, seguimos con tus números.', intent: 'other' }
-    if (ctx.type === 'unsupported') return { reply: 'Por ahora entiendo mensajes de texto y fotos de tickets (JPG, PNG o WebP). No registré nada.', intent: 'other' }
+    if (ctx.type === 'unsupported') return { reply: 'Entiendo texto, notas de voz y fotos de tickets (JPG, PNG o WebP). No registré nada.', intent: 'other' }
     if (ctx.type === 'image') return this.receipts.handle(ctx, profile)
     const redirect = offTopicReply(ctx.text)
     if (redirect) return { reply: redirect, intent: 'other' }
@@ -96,6 +105,7 @@ export class WhatsAppMessageProcessor {
     if (asksForSticker(ctx.text)) return { reply: 'No pude preparar el sticker. Probá de nuevo en un momento.', intent: 'other' }
     const preference = paymentPreference(ctx.text, profile)
     if (preference) {
+      if (ctx.fromAudio) return { reply: `Entendí: “${ctx.text}”. Para cambiar tus preferencias, mandámelo por escrito.`, intent: 'other' }
       if (preference.input) await this.links.updateDefaults(ctx.profileId, preference.input)
       return { reply: preference.reply, intent: 'other' }
     }
@@ -114,6 +124,7 @@ export class WhatsAppMessageProcessor {
     const ai = NEEDS_AI.has(intent) ? await this.extract(ctx, profile) : null
     // A classifier's generic "help" must not replace an open conversation with a menu.
     intent = intent ?? (ai?.intent === 'help' ? 'other' : ai?.intent) ?? 'other'
+    if (ctx.fromAudio && (intent === 'correct_last' || intent === 'undo_last')) return { reply: 'Para cambiar o cancelar un gasto, respondeme por escrito. No cambié nada.', intent: 'other' }
     switch (intent) {
       case 'register_expense': return this.expenses.continue(ctx, proposalFromText(ctx.text, ai, profile, ctx.localDate), profile)
       case 'correct_last':

@@ -24,6 +24,7 @@ export class ExpenseIntakeService {
 
   /** Asks exactly one question, or registers the expense. The origin wamid is the idempotency key. */
   async continue(ctx: InboundContext, input: Parameters<typeof nextStep>[0], profile: IntakeProfileContext, draft?: StoredDraft, notes: string[] = []): Promise<HandlerResult> {
+    if (ctx.fromAudio) input = { ...input, audioConfirmationRequired: true }
     const origin = draft ? { inboundId: draft.sourceInboundId, wamid: draft.sourceWamid } : { inboundId: ctx.inboundId, wamid: ctx.wamid }
     const step = nextStep(input, profile)
     if (step.kind === 'ask') {
@@ -47,8 +48,8 @@ export class ExpenseIntakeService {
       const saved = await this.drafts.save({ profileId: ctx.profileId, sourceInboundId: origin.inboundId, sourceWamid: origin.wamid, field: 'receipt_confirmation', question, proposal: { ...proposal, receiptConfirmed: false }, meta: draft?.meta })
       return { reply: question, intent: 'clarification', result: { draftId: saved.id, pendingField: 'receipt_confirmation' } }
     }
-    if (proposal.inputMethod === 'RECEIPT_SCAN' && !proposal.receiptConfirmed) {
-      const question = [...notes, receiptReview(proposal, step.account?.name ?? null)].join('\n')
+    if ((proposal.inputMethod === 'RECEIPT_SCAN' || proposal.audioConfirmationRequired || ctx.fromAudio) && !proposal.receiptConfirmed) {
+      const question = [...notes, proposal.inputMethod === 'RECEIPT_SCAN' ? receiptReview(proposal, step.account?.name ?? null) : `Entendí ${formatMoney(proposal.amount, proposal.currency)} en ${proposal.title}, el ${formatDate(proposal.date)}. ${step.account ? `Lo cargo a ${step.account.name}.` : 'Queda sin cuenta.'}\nLo guardo? Decime sí o no por escrito.`].join('\n')
       const saved = await this.drafts.save({ profileId: ctx.profileId, sourceInboundId: origin.inboundId, sourceWamid: origin.wamid, field: 'receipt_confirmation', question, proposal, meta: draft?.meta })
       return { reply: question, intent: 'clarification', result: { draftId: saved.id, pendingField: 'receipt_confirmation' } }
     }

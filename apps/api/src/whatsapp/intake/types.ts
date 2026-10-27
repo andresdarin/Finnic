@@ -33,6 +33,7 @@ export type ExpenseProposal = {
   receipt?: { sha256: string | null; subtotal: string | null; confidence: number | null; discounts?: string | null }
   duplicateAcknowledged?: boolean
   receiptConfirmed?: boolean
+  audioConfirmationRequired?: boolean
   receiptItemsEdited?: boolean
 }
 
@@ -49,7 +50,8 @@ export type InboundContext = {
   wamid: string
   profileId: string
   text: string
-  type: 'text' | 'image' | 'sticker' | 'unsupported'
+  type: 'text' | 'image' | 'sticker' | 'audio' | 'unsupported'
+  fromAudio?: boolean
   conversationId?: string
   channel?: 'app' | 'whatsapp'
   attachment?: { bytes: Buffer; mimeType: string; sha256: string }
