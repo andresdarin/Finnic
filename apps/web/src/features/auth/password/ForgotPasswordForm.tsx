@@ -13,7 +13,7 @@ export default function ForgotPasswordForm() {
   const [error, setError] = useState<string | null>(null)
   const busy = useRef(false)
   return <div className="space-y-5">
-    {sent ? <div role="status" className="space-y-2 text-sm leading-6"><p>Si ese correo tiene una cuenta, te enviamos un enlace para cambiar la contraseña.</p><p className="text-muted-foreground">Revisá también spam. Abrí el enlace en este mismo navegador.</p></div> : <form className="space-y-4" onSubmit={async event => {
+    {sent ? <div role="status" className="space-y-2 text-sm leading-6"><p>Si ese correo tiene una cuenta, te enviamos un enlace para cambiar la contraseña.</p><p className="text-muted-foreground">Revisá también spam. El enlace sirve una sola vez.</p></div> : <form className="space-y-4" onSubmit={async event => {
       event.preventDefault()
       if (busy.current) return
       busy.current = true; setLoading(true); setError(null)
