@@ -1,0 +1,27 @@
+name: Daily database health
+on:
+  schedule:
+    - cron: '17 13 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: daily-database-health
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check the app and its database without reading personal records
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The first call may include Render Free's cold start. No credentials required.
+          for sample in 1 2 3; do
+            curl --fail --silent --show-error --max-time 100 \
+              --write-out '\nHTTP %{http_code}; total %{time_total}s; first byte %{time_starttransfer}s\n' \
+              https://lovehold.onrender.com/health/database
+            echo
+            sleep 2
+          done
