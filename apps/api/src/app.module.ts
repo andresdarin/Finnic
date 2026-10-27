@@ -12,6 +12,7 @@ import { WebhooksModule } from './webhooks/webhooks.module'
 import { TranquilityModule } from './finance/tranquility/tranquility.module'
 import { RewardsModule } from './rewards/rewards.module'
 import { LegalModule } from './legal/legal.module'
+import { AdminModule } from './admin/admin.module'
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { LegalModule } from './legal/legal.module'
     TranquilityModule,
     RewardsModule,
     LegalModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

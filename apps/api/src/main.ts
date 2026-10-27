@@ -19,6 +19,7 @@ async function bootstrap() {
       'https://lovehold-web.vercel.app',
       'https://www.finnic.space',
       'https://finnic.space',
+      'https://app.finnic.space',
     ]),
   )
 

@@ -11,7 +11,8 @@
     "prisma:generate": "dotenv -- prisma generate",
     "prisma:migrate": "dotenv -- prisma migrate dev",
     "prisma:studio": "dotenv -- prisma studio",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "prisma:seed": "tsx prisma/seed.ts",
+    "admin:grant": "tsx scripts/admin-grant.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
