@@ -6,7 +6,7 @@ import { COMPOSER_PLACEHOLDERS } from '../constants'
 import ChatAttachments, { type ChatFile } from './ChatAttachments'
 
 interface Props {
-  onSend: (text: string, file?: File, kind?: 'image' | 'sticker', requestId?: string) => Promise<boolean>
+  onSend: (text: string, file?: File, kind?: 'image' | 'document' | 'sticker', requestId?: string) => Promise<boolean>
   disabled?: boolean
 }
 

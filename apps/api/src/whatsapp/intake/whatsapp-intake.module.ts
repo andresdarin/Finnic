@@ -25,6 +25,7 @@ import { WhatsAppMessageProcessor } from './whatsapp-message.processor'
 import { MediaHistoryService } from './media-history.service'
 import { AppChatController } from './app-chat.controller'
 import { AudioIntakeService } from './audio/audio-intake.service'
+import { DocumentIncomeService } from './expense/document-income.service'
 
 /** WhatsApp → intake (tools layer) → finance use cases. */
 @Module({
@@ -33,7 +34,7 @@ import { AudioIntakeService } from './audio/audio-intake.service'
   providers: [
     AdminGuard, WhatsAppLinkService, WhatsAppInboxService, WhatsAppWorker, WhatsAppMessageProcessor, WhatsAppExtractorService,
     IntakeContextService, DraftRepository, DraftResponder, ExpenseIntakeService, ReceiptIntakeService, CorrectionIntakeService,
-    QueryIntakeService, ChatFallback, MediaHistoryService, AudioIntakeService,
+    QueryIntakeService, ChatFallback, MediaHistoryService, AudioIntakeService, DocumentIncomeService,
   ],
   exports: [WhatsAppInboxService, WhatsAppWorker],
 })

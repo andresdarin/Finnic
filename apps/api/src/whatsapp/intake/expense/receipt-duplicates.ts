@@ -21,7 +21,7 @@ export async function findReceiptDuplicate(prisma: PrismaService, profileId: str
   }
   const sameDay = await prisma.personalExpense.findMany({
     where: {
-      profileId, movementType: 'EXPENSE', inputMethod: 'RECEIPT_SCAN', amount: proposal.amount, currency: proposal.currency ?? undefined,
+      profileId, movementType: proposal.movementType ?? 'EXPENSE', inputMethod: proposal.movementType === 'INCOME' ? undefined : 'RECEIPT_SCAN', amount: proposal.amount, currency: proposal.currency ?? undefined,
       date: { gte: new Date(`${proposal.date}T00:00:00-03:00`), lt: new Date(`${proposal.date}T23:59:59.999-03:00`) },
       NOT: { sourceMessageId: ownWamid },
     },

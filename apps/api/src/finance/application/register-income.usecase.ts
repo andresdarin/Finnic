@@ -7,7 +7,7 @@ import { registerIncomeSchema, type RegisterIncomeInput } from './dto/schemas'
 export class RegisterIncomeUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(command: { profileId: string; input: RegisterIncomeInput }) {
+  async execute(command: { profileId: string; input: RegisterIncomeInput; context?: { source: 'web' | 'whatsapp'; inputMethod: 'MANUAL' | 'RECEIPT_SCAN' } }) {
     const input = registerIncomeSchema.parse(command.input)
     const due = new Date(input.dueOn)
     const profile = await this.prisma.profile.findUnique({
@@ -76,11 +76,13 @@ export class RegisterIncomeUseCase {
               date: due,
               type: 'variable',
               movementType: 'INCOME',
-              inputMethod: 'MANUAL',
+              inputMethod: command.context?.inputMethod ?? 'MANUAL',
+              source: command.context?.source,
               category: input.category?.trim() || 'INGRESOS',
               monthKey,
               financeAccountId: account?.id,
               scheduledCashFlowId: flow.id,
+              sourceMessageId: key,
             },
           })
         }

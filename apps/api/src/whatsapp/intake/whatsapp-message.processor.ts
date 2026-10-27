@@ -67,7 +67,7 @@ export class WhatsAppMessageProcessor {
     const profileId = linked.id
     const ctx: InboundContext = {
       inboundId: row.id, wamid: row.wamid, profileId, text,
-      type: row.type === 'image' || row.type === 'sticker' || row.type === 'text' || row.type === 'audio' ? row.type : 'unsupported',
+      type: row.type === 'image' || row.type === 'document' || row.type === 'sticker' || row.type === 'text' || row.type === 'audio' ? row.type : 'unsupported',
       localDate: localDateOf(row.messageTimestamp ?? row.createdAt), contextWamid: row.contextWamid,
       media: row.mediaId ? { id: row.mediaId, mimeType: row.mediaMimeType, sha256: row.mediaSha256 } : null,
     }
@@ -97,7 +97,7 @@ export class WhatsAppMessageProcessor {
     if (LINK_COMMAND.test(ctx.text)) return { reply: 'Este número ya está vinculado a tu cuenta de Finnic.', intent: 'link' }
     if (ctx.type === 'sticker') return { reply: 'Te leo. Cuando quieras, seguimos con tus números.', intent: 'other' }
     if (ctx.type === 'unsupported') return { reply: 'Entiendo texto, notas de voz y fotos de tickets (JPG, PNG o WebP). No registré nada.', intent: 'other' }
-    if (ctx.type === 'image') return this.receipts.handle(ctx, profile)
+    if (ctx.type === 'image' || ctx.type === 'document') return this.receipts.handle(ctx, profile)
     const redirect = offTopicReply(ctx.text)
     if (redirect) return { reply: redirect, intent: 'other' }
     const sticker = await this.stickers?.select(ctx.profileId, ctx.text)

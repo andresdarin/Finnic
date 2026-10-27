@@ -35,9 +35,11 @@ export type ExpenseProposal = {
   receiptConfirmed?: boolean
   audioConfirmationRequired?: boolean
   receiptItemsEdited?: boolean
+  movementType?: 'EXPENSE' | 'INCOME'
+  transferDocument?: boolean
 }
 
-export type PendingField = 'amount' | 'currency' | 'account' | 'date' | 'duplicate' | 'receipt_confirmation' | 'which_expense'
+export type PendingField = 'movement_direction' | 'amount' | 'currency' | 'account' | 'date' | 'duplicate' | 'receipt_confirmation' | 'which_expense'
 
 export type HandlerResult = {
   reply: string
@@ -50,7 +52,7 @@ export type InboundContext = {
   wamid: string
   profileId: string
   text: string
-  type: 'text' | 'image' | 'sticker' | 'audio' | 'unsupported'
+  type: 'text' | 'image' | 'document' | 'sticker' | 'audio' | 'unsupported'
   fromAudio?: boolean
   conversationId?: string
   channel?: 'app' | 'whatsapp'

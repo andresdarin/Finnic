@@ -21,6 +21,10 @@ export const textExtractionSchema = z.object({
 export type TextExtraction = z.infer<typeof textExtractionSchema>
 
 export const receiptExtractionSchema = z.object({
+  documentKind: z.enum(['receipt', 'transfer', 'financial', 'unrelated']).optional(),
+  summary: z.string().max(1500).nullable().optional(),
+  movementCount: z.number().int().min(0).optional(),
+  paymentStatus: z.enum(['completed', 'pending', 'failed', 'unknown']).optional(),
   isReceipt: z.boolean().catch(false),
   merchant: nullableString,
   date: nullableString,

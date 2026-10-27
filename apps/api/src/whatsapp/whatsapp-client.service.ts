@@ -101,6 +101,7 @@ export class WhatsAppClient {
 }
 
 export function matchesMagic(bytes: Buffer, mimeType: string) {
+  if (mimeType === 'application/pdf') return bytes.subarray(0, 5).toString('ascii') === '%PDF-'
   if (mimeType === 'audio/ogg' || mimeType === 'audio/opus') return bytes.subarray(0, 4).toString('ascii') === 'OggS'
   if (mimeType === 'audio/wav' || mimeType === 'audio/x-wav') return bytes.subarray(0, 4).toString('ascii') === 'RIFF' && bytes.subarray(8, 12).toString('ascii') === 'WAVE'
   if (mimeType === 'audio/mp4') return bytes.subarray(4, 8).toString('ascii') === 'ftyp'

@@ -3,6 +3,7 @@ import { addDays, validPurchaseDate } from '../parsing/local-date'
 import { centsToMoney, moneyCandidates } from '../parsing/money-text'
 import { currencySignal, normalizeText, paymentSignal } from '../parsing/signals'
 import type { ExpenseProposal, PendingField } from '../types'
+import { movementDirection } from './movement-direction'
 
 export type DraftMeta = { options?: Array<{ id: string; name: string }>; amountOptions?: string[] }
 export type DraftAnswer = { kind: 'updated'; proposal: ExpenseProposal } | { kind: 'cancel' } | { kind: 'not_understood' }
@@ -27,6 +28,10 @@ export function parseDateAnswer(answer: string, today: string): string | null {
 export function applyDraftAnswer(field: PendingField, answer: string, proposal: ExpenseProposal, meta: DraftMeta, today: string): DraftAnswer {
   const text = normalizeText(answer)
   if (/^(cancelar|cancela|olvidalo)$/.test(text)) return { kind: 'cancel' }
+  if (field === 'movement_direction') {
+    const direction = movementDirection(answer)
+    return direction === 'INCOME' || direction === 'EXPENSE' ? { kind: 'updated', proposal: { ...proposal, movementType: direction, receiptConfirmed: false } } : { kind: 'not_understood' }
+  }
   if (field === 'receipt_confirmation') {
     if (YES.test(text)) return { kind: 'updated', proposal: { ...proposal, receiptConfirmed: true } }
     if (NO.test(text)) return { kind: 'cancel' }
