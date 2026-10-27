@@ -12,7 +12,7 @@ export function Showcase() {
     <section className="overflow-hidden bg-navy py-20 text-white sm:py-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="max-w-2xl">
-          <p className="eyebrow text-gold">Tranquilidad financiera</p>
+          <p className="eyebrow text-[#D4BE97]">Tranquilidad financiera</p>
           <h2 className="mt-3 text-balance font-display text-3xl leading-tight sm:text-[2.6rem]">
             No es cuánto gastaste. Es cuánto podés gastar.
           </h2>
