@@ -19,13 +19,13 @@ export default function ThemeToggle({ variant = 'surface' }: ThemeToggleProps) {
   if (variant === 'dock') {
     buttonStyles = 'rounded-full bg-surface text-foreground hover:bg-surface-soft'
   } else if (variant === 'auth') {
-    buttonStyles = 'rounded-full bg-sand/80 dark:bg-surface/85 text-navy dark:text-aqua hover:bg-sand dark:hover:bg-surface-alt focus-visible:ring-2 focus-visible:ring-accent'
+    buttonStyles = 'rounded-full border border-navy/10 bg-[#F5F2EE]/90 text-navy hover:border-navy/20 hover:bg-sand active:scale-[0.94] dark:border-white/10 dark:bg-surface/85 dark:text-aqua dark:hover:bg-surface-alt focus-visible:ring-2 focus-visible:ring-accent'
   }
 
   return (
     <button
       onClick={toggleTheme}
-      className={`relative flex h-9 w-9 items-center justify-center transition-all focus:outline-none ${buttonStyles}`}
+      className={`relative flex h-10 w-10 items-center justify-center transition-[background-color,border-color,scale] focus:outline-none ${buttonStyles}`}
       aria-label="Alternar tema"
     >
       <AnimatePresence mode="wait" initial={false}>

@@ -7,6 +7,9 @@ import { Mail, LockKeyhole, UserRound, Phone, Eye, EyeOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { apiFetch } from '@/lib/api'
 import { AuthBrand, AuthField, AuthSubmitButton } from '@/features/auth/AuthComponents'
+import { SocialAuthButtons } from '@/features/auth/social/SocialAuthButtons'
+import { TermsConsent } from '@/features/auth/consent/TermsConsent'
+import { TERMS_VERSION } from '@/features/legal/constants'
 
 /**
  * Vista de Register rediseñada para Finnic.
@@ -27,6 +30,7 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [phone, setPhone] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [emailConfirmMessage, setEmailConfirmMessage] = useState<string | null>(null)
@@ -51,7 +55,14 @@ export default function SignUpPage() {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { display_name: displayName, phone } },
+      options: {
+        data: {
+          display_name: displayName,
+          phone,
+          terms_version: TERMS_VERSION,
+          terms_accepted_at: new Date().toISOString(),
+        },
+      },
     })
 
     if (signUpError) {
@@ -83,20 +94,19 @@ export default function SignUpPage() {
 
   if (!mounted) return null
 
-  const isFormValid = Boolean(displayName && email && password && confirmPassword)
+  const isFormValid = Boolean(displayName && email && password && confirmPassword && acceptedTerms)
 
   return (
-    <div className="flex flex-col gap-7 sm:gap-9">
-      {/* Encabezado Editorial Finnic Centrado */}
+    <div className="flex flex-1 flex-col justify-between gap-6 md:gap-10">
       <AuthBrand
         title="Creá tu cuenta"
         subtitle="Empezá a ordenar tus finanzas."
       />
 
       {/* Formulario monolítico en bloque de cristal cálido (Sand/Navy) */}
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div className="neu-raised overflow-hidden rounded-3xl border border-border/60 bg-surface/90 transition-all">
-          <div className="flex flex-col divide-y divide-border/60">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <div className="overflow-hidden rounded-2xl border border-navy/10 bg-[#F5F2EE]/90 dark:border-white/10 dark:bg-surface/85">
+          <div className="flex flex-col divide-y divide-navy/10 dark:divide-white/10">
             {/* 1. Nombre completo */}
             <AuthField
               id="displayName"
@@ -138,7 +148,7 @@ export default function SignUpPage() {
 
             {/* 4 & 5. Contraseña y Repetir Contraseña con el Botón CTA a la derecha en el medio */}
             <div className="relative flex items-center justify-between">
-              <div className="flex flex-1 flex-col divide-y divide-border/60">
+              <div className="flex flex-1 flex-col divide-y divide-navy/10 dark:divide-white/10">
                 <AuthField
                   id="password"
                   label="Contraseña"
@@ -186,7 +196,7 @@ export default function SignUpPage() {
               </div>
 
               {/* CTA Circular Sólido Integrado a la derecha entre las dos contraseñas */}
-              <div className="p-3 sm:p-3.5 pr-4 flex items-center justify-center">
+              <div className="flex items-center justify-center p-2.5 pr-3 sm:p-3.5 sm:pr-4">
                 <AuthSubmitButton
                   loading={loading}
                   disabled={!isFormValid}
@@ -196,6 +206,8 @@ export default function SignUpPage() {
             </div>
           </div>
         </div>
+
+        <TermsConsent checked={acceptedTerms} onChange={setAcceptedTerms} />
 
         {error && (
           <p className="rounded-2xl border border-danger/25 bg-danger/10 px-4 py-3 text-xs font-medium text-danger animate-fade-in backdrop-blur-xs">
@@ -210,18 +222,19 @@ export default function SignUpPage() {
         )}
       </form>
 
-      {/* Enlaces de pie y navegación */}
-      <footer className="mt-2 flex flex-col items-center gap-3">
-        <p className="text-center text-xs sm:text-sm font-medium text-navy/80 dark:text-foreground/80">
+      <div className="flex flex-col gap-4 md:gap-6">
+        <SocialAuthButtons verb="Registrarte" dividerLabel="o registrate con" disabled={!acceptedTerms} />
+
+        <p className="text-center text-sm text-navy/60 dark:text-foreground/60">
           ¿Ya tenés cuenta?{' '}
           <Link
             href="/login"
-            className="font-bold text-accent hover:text-accent-hover transition-colors underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+            className="font-semibold text-accent underline-offset-4 transition-colors hover:text-accent-hover hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
           >
             Iniciar sesión
           </Link>
         </p>
-      </footer>
+      </div>
     </div>
   )
 }
