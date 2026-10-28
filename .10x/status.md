@@ -5,7 +5,7 @@
 | 0 Brainstorming | ✅ | ✅ | ✅ spec 2026-10-28 |
 | 1 Estrategia | ✅ | ✅ | ✅ |
 | 2 Diseño | ✅ ADR-001 | ✅ ADR-002 | ✅ ADR-003, ADR-004 |
-| 3 Planificación | ✅ | ✅ | ⏳ |
+| 3 Planificación | ✅ | ✅ | ✅ T1–T9 |
 | 4 Implementación | ✅ | ✅ | ⏳ |
 | 5 Verificación | ✅ 44 e2e, 317 unit | ✅ axe 0 serias | ⏳ |
 | 6 Entrega | ⏳ CI listo, sin push | ⏳ sin push | ⏳ |
@@ -21,3 +21,14 @@
 
 ## Programa desktop (2026-10-28)
 Spec: `specs/2026-10-28-desktop-experience-design.md`. Sub-proyectos en orden: desktop-shell → desktop-movements → desktop-dashboard → desktop-finance.
+
+### desktop-shell — tareas
+- [ ] T1 infra global (bus, media query, flag persistente)
+- [ ] T2 suscripciones de datos + emisión en modales
+- [ ] T3 FinnicChatProvider + ChatConversation
+- [ ] T4 NewActionProvider
+- [ ] T5 FinnicPanel
+- [ ] T6 Sidebar (Nuevo, Finnic, colapso) + PageContainer
+- [ ] T7 Paleta ⌘K + atajos
+- [ ] T8 /chat en desktop
+- [ ] T9 e2e + suite completa

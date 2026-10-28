@@ -1,3 +1,3 @@
 # Handoff
-**De:** Architect + Staff → **A:** EM + Senior Engineer (fase 3 de `desktop-shell`)
-Diseño en `decisions/architect/desktop-shell.md` y `decisions/staff-engineer/desktop-shell.md`. ADR-003 (providers de chat, acciones y panel + evento `finnic:data-changed`) y ADR-004 (`cmdk@1.1.1`).
+**De:** EM + Senior → **A:** SDE (fase 4 de `desktop-shell`)
+Tareas T1–T9 en `decisions/engineering-manager/desktop-shell.md`, enfoque por tarea en `decisions/senior-engineer/desktop-shell.md`. No tocar los archivos con cambios sin commitear del usuario (perfil, ProfileProvider, API).
