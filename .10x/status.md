@@ -8,7 +8,7 @@
 | 3 Planificación | ✅ | ✅ | ✅ T1–T9 | ✅ M1–M5 |
 | 4 Implementación | ✅ | ✅ | ✅ T1–T9 | ⏳ |
 | 5 Verificación | ✅ 44 e2e, 317 unit | ✅ axe 0 serias | ✅ 51 e2e, 79 unit web, axe 0 serias | ⏳ |
-| 6 Entrega | ⏳ CI listo, sin push | ⏳ sin push | ⏳ | ⏳ |
+| 6 Entrega | ✅ en main (push previo) | ✅ en main (push previo) | ✅ CI + CD verdes 2026-10-28 | ⏳ |
 
 ## Pendientes (deuda priorizada)
 1. Editar y borrar gastos desde el detalle (alto).
@@ -34,5 +34,6 @@ Spec: `specs/2026-10-28-desktop-experience-design.md`. Sub-proyectos en orden: d
 - [x] T9 e2e + suite completa
 
 ### desktop-shell — siguiente
-- Entrega: push de `main` (CI corre test + e2e). Sin push hecho.
+- Entregado: CI 40782078797 y CD 40782079196 verdes (Vercel + Render).
+- Recomendado: que CD dependa de CI.
 - Sub-proyectos pendientes: desktop-movements → desktop-dashboard → desktop-finance.
