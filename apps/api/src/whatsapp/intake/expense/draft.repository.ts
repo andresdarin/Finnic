@@ -25,8 +25,8 @@ export class DraftRepository {
   /** One draft per origin message; re-asking updates it in place. */
   async save(input: { profileId: string; sourceInboundId: string; sourceWamid: string; field: PendingField; question: string; proposal: ExpenseProposal; meta?: DraftMeta }) {
     const data = { pendingField: input.field, question: input.question, proposal: { proposal: input.proposal, meta: input.meta ?? {} } as object, status: 'awaiting', expiresAt: new Date(Date.now() + DRAFT_TTL_MS) }
-    // Starting a new expense closes any other open draft so replies cannot hit the wrong one.
-    await this.prisma.whatsAppExpenseDraft.updateMany({ where: { profileId: input.profileId, status: 'awaiting', sourceInboundId: { not: input.sourceInboundId } }, data: { status: 'cancelled' } })
+    // Preserve unfinished work separately; never describe a replaced draft as a user cancellation.
+    await this.prisma.whatsAppExpenseDraft.updateMany({ where: { profileId: input.profileId, status: 'awaiting', sourceInboundId: { not: input.sourceInboundId } }, data: { status: 'parked' } })
     const row = await this.prisma.whatsAppExpenseDraft.upsert({
       where: { sourceInboundId: input.sourceInboundId },
       create: { profileId: input.profileId, sourceInboundId: input.sourceInboundId, sourceWamid: input.sourceWamid, ...data },
@@ -41,5 +41,23 @@ export class DraftRepository {
 
   async cancelOpen(profileId: string) {
     return (await this.prisma.whatsAppExpenseDraft.updateMany({ where: { profileId, status: 'awaiting' }, data: { status: 'cancelled' } })).count
+  }
+
+  async findOwned(profileId: string, id: string) {
+    const row = await this.prisma.whatsAppExpenseDraft.findFirst({ where: { id, profileId } })
+    if (!row) return null
+    const registered = await this.prisma.personalExpense.findFirst({ where: { profileId, OR: [{ sourceMessageId: row.sourceWamid }, ...(row.expenseId ? [{ id: row.expenseId }] : [])] }, select: { id: true } })
+    return { draft: decode(row), status: row.status, registered: Boolean(registered) }
+  }
+
+  async recentStatus(profileId: string) {
+    const rows = await this.prisma.whatsAppExpenseDraft.findMany({ where: { profileId }, orderBy: { updatedAt: 'desc' }, take: 20 })
+    if (!rows.length) return []
+    const expenses = await this.prisma.personalExpense.findMany({ where: { profileId, OR: [{ sourceMessageId: { in: rows.map(row => row.sourceWamid) } }, { id: { in: rows.flatMap(row => row.expenseId ? [row.expenseId] : []) } }] }, select: { id: true, sourceMessageId: true, title: true, amount: true, currency: true } })
+    return rows.map(row => {
+      const draft = decode(row)
+      const expense = expenses.find(expense => expense.id === row.expenseId || expense.sourceMessageId === row.sourceWamid)
+      return { draftId: row.id, title: expense?.title ?? draft.proposal.title, amount: expense?.amount.toFixed(2) ?? draft.proposal.amount, currency: expense?.currency ?? draft.proposal.currency, status: expense ? 'completed' : row.status === 'completed' ? 'not_in_ledger' : row.status, expenseId: expense?.id ?? null, ledgerVerified: Boolean(expense), pendingField: draft.pendingField, updatedAt: row.updatedAt, ...(row.status === 'cancelled' ? { note: 'Puede ser una cancelación o un reemplazo del flujo anterior. No atribuir una intención al usuario.' } : {}) }
+    })
   }
 }

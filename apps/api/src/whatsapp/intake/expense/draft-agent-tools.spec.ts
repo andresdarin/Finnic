@@ -21,6 +21,15 @@ function setup() {
 }
 
 describe('agent draft capabilities', () => {
+  it('does not repeat the confirmation question when the model submits the same proposal again', async () => {
+    const flow = setup()
+    const patch = { accountName: 'Mi tarjeta', paymentMethod: 'CREDIT', prepareAccount: true, openingBalance: '22000.00' }
+    await flow.tools.update_pending_expense.execute(patch)
+    const repeated = await flow.tools.update_pending_expense.execute(patch)
+    expect(repeated.reply).toBeUndefined()
+    expect(repeated.data).toMatchObject({ unchanged: true })
+    expect(flow.repository.save).toHaveBeenCalledTimes(1)
+  })
   it('applies interpreted identity, credit type and opening debt to the actual draft without ledger writes', async () => {
     const flow = setup()
     const result = await flow.tools.update_pending_expense.execute({ accountName: 'OCA MASTER', paymentMethod: 'CREDIT', prepareAccount: true, openingBalance: '22000.00' })

@@ -24,14 +24,16 @@ export class MediaHistoryService {
       dataUrl: `data:${ctx.attachment.mimeType};base64,${ctx.attachment.bytes.toString('base64')}`,
     } : undefined
     const outbound = isFinnicSticker(outcome.result?.outboundSticker) ? await this.stickers.attachment(outcome.result.outboundSticker) : null
+    const receivedAt = new Date()
+    const repliedAt = new Date(receivedAt.getTime() + 1)
     await this.prisma.$transaction([
       this.prisma.aiMessage.upsert({
         where: { id: `intake:${ctx.inboundId}:user` }, update: {},
-        create: { id: `intake:${ctx.inboundId}:user`, conversationId: conversation.id, role: 'USER', content: ctx.text || (ctx.type === 'document' ? 'PDF adjunto' : ctx.type === 'sticker' ? 'Sticker' : 'Foto de ticket'), metadata: { source: ctx.channel ?? 'whatsapp', ...(attachment ? { attachment } : {}) } },
+        create: { id: `intake:${ctx.inboundId}:user`, conversationId: conversation.id, role: 'USER', createdAt: receivedAt, content: ctx.text || (ctx.type === 'document' ? 'PDF adjunto' : ctx.type === 'sticker' ? 'Sticker' : 'Foto de ticket'), metadata: { source: ctx.channel ?? 'whatsapp', ...(attachment ? { attachment } : {}) } },
       }),
       this.prisma.aiMessage.upsert({
         where: { id: `intake:${ctx.inboundId}:reply` }, update: {},
-        create: { id: `intake:${ctx.inboundId}:reply`, conversationId: conversation.id, role: 'ASSISTANT', content: outcome.reply, ...(outbound ? { metadata: { attachment: outbound } } : {}) },
+        create: { id: `intake:${ctx.inboundId}:reply`, conversationId: conversation.id, role: 'ASSISTANT', createdAt: repliedAt, content: outcome.reply, ...(outbound ? { metadata: { attachment: outbound } } : {}) },
       }),
       this.prisma.aiConversation.update({ where: { id: conversation.id }, data: { updatedAt: new Date() } }),
     ])

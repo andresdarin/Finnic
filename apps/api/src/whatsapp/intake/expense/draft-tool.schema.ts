@@ -14,7 +14,7 @@ export const draftPatchSchema = z.object({
 export type DraftPatch = z.infer<typeof draftPatchSchema>
 export const draftPatchDeclaration = {
   name: 'update_pending_expense',
-  description: 'Aplica al borrador lo que el usuario acaba de aclarar, sin guardar gastos ni crear cuentas. Usala para identificar una cuenta (por ejemplo una marca del ticket es su tarjeta), cambiar el medio de pago, indicar deuda inicial o empezar seguimiento desde ahora. prepareAccount solo si acepta preparar el alta. No convierte datos desconocidos en cero salvo startFromNow explícito. Devuelve la siguiente revisión/confirmación del servidor. Nunca confirma ni ejecuta un registro.',
+  description: 'Aplica al borrador datos explícitos que el usuario dio en la conversación sobre ESTA operación; no toma como datos las afirmaciones antiguas del asistente, sin guardar gastos ni crear cuentas. Usala para identificar una cuenta (por ejemplo una marca del ticket es su tarjeta), cambiar el medio de pago, indicar deuda inicial o empezar seguimiento desde ahora. prepareAccount solo si acepta preparar el alta. No convierte datos desconocidos en cero salvo startFromNow explícito. Devuelve la siguiente revisión/confirmación del servidor. Nunca confirma ni ejecuta un registro.',
   parameters: { type: 'object', properties: {
     accountName: { type: 'string', description: 'Nombre indicado por el usuario, no necesariamente la marca impresa. No incluir número de tarjeta.' },
     paymentMethod: { type: 'string', enum: ['CREDIT', 'DEBIT', 'CASH', 'TRANSFER', 'CARD'] },

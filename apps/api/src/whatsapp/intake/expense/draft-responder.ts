@@ -27,6 +27,7 @@ export class DraftResponder {
   ) {}
 
   async answer(ctx: InboundContext, draft: StoredDraft, profile: IntakeProfileContext, cancel: boolean): Promise<HandlerResult> {
+    if (draft.meta.accountConfirmationInboundId && draft.meta.accountConfirmationInboundId === ctx.inboundId) return { reply: draft.question ?? 'La cuenta ya quedó preparada; el gasto sigue pendiente de confirmación.', intent: 'clarification' }
     if (cancel) {
       await this.drafts.close(draft.id, ctx.profileId, 'cancelled')
       return { reply: 'Listo, no registré nada.', intent: 'cancel' }

@@ -81,7 +81,7 @@ export class AccountOnboardingService {
       if (!/^(si|dale|confirmo|confirmar|ok|si dale|dale gracias|de una|hacelo asi)$/.test(text)) return null
       const existing = profile.accounts.find(a => a.purpose === 'OPERATING' && a.type === creation.type && a.currency === creation.currency && normalizeText(a.name) === normalizeText(creation.name!))
       const account = existing ?? await this.accounts.create(ctx.profileId, { name: creation.name!, type: creation.type, currency: creation.currency!, initialBalance: creation.initialBalance!, isSpendable: creation.type !== 'CREDIT' }, draft.id)
-      const meta = { ...draft.meta }; delete meta.accountCreation
+      const meta = { ...draft.meta, accountConfirmationInboundId: ctx.inboundId }; delete meta.accountCreation
       // Creating the account never confirms or writes the purchase itself.
       const compatible = account.currency === draft.proposal.currency
       const proposal = { ...draft.proposal, financeAccountId: compatible ? account.id : null, accountHint: compatible ? account.name : null, confirmationRequired: true, receiptConfirmed: false }

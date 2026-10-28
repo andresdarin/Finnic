@@ -1,6 +1,14 @@
 import type { ChatMessage } from '../client/gemini.types'
-export function agentHistory(messages: Array<{ role: string; content: string; metadata?: unknown }>): ChatMessage[] {
-  const history = messages.flatMap(message => {
+export function agentHistory(messages: Array<{ id?: string; role: string; content: string; metadata?: unknown }>): ChatMessage[] {
+  // Older intake rows used one transaction timestamp for both sides. Restore pair order.
+  const ordered = [...messages]
+  for (let index = 0; index < ordered.length - 1; index++) {
+    const first = ordered[index]!, second = ordered[index + 1]!
+    if (first.id?.startsWith('intake:') && first.id.endsWith(':reply') && second.id === first.id.replace(/:reply$/, ':user')) [ordered[index], ordered[index + 1]] = [second, first]
+  }
+  const userStarts = ordered.flatMap((message, index) => message.role === 'USER' ? [index] : [])
+  const window = userStarts.length > 20 ? ordered.slice(userStarts[userStarts.length - 20]) : ordered
+  const history = window.flatMap(message => {
     if (message.role === 'SYSTEM') return []
     const metadata = message.metadata as { modelContent?: ChatMessage; toolResponse?: ChatMessage; functionCall?: unknown; functionResponse?: unknown } | null
     if (metadata?.modelContent && metadata?.toolResponse) return [metadata.modelContent, metadata.toolResponse]
