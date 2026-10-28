@@ -25,7 +25,7 @@ export interface MovementPresentation {
 const TONES: Record<FinancialMovementType, { Icon: LucideIcon; iconClass: string; amountClass: string }> = {
   EXPENSE: { Icon: WalletCards, iconClass: 'border-border/80 text-foreground', amountClass: 'text-foreground' },
   INCOME: { Icon: ArrowUpRight, iconClass: 'border-[#2E7D6A]/30 text-[#2E7D6A] dark:text-[#4BE3B5]', amountClass: 'text-[#2E7D6A] dark:text-[#4BE3B5]' },
-  FX: { Icon: RefreshCw, iconClass: 'border-[#A58D66]/40 text-[#A58D66]', amountClass: 'text-[#A58D66]' },
+  FX: { Icon: RefreshCw, iconClass: 'border-[#A58D66]/40 text-[#7A6440] dark:text-[#A58D66]', amountClass: 'text-[#7A6440] dark:text-[#A58D66]' },
   TRANSFER: { Icon: ArrowRightLeft, iconClass: 'border-[#407E8C]/40 text-[#407E8C] dark:text-[#C0D5D6]', amountClass: 'text-[#407E8C] dark:text-[#C0D5D6]' },
   CARD_PAYMENT: { Icon: CreditCard, iconClass: 'border-[#407E8C]/40 text-[#407E8C] dark:text-[#C0D5D6]', amountClass: 'text-foreground' },
 }

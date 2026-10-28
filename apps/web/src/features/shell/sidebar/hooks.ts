@@ -14,8 +14,8 @@ export const NAV_ITEMS = [
   { label: 'Finnic AI', href: '/ai', icon: Brain },
 ] as const
 
-/** Pantallas que viven dentro de otra sección: Tranquilidad se abre desde Balance. */
-const SECTION_ALIASES: Record<string, string> = { '/tranquilidad-financiera': '/balance' }
+/** Pantallas que viven dentro de otra sección: Tranquilidad se abre desde Balance; el alta de gasto, desde Movimientos. */
+const SECTION_ALIASES: Record<string, string> = { '/tranquilidad-financiera': '/balance', '/expenses/new': '/expenses' }
 
 /** href del ítem de navegación que corresponde a la ruta actual. */
 export function navHrefFor(pathname: string): string {

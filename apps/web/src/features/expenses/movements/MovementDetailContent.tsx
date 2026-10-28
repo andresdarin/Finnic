@@ -32,7 +32,7 @@ export default function MovementDetailContent({ movement, onClose }: Props) {
       {/* Cabecera */}
       <div className="flex items-start justify-between gap-4 border-b border-border/60 p-6">
         <div className="min-w-0">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-[#A58D66]">{label}</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-[#7A6440] dark:text-[#A58D66]">{label}</span>
           <h2 className="mt-1 truncate text-lg sm:text-xl font-bold text-foreground">{title}</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">{formatDate(movement.date)}</p>
         </div>
@@ -51,7 +51,7 @@ export default function MovementDetailContent({ movement, onClose }: Props) {
         <p className="text-xs font-semibold text-muted-foreground mb-1">Monto total</p>
         <p className={`text-3xl font-extrabold tabular-nums tracking-tight ${amountClass}`}>{amount}</p>
         {type === 'FX' && rate && (
-          <p className="mt-2 text-xs font-semibold text-[#A58D66]">Cotización real: {rate}</p>
+          <p className="mt-2 text-xs font-semibold text-[#7A6440] dark:text-[#A58D66]">Cotización real: {rate}</p>
         )}
       </div>
 
