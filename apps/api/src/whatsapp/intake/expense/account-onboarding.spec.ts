@@ -17,6 +17,22 @@ const setup = () => {
 }
 
 describe('conversational account onboarding', () => {
+  it('offers prospective tracking when debt is unknown without inventing a known balance or writing', async () => {
+    const { service, accounts, drafts } = setup()
+    const pending = draft(); pending.meta.accountCreation = { type: 'CREDIT', currency: 'UYU', name: 'OCA', stage: 'balance' }
+    const result = await service.answer(ctx('no se, vamos a empezar ahora y vamos viendo, se va acomodar en el correr de los meses'), pending, profile)
+    expect(result?.reply).toContain('sin incluir la deuda anterior')
+    expect(result?.reply).not.toContain('Qué deuda')
+    expect(accounts.create).not.toHaveBeenCalled()
+    expect(drafts.save.mock.calls[0]![0]).toMatchObject({ meta: { accountCreation: { prospective: true, stage: 'confirm' } } })
+  })
+  it('passes unexpected prose back to conversation while preserving the onboarding state', async () => {
+    const { service, accounts, drafts } = setup()
+    const pending = draft(); pending.meta.accountCreation = { type: 'CREDIT', currency: 'UYU', name: 'OCA', stage: 'balance' }
+    expect(await service.answer(ctx('prefiero hablar de eso después'), pending, profile)).toBeNull()
+    expect(accounts.create).not.toHaveBeenCalled()
+    expect(drafts.save).not.toHaveBeenCalled()
+  })
   it('extracts only the compatible account from the screenshot list', () => {
     expect(accountMention('mi cuenta itau (débito) oca blue (débito) prex (débito) oca (crédito) y efectivo', 'CREDIT')).toBe('oca')
     expect(accountMention('OCA (crédito) Visa (crédito)', 'CREDIT')).toBeNull()

@@ -13,6 +13,18 @@ const proposal: ExpenseProposal & { amount: string; currency: 'UYU'; date: strin
 }
 
 describe('confirmación del ticket antes de guardar', () => {
+  it('acknowledges the scanned receipt before asking for an unavailable credit account and preserves all items', async () => {
+    const createExpense = { execute: vi.fn() }
+    const drafts = { save: vi.fn(async () => ({ id: 'draft' })) }
+    const service = new ExpenseIntakeService({} as never, createExpense as never, drafts as never)
+    const context = { profileId: 'p', inboundId: 'receipt-in', wamid: 'receipt-wa' } as InboundContext
+    const profile = { accounts: [], budgetCategories: [], defaultAccountId: null, defaultCurrency: 'UYU' } as unknown as IntakeProfileContext
+    const result = await service.continue(context, { ...proposal, accountless: false, paymentMethod: 'CREDIT' }, profile)
+    expect(result.reply).toContain('Leí el ticket de Súper por $U 100,00, con 1 producto')
+    expect(result.reply.indexOf('Leí el ticket')).toBeLessThan(result.reply.indexOf('tarjeta'))
+    expect(drafts.save).toHaveBeenCalledWith(expect.objectContaining({ sourceWamid: 'receipt-wa', proposal: expect.objectContaining({ items: proposal.items, amount: '100.00' }) }))
+    expect(createExpense.execute).not.toHaveBeenCalled()
+  })
   it('numbers products, localizes fractional quantities and avoids repeating identical unit prices', () => {
     const review = receiptReview({ ...proposal, amount: '40.00', items: [{ name: 'Pan', quantity: 1, unitPrice: 20, totalPrice: 20 }, { name: 'Papa', quantity: 0.5, unitPrice: 40, totalPrice: 20 }] }, 'Débito')
     expect(review).toContain('1. Pan × 1 — $U 20,00\n2. Papa × 0,5 — $U 20,00 (a $U 40,00)')

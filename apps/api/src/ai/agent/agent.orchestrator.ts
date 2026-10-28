@@ -22,7 +22,7 @@ import { confirmAction } from './confirm-action'
 import { StyleMemoryService } from '../personality/style-memory.service'
 import { ChatUnavailableError } from '../client/chat-fallback'
 
-export type AgentRequest = { profileId: string; conversationId: string; message: string; channel?: 'app' | 'whatsapp'; pendingExpense?: { amount: string | null; currency: string | null; title: string; pendingField: string; calculation?: unknown } }
+export type AgentRequest = { profileId: string; conversationId: string; message: string; channel?: 'app' | 'whatsapp'; pendingExpense?: { amount: string | null; currency: string | null; title: string; pendingField: string; calculation?: unknown; accountSetup?: unknown } }
 export type AgentResponse = {
   text: string; conversationId: string; pendingActionId?: string; actionStatus?: PendingActionStatus
   kind?: 'explanation' | 'query' | 'action' | 'error'

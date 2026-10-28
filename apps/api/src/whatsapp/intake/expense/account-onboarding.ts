@@ -1,7 +1,7 @@
 import { parseAmountToCents, centsToMoney } from '../parsing/money-text'
 import type { Currency } from '../types'
 
-export type AccountOnboarding = { type: 'CASH' | 'BANK' | 'CREDIT'; name?: string; currency?: Currency; initialBalance?: string; stage: 'name' | 'balance' | 'confirm' }
+export type AccountOnboarding = { type: 'CASH' | 'BANK' | 'CREDIT'; name?: string; currency?: Currency; initialBalance?: string; prospective?: boolean; stage: 'name' | 'balance' | 'confirm' }
 
 export function accountMention(text: string, type: AccountOnboarding['type']): string | null {
   const wanted = type === 'CREDIT' ? /cr[eé]dito/i : type === 'BANK' ? /d[eé]bito/i : /efectivo/i
@@ -20,6 +20,7 @@ export function initialBalanceAnswer(text: string): string | null {
 }
 
 export function accountQuestion(account: AccountOnboarding) {
+  if (account.prospective) return `Podemos empezar ${account.name} desde cero para llevar los gastos nuevos, sin incluir ${account.type === 'CREDIT' ? 'la deuda' : 'el saldo'} anterior. Lo hacemos así?`
   if (!account.name) return account.type === 'CREDIT' ? 'Cómo se llama la tarjeta de crédito?' : 'Qué nombre le ponemos a la cuenta?'
   if (!account.initialBalance) return account.type === 'CREDIT' ? `Qué deuda tenía ${account.name} antes de este gasto? Si no tenía, decime 0.` : `Qué saldo tenía ${account.name} antes de este gasto? Si estaba vacía, decime 0.`
   const label = account.type === 'CREDIT' ? 'tarjeta de crédito' : account.type === 'CASH' ? 'efectivo' : 'cuenta de débito'

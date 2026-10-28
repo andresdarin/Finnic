@@ -37,6 +37,10 @@ export class ExpenseIntakeService {
     if (input.transferDocument && input.movementType === 'INCOME') input = { ...input, paymentMethod: 'TRANSFER' }
     const step = nextStep(input, input.transferDocument ? { ...profile, defaultCurrency: null } : profile)
     if (step.kind === 'ask') {
+      if (!draft && input.inputMethod === 'RECEIPT_SCAN' && !input.transferDocument) {
+        const amount = input.amount && input.currency ? ` por ${formatMoney(input.amount, input.currency)}` : ''
+        notes = [`Leí el ticket de ${input.merchant ?? input.title}${amount}${input.items?.length ? `, con ${input.items.length} ${input.items.length === 1 ? 'producto' : 'productos'}` : ''}. Todavía no lo guardé.`, ...notes]
+      }
       const accountCreation = step.field === 'account' && step.proposal.paymentMethod === 'CREDIT' && !step.options?.length && step.proposal.currency
         ? { type: 'CREDIT' as const, currency: step.proposal.currency, stage: 'name' as const } : undefined
       const saved = await this.drafts.save({ profileId: ctx.profileId, sourceInboundId: origin.inboundId, sourceWamid: origin.wamid, field: step.field, question: step.question, proposal: step.proposal, meta: { ...(draft?.meta ?? {}), options: step.options, accountCreation } })

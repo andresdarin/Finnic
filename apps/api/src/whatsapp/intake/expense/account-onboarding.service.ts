@@ -33,14 +33,20 @@ export class AccountOnboardingService {
       if (!validAccountName(name)) return { reply: 'Pasame solo un nombre corto para identificarla.', intent: 'clarification' }
       creation.name = name; creation.stage = 'balance'
     } else if (saved?.stage === 'balance') {
+      if (/\b(?:no se|no tengo idea|no recuerdo|no lo se|desconozco|empezar (?:ahora|desde (?:ahora|cero))|arrancar (?:ahora|desde (?:ahora|cero)))\b/.test(text)) {
+        creation.initialBalance = '0.00'; creation.prospective = true; creation.stage = 'confirm'
+        const question = accountQuestion(creation)
+        await this.save(ctx, draft, { ...draft.meta, accountCreation: creation }, question)
+        return { reply: question, intent: 'clarification', result: { draftId: draft.id } }
+      }
       const balance = initialBalanceAnswer(ctx.text)
       const currency = currencySignal(ctx.text)
-      if (balance === null || currency === 'CONFLICT') return { reply: accountQuestion(creation), intent: 'clarification' }
+      if (balance === null || currency === 'CONFLICT') return null
       creation.initialBalance = balance
       if (currency === 'UYU' || currency === 'USD') creation.currency = currency
       creation.stage = 'confirm'
     } else if (saved?.stage === 'confirm') {
-      if (!/^(si|dale|confirmo|confirmar|ok)$/.test(text)) return { reply: accountQuestion(creation), intent: 'clarification' }
+      if (!/^(si|dale|confirmo|confirmar|ok|si dale|dale gracias|de una|hacelo asi)$/.test(text)) return null
       const existing = profile.accounts.find(a => a.purpose === 'OPERATING' && a.type === creation.type && a.currency === creation.currency && normalizeText(a.name) === normalizeText(creation.name!))
       const account = existing ?? await this.accounts.create(ctx.profileId, { name: creation.name!, type: creation.type, currency: creation.currency!, initialBalance: creation.initialBalance!, isSpendable: creation.type !== 'CREDIT' }, draft.id)
       const meta = { ...draft.meta }; delete meta.accountCreation
