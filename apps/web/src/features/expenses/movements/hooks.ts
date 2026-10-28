@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { apiFetch } from '@/lib/api'
+import { useRefetchOnDataChanged } from '@/hooks/useRefetchOnDataChanged'
 import { getCurrentMonth } from './constants'
 import type { Movement, MovementFilters, MonthSummary, PaginationInfo, ExpenseListResponse } from './types'
 
@@ -68,6 +69,7 @@ export function useMovements() {
     setFiltersState({ month: getCurrentMonth(), q: '', kind: '', scope: '', category: '', paymentMethod: '', financialType: '', account: '', currency: '', period: '' })
   }
   function refresh() { load(false) }
+  useRefetchOnDataChanged(refresh)
   function loadMore() { if (!loading && pagination.hasMore) load(true) }
 
   return { movements, summary, pagination, loading, error, filters, setFilter, clearFilters, refresh, loadMore }

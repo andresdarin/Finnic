@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { apiFetch } from '@/lib/api'
+import { emitDataChanged } from '@/lib/dataChanged'
+import { useRefetchOnDataChanged } from '@/hooks/useRefetchOnDataChanged'
 import { currentMonthKey } from './constants'
 import type {
   PersonalExpense,
@@ -40,6 +42,7 @@ export function usePersonalFinance(monthKey?: string) {
   useEffect(() => {
     fetchExpenses()
   }, [fetchExpenses])
+  useRefetchOnDataChanged(fetchExpenses)
 
   return { expenses, loading, error, refetch: fetchExpenses }
 }
@@ -72,6 +75,7 @@ export function useFinanceAccounts() {
   useEffect(() => {
     fetchAccounts()
   }, [fetchAccounts])
+  useRefetchOnDataChanged(fetchAccounts)
 
   return { accounts, loading, error, refetch: fetchAccounts }
 }
@@ -109,6 +113,7 @@ export function useFinanceSnapshot() {
   }, [])
 
   useEffect(() => { fetchSnapshot() }, [fetchSnapshot])
+  useRefetchOnDataChanged(fetchSnapshot)
   return { snapshot, loading, error, refetch: fetchSnapshot }
 }
 
@@ -121,7 +126,7 @@ export function useCreateExpense() {
       const supabase = createClient()
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) throw new Error('No session')
-      return await apiFetch<PersonalExpense>(
+      const result = await apiFetch<PersonalExpense>(
         '/api/personal-finance',
         {
           method: 'POST',
@@ -129,6 +134,8 @@ export function useCreateExpense() {
         },
         session.access_token,
       )
+      emitDataChanged()
+      return result
     } finally {
       setSubmitting(false)
     }
@@ -146,7 +153,7 @@ export function useCreateTransfer() {
       const supabase = createClient()
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) throw new Error('No session')
-      return await apiFetch<PersonalExpense>(
+      const result = await apiFetch<PersonalExpense>(
         '/api/finance/transfers',
         {
           method: 'POST',
@@ -154,6 +161,8 @@ export function useCreateTransfer() {
         },
         session.access_token,
       )
+      emitDataChanged()
+      return result
     } finally {
       setSubmitting(false)
     }
@@ -171,7 +180,7 @@ export function useRegisterIncome() {
       const supabase = createClient()
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) throw new Error('No session')
-      return await apiFetch<any>(
+      const result = await apiFetch<any>(
         '/api/finance/incomes',
         {
           method: 'POST',
@@ -179,6 +188,8 @@ export function useRegisterIncome() {
         },
         session.access_token,
       )
+      emitDataChanged()
+      return result
     } finally {
       setSubmitting(false)
     }
