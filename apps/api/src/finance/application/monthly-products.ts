@@ -1,9 +1,14 @@
 import type { PrismaService } from '../../prisma/prisma.service'
 
 /** Individual unit prices, never the total of a ticket or an unknown-quantity line. */
-export async function monthlyProducts(prisma: PrismaService, profileId: string, monthKey: string, expenseCount: number) {
+export async function monthlyProducts(
+  prisma: PrismaService,
+  profileId: string,
+  filter: { monthKey: string } | { date: { gte?: Date; lt: Date } },
+  expenseCount: number,
+) {
   const items = await prisma.personalExpenseItem.findMany({
-    where: { expense: { profileId, monthKey, movementType: 'EXPENSE' } },
+    where: { expense: { profileId, ...filter, movementType: 'EXPENSE' } },
     select: { expenseId: true, name: true, unitPrice: true, totalPrice: true, quantity: true, expense: { select: { currency: true, merchant: true, date: true } } },
     orderBy: { id: 'asc' },
   })

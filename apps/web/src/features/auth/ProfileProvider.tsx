@@ -8,12 +8,14 @@ import { apiFetch, ApiError } from '@/lib/api'
 import AppShell from '../shell/AppShell'
 import FeatherLoading from '@/components/ui/FeatherLoading'
 import FinnicErrorCard from '@/components/ui/FinnicErrorCard'
+import type { DefaultQueryPeriod } from '@lovehold/shared'
 
 interface Profile {
   id: string
   email: string
   displayName: string | null
   avatarUrl: string | null
+  defaultQueryPeriod: DefaultQueryPeriod
   color: string
   createdAt: string
   role?: string | null

@@ -1,4 +1,5 @@
-export type { Profile } from './profile'
+export { DEFAULT_QUERY_PERIODS } from './profile'
+export type { DefaultQueryPeriod, Profile } from './profile'
 export type { Household, HouseholdMember, MemberRole } from './household'
 export { EXPENSE_ITEM_CATEGORIES } from './expense'
 export type { Category, Expense, ExpenseItem, ExpenseItemCategory, ExpenseSplit, SplitType } from './expense'

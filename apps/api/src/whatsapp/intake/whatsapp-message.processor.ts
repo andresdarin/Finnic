@@ -29,7 +29,8 @@ import { AudioIntakeService } from './audio/audio-intake.service'
 
 export type ProcessorOutcome = HandlerResult & { profileId: string | null }
 
-const UNLINKED = 'Hola, soy Finnic. Este número no está vinculado a una cuenta, así que no puedo mostrar ni registrar información.\nPara vincularlo: en la app entrá a Perfil → WhatsApp, generá un código y enviame "vincular 123456" desde este teléfono.'
+const APP_URL = 'https://lovehold-web.vercel.app'
+const UNLINKED = `Hola, soy Finnic. Este número todavía no está vinculado, así que no puedo mostrar ni registrar tus datos.\nEntrá a ${APP_URL}/signup para crear tu cuenta, o iniciá sesión si ya tenés una. Después, en Perfil → WhatsApp, generá un código y enviámelo desde este teléfono como "vincular <código>".`
 const LINK_REPLIES: Record<LinkOutcome, string> = {
   linked: '✅ Listo, este número quedó vinculado a tu cuenta de Finnic.\nYa podés escribirme "Gasté 850 pesos en el súper con débito" o mandarme la foto de un ticket.',
   invalid: 'El código no es válido o ya venció. Generá uno nuevo en Perfil → WhatsApp.',
@@ -171,7 +172,16 @@ export class WhatsAppMessageProcessor {
 
   private async unlinked(row: WhatsAppInboundMessage, text: string): Promise<HandlerResult> {
     const match = LINK_COMMAND.exec(text)
-    if (!match) return { reply: UNLINKED, intent: 'other' }
+    if (!match) {
+      const normalized = text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
+      if (/\b(?:link|enlace|url)\b/.test(normalized)) {
+        return { reply: `Sí, acá podés entrar: ${APP_URL}/signup. Si ya tenés cuenta, iniciá sesión en ${APP_URL}/login. Después andá a Perfil → WhatsApp para vincular este teléfono.`, intent: 'other' }
+      }
+      if (/\b(?:como|donde|acced|entro|registr|crear cuenta|iniciar sesion|login)\b/.test(normalized)) {
+        return { reply: `Entrá a ${APP_URL}/signup y creá tu cuenta. Si ya tenés una, iniciá sesión en ${APP_URL}/login. Luego abrí Perfil → WhatsApp, generá un código y enviámelo desde este teléfono como "vincular <código>".`, intent: 'other' }
+      }
+      return { reply: UNLINKED, intent: 'other' }
+    }
     const failures = await this.prisma.whatsAppInboundMessage.count({ where: { from: row.from, intent: 'link_failed', createdAt: { gte: new Date(Date.now() - 3_600_000) } } })
     const outcome = await this.links.consume(match[1]!, row.from, failures)
     return { reply: LINK_REPLIES[outcome], intent: outcome === 'linked' ? 'link' : 'link_failed' }

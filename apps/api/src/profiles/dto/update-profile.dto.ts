@@ -1,4 +1,5 @@
-import { IsOptional, IsString, MaxLength } from 'class-validator'
+import { IsEnum, IsOptional, IsString, MaxLength, ValidateIf } from 'class-validator'
+import { DefaultQueryPeriod } from '@prisma/client'
 
 export class UpdateProfileDto {
   @IsOptional()
@@ -9,4 +10,8 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   avatarUrl?: string
+
+  @ValidateIf((_, value) => value !== undefined)
+  @IsEnum(DefaultQueryPeriod)
+  defaultQueryPeriod?: DefaultQueryPeriod
 }

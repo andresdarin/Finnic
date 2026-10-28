@@ -23,6 +23,7 @@ model Profile {
   whatsappLinkedAt         DateTime?
   whatsappDefaultAccountId String?
   whatsappDefaultCurrency  FinanceCurrency?
+  defaultQueryPeriod       DefaultQueryPeriod @default(MONTH)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 
@@ -52,6 +53,14 @@ model Profile {
   whatsappActions      WhatsAppExpenseAction[]
   rewardEntries        RewardEntry[]
   rewardItems          RewardItem[]
+}
+
+enum DefaultQueryPeriod {
+  MONTH
+  FORTNIGHT
+  WEEK
+  YEAR
+  ALL_TIME
 }
 
 enum FinanceCurrency {

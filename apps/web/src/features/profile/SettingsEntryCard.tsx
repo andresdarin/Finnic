@@ -5,17 +5,20 @@ import Link from 'next/link'
 import { DollarSign, Globe, Palette, Mail, ShieldCheck, LogOut, Settings, ChevronDown } from 'lucide-react'
 import LiquidGlass from '@/components/ui/LiquidGlass'
 import { useTheme } from '@/features/theme/ThemeProvider'
+import type { DefaultQueryPeriod } from '@lovehold/shared'
+import { DefaultQueryPeriodSetting } from './DefaultQueryPeriodSetting'
 
 interface SettingsEntryCardProps {
   email: string | undefined
   onLogout: () => void
+  defaultQueryPeriod: DefaultQueryPeriod
 }
 
 /**
  * Compact, collapsible settings card for preferences and account info.
  * Stays out of focus by default — the user can expand to see details.
  */
-export function SettingsEntryCard({ email, onLogout }: SettingsEntryCardProps) {
+export function SettingsEntryCard({ email, onLogout, defaultQueryPeriod }: SettingsEntryCardProps) {
   const [expanded, setExpanded] = useState(false)
   const { theme } = useTheme()
 
@@ -56,6 +59,7 @@ export function SettingsEntryCard({ email, onLogout }: SettingsEntryCardProps) {
               <SettingsRow icon={Globe} label="Formato" value="$ 1.234,56" />
               <SettingsRow icon={Palette} label="Tema" value={theme === 'dark' ? 'Oscuro' : 'Claro'} />
             </div>
+            <DefaultQueryPeriodSetting value={defaultQueryPeriod} />
           </div>
 
           {/* Account */}

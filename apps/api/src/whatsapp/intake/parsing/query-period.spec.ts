@@ -16,7 +16,7 @@ describe('financial calendar questions', () => {
     expect(queryPeriod('Gasté más o menos que el mes pasado?', '2026-01')).toMatchObject({ comparison: true, months: ['2026-01', '2025-12'] })
     expect(queryPeriod('Compará agosto con julio', '2026-10').months).toEqual(['2026-08', '2026-07'])
   })
-  it.each(['Cuánto gasté ayer?', 'Cuánto gasté la semana pasada?', 'Cuánto gasté los últimos 30 días?'])('does not invent a monthly answer to %s', text => {
+  it.each(['Cuánto gasté ayer?', 'Cuánto gasté los últimos 30 días?'])('does not invent a monthly answer to %s', text => {
     expect(queryPeriod(text, '2026-10').unsupported).toBe(true)
   })
 })

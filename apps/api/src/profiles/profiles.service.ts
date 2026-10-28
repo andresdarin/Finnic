@@ -56,6 +56,7 @@ export class ProfilesService {
       data: {
         ...(dto.displayName !== undefined && { displayName: dto.displayName }),
         ...(dto.avatarUrl !== undefined && { avatarUrl: dto.avatarUrl }),
+        ...(dto.defaultQueryPeriod !== undefined && { defaultQueryPeriod: dto.defaultQueryPeriod }),
       },
     })
   }

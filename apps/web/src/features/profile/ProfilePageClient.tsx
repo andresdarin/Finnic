@@ -76,7 +76,7 @@ export default function ProfilePageClient() {
           {/* Goals & Settings */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <NextGoalsCard />
-            <SettingsEntryCard email={profile?.email} onLogout={logout} />
+            <SettingsEntryCard email={profile?.email} onLogout={logout} defaultQueryPeriod={profile?.defaultQueryPeriod ?? 'MONTH'} />
           </div>
 
           <WhatsAppLinkCard />

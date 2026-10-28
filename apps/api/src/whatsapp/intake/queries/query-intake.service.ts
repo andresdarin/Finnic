@@ -31,18 +31,19 @@ export class QueryIntakeService {
   ) {}
 
   async monthSpending(ctx: InboundContext): Promise<HandlerResult> {
-    const current = await this.activity.monthly(ctx.profileId)
-    const period = queryPeriod(ctx.text, current.monthKey)
-    if (period.unsupported) return { reply: 'Qué mes querés consultar? Puedo revisar un mes calendario o comparar dos meses.', intent: 'other' }
+    const current = await this.activity.monthly(ctx.profileId, ctx.localDate.slice(0, 7))
+    const preference = await this.activity.defaultQueryPeriod(ctx.profileId)
+    const period = queryPeriod(ctx.text, current.monthKey, preference, ctx.localDate)
+    if (period.unsupported) return { reply: '¿Qué período querés consultar? Podés pedirme un mes, una semana, una quincena, un año o todo el historial.', intent: 'other' }
     const requested = currencySignal(ctx.text)
     const currency = requested === 'UYU' || requested === 'USD' ? requested : null
     if (period.comparison) {
-      const [first, second] = await Promise.all(period.months.map(month => month === current.monthKey ? current : this.activity.monthly(ctx.profileId, month)))
+      const [first, second] = await Promise.all(period.ranges.map(range => this.activity.range(ctx.profileId, range.from, range.to, range.label)))
       return { reply: comparisonReply(first!, second!, currency), intent: 'query_month_spending' }
     }
-    const data = period.month === current.monthKey ? current : await this.activity.monthly(ctx.profileId, period.month)
+    const data = await this.activity.range(ctx.profileId, period.from, period.to, period.label)
     const month = data.monthKey
-    const label = monthLabel(month)
+    const label = data.periodLabel ?? monthLabel(month)
     const totals = Object.entries(data.totalsByCurrency).filter(([value, types]) => (!currency || value === currency) && types.EXPENSE && types.EXPENSE !== '0.00')
     if (!totals.length) return { reply: `No tengo gastos personales registrados en ${label}.`, intent: 'query_month_spending' }
     const lines = [`Gastos personales de ${label}:`]
@@ -57,17 +58,19 @@ export class QueryIntakeService {
   }
 
   async largestExpense(ctx: InboundContext): Promise<HandlerResult> {
-    const current = await this.activity.monthly(ctx.profileId)
-    const period = queryPeriod(ctx.text, current.monthKey)
-    if (period.unsupported) return { reply: 'Qué mes querés revisar para buscar el gasto más alto?', intent: 'other' }
-    const data = period.month === current.monthKey ? current : await this.activity.monthly(ctx.profileId, period.month)
+    const current = await this.activity.monthly(ctx.profileId, ctx.localDate.slice(0, 7))
+    const preference = await this.activity.defaultQueryPeriod(ctx.profileId)
+    const period = queryPeriod(ctx.text, current.monthKey, preference, ctx.localDate)
+    if (period.unsupported) return { reply: '¿Qué período querés revisar para buscar el gasto más alto?', intent: 'other' }
+    const data = await this.activity.range(ctx.profileId, period.from, period.to, period.label)
     const signal = currencySignal(ctx.text)
     const requestedCurrency = signal === 'UYU' || signal === 'USD' ? signal : null
     const expenses = data.largestExpensesByCurrency.filter(row => !requestedCurrency || row.currency === requestedCurrency)
-    if (!expenses.length) return { reply: `No tengo gastos personales registrados en ${monthLabel(data.monthKey)}` + (requestedCurrency ? ` en ${requestedCurrency}.` : '.'), intent: 'other' }
-    const lines = expenses.map(row => `Tu gasto más alto${expenses.length > 1 ? ` en ${row.currency}` : ''} fue ${row.title}: ${formatMoney(row.amount, row.currency)}${row.merchant && normalizeText(row.merchant) !== normalizeText(row.title) ? ` en ${row.merchant}` : ''}, el ${new Intl.DateTimeFormat('es-UY', { timeZone: data.timeZone, day: 'numeric', month: 'numeric' }).format(row.date)}.`)
+    const periodLabel = data.periodLabel ?? monthLabel(data.monthKey)
+    if (!expenses.length) return { reply: `No tengo gastos personales registrados en ${periodLabel}` + (requestedCurrency ? ` en ${requestedCurrency}.` : '.'), intent: 'other' }
+    const lines = expenses.map(row => `Tu gasto más alto${expenses.length > 1 ? ` en ${row.currency}` : ''} de ${periodLabel} fue ${row.title}: ${formatMoney(row.amount, row.currency)}${row.merchant && normalizeText(row.merchant) !== normalizeText(row.title) ? ` en ${row.merchant}` : ''}, el ${new Intl.DateTimeFormat('es-UY', { timeZone: data.timeZone, day: 'numeric', month: 'numeric' }).format(row.date)}.`)
     if (lines.length > 1) lines.push('Las monedas van por separado.')
-    return { reply: lines.join('\n'), intent: 'other', result: { monthKey: data.monthKey, source: 'largest_expenses_full_month' } }
+    return { reply: lines.join('\n'), intent: 'other', result: { monthKey: data.monthKey, periodLabel, source: 'largest_expenses_full_period' } }
   }
 
   async financialQuestion(ctx: InboundContext): Promise<HandlerResult | null> {
@@ -77,10 +80,11 @@ export class QueryIntakeService {
     if (kind === 'monthly') return this.monthSpending(ctx)
     if (kind === 'largest_expense') return this.largestExpense(ctx)
     if (kind === 'product') {
-      const current = await this.activity.monthly(ctx.profileId)
-      const period = queryPeriod(ctx.text, current.monthKey)
-      if (period.unsupported) return { reply: 'Qué mes querés revisar para comparar los productos?', intent: 'other' }
-      const data = period.month === current.monthKey ? current : await this.activity.monthly(ctx.profileId, period.month)
+      const current = await this.activity.monthly(ctx.profileId, ctx.localDate.slice(0, 7))
+      const preference = await this.activity.defaultQueryPeriod(ctx.profileId)
+      const period = queryPeriod(ctx.text, current.monthKey, preference, ctx.localDate)
+      if (period.unsupported) return { reply: '¿Qué período querés revisar para comparar los productos?', intent: 'other' }
+      const data = await this.activity.range(ctx.profileId, period.from, period.to, period.label)
       const currency = currencySignal(ctx.text)
       return { reply: productReply(data, currency === 'CONFLICT' ? null : currency), intent: 'other' }
     }
