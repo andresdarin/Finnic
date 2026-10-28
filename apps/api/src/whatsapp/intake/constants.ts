@@ -23,7 +23,7 @@ export const CORRECTION_WINDOW_MS = 24 * 60 * 60_000
 /** Expenses created in a burst (e.g. two tickets sent together) make "ese gasto" ambiguous. */
 export const AMBIGUOUS_CORRECTION_GAP_MS = 90_000
 export const MAX_MEDIA_BYTES = 5 * 1024 * 1024
-export const ALLOWED_MEDIA_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const
+export const ALLOWED_MEDIA_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'] as const
 export const RECEIPT_MIN_CONFIDENCE = 0.6
 
 export const PROCESSING_LEASE_MS = 2 * 60_000
@@ -35,6 +35,8 @@ export const HELP_TEXT = [
   'Podés escribirme, por ejemplo:',
   '• "Gasté 850 pesos en el súper con débito"',
   '• Una foto del ticket (con o sin texto)',
+  '• Un PDF financiero o un comprobante de transferencia para revisar un ingreso o egreso',
+  '• Una nota de voz con el gasto o tu consulta; para guardar, confirmás por escrito',
   '• "Eran 580", "fue en efectivo" o "deshacé ese gasto"',
   '• "¿Cuánto gasté este mes?", "¿Cuánto puedo gastar este fin de semana?"',
   '• "¿Cómo voy con mi ahorro?", "¿Puedo comprar algo de 3.000 pesos?"',

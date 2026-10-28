@@ -5,7 +5,7 @@ import { WhatsAppMessageProcessor } from '../whatsapp-message.processor'
 import { WhatsAppInboxService } from './whatsapp-inbox.service'
 import { FinnicStickersService, isFinnicSticker } from '../../../ai/personality/finnic-stickers.service'
 
-const DEAD_REPLY = 'No pude procesar tu mensaje después de varios intentos y no registré nada. Probá enviarlo de nuevo en unos minutos.'
+const DEAD_REPLY = 'No pude terminar de procesar tu mensaje. Revisá tus últimos movimientos antes de volver a mandarlo, por si el gasto llegó a guardarse.'
 const POLL_MS = 5_000
 const MAX_PER_TICK = 25
 
@@ -44,6 +44,7 @@ export class WhatsAppWorker implements OnModuleInit, OnModuleDestroy {
 
   /** Processes due messages, then sends pending replies. Exposed for tests and manual runs. */
   async drain() {
+    await this.sendReplies()
     for (let i = 0; i < MAX_PER_TICK; i++) {
       const row = await this.inbox.claimNext().catch(error => { this.logger.error({ event: 'whatsapp_claim_failed', error: String(error) }); return null })
       if (!row) break
@@ -55,7 +56,12 @@ export class WhatsAppWorker implements OnModuleInit, OnModuleDestroy {
         const state = await this.inbox.fail(row, error, DEAD_REPLY)
         this.logger.warn({ event: 'whatsapp_inbound_failed', id: row.id, attempts: row.attempts, state })
       }
+      await this.sendReplies()
     }
+  }
+
+  /** Do not hold a finished reply behind the next user's slow audio/model call. */
+  private async sendReplies() {
     for (let i = 0; i < MAX_PER_TICK; i++) {
       const reply = await this.inbox.claimReply().catch(() => null)
       if (!reply) break

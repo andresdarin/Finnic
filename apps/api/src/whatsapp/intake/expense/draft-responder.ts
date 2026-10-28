@@ -6,6 +6,8 @@ import { applyDraftAnswer } from './draft-answer'
 import { DraftRepository, type StoredDraft } from './draft.repository'
 import { ExpenseIntakeService } from './expense-intake.service'
 import type { IntakeProfileContext } from './intake-context.service'
+import { correctReceiptItem } from './receipt-item-correction'
+import { movementDirection } from './movement-direction'
 
 type WhichExpense = { pending: { action: 'correct' | 'undo'; request?: CorrectionRequest }; options: string[] }
 
@@ -24,11 +26,24 @@ export class DraftResponder {
       return { reply: 'Listo, no registré nada.', intent: 'cancel' }
     }
     if (draft.pendingField === 'which_expense') return this.whichExpense(ctx, draft, profile)
+    if (draft.proposal.transferDocument && movementDirection(ctx.text) === 'OWN') {
+      await this.drafts.close(draft.id, ctx.profileId, 'cancelled')
+      return { reply: 'Entre tus cuentas no es ingreso ni gasto. No lo registré como tal; podés cargar esa transferencia entre cuentas desde Balance.', intent: 'other' }
+    }
+    if (draft.proposal.transferDocument && draft.pendingField === 'receipt_confirmation') {
+      const direction = movementDirection(ctx.text)
+      if (direction === 'INCOME' || direction === 'EXPENSE') return this.expenses.continue(ctx, { ...draft.proposal, movementType: direction, receiptConfirmed: false }, profile, draft)
+    }
     if (draft.pendingField === 'receipt_confirmation' && /^revisar$/i.test(ctx.text.trim())) return this.expenses.continue(ctx, { ...draft.proposal, receiptConfirmed: false }, profile, draft)
+    if (draft.pendingField === 'receipt_confirmation') {
+      const correction = correctReceiptItem(ctx.text, draft.proposal)
+      if (correction?.kind === 'ask') return { reply: correction.question, intent: 'clarification', result: { draftId: draft.id } }
+      if (correction?.kind === 'updated') return this.expenses.continue(ctx, correction.proposal, profile, draft, ['Corregí el detalle. Revisá que los productos y el total coincidan con el ticket.'])
+    }
     const answer = applyDraftAnswer(draft.pendingField, ctx.text, draft.proposal, draft.meta, ctx.localDate)
     if (answer.kind === 'cancel') {
       await this.drafts.close(draft.id, ctx.profileId, 'cancelled')
-      return { reply: 'Listo, no registré ese gasto.', intent: 'cancel' }
+      return { reply: `Listo, no registré ese ${draft.proposal.transferDocument ? 'movimiento' : 'gasto'}.`, intent: 'cancel' }
     }
     if (answer.kind === 'not_understood') return { reply: `Me falta aclarar esto: ${draft.question ?? ''}\nSi preferís dejarlo, decime "cancelar".`.trim(), intent: 'clarification', result: { draftId: draft.id } }
     return this.expenses.continue(ctx, answer.proposal, profile, draft)

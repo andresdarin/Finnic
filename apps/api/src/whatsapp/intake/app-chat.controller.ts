@@ -23,9 +23,9 @@ export class AppChatController {
     if (!/^[a-zA-Z0-9-]{16,64}$/.test(body.requestId ?? '')) throw new BadRequestException('Identificador de mensaje inválido.')
     const text = (body.message ?? '').trim()
     if (text.length > 4096 || (!file && !text)) throw new BadRequestException('Escribí un mensaje o elegí un adjunto.')
-    const type = file ? body.kind === 'sticker' ? 'sticker' : 'image' : 'text'
+    const type = file ? body.kind === 'sticker' ? 'sticker' : file.mimetype === 'application/pdf' ? 'document' : 'image' : 'text'
     if (file && (!matchesMagic(file.buffer, file.mimetype) || (type === 'sticker' && (!['image/webp', 'image/png'].includes(file.mimetype) || file.buffer.length > 512 * 1024)))) {
-      throw new BadRequestException('Usá fotos JPG, PNG o WebP de hasta 5 MB; los stickers PNG o WebP admiten hasta 512 KB.')
+      throw new BadRequestException('Usá PDF o fotos JPG, PNG o WebP de hasta 5 MB; stickers PNG o WebP de hasta 512 KB.')
     }
     const { profileId } = await this.context.resolveProfile(user.authUserId)
     const conversation = await this.context.ensureConversation(profileId, body.conversationId || undefined, text || 'Chat con Finnic')

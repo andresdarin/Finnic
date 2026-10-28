@@ -7,7 +7,8 @@ function setup() {
   const expenses = { continue: vi.fn() }
   const prisma = { profile: { findFirst: vi.fn(async () => ({ id: 'p' })) }, whatsAppExpenseAction: { findUnique: vi.fn(async () => null) } }
   const context = { load: vi.fn(async () => ({ accounts: [], budgetCategories: [] })) }
-  const processor = new WhatsAppMessageProcessor(prisma as never, {} as never, extractor as never, context as never, { findOpen: vi.fn(async () => null) } as never, expenses as never, {} as never, {} as never, {} as never, {} as never, chat as never)
+  const queries = { financialQuestion: vi.fn(async () => null) }
+  const processor = new WhatsAppMessageProcessor(prisma as never, {} as never, extractor as never, context as never, { findOpen: vi.fn(async () => null) } as never, expenses as never, {} as never, {} as never, {} as never, queries as never, chat as never)
   const message = (body: string) => ({ id: 'in', wamid: 'wa', from: '59899123456', body, type: 'text', createdAt: new Date(), messageTimestamp: null })
   return { processor, chat, extractor, expenses, message }
 }

@@ -27,7 +27,7 @@ export class ChatFallback {
       const conversation = ctx.conversationId ? { id: ctx.conversationId } : await this.channel.resolveConversation(ctx.profileId)
       await this.prisma.whatsAppInboundMessage.update({ where: { id: ctx.inboundId }, data: { conversationId: conversation.id } })
       const normalized = ctx.text.trim().toLowerCase()
-      const action = /^(s[ií]|confirmar|no|cancelar)$/.test(normalized)
+      const action = !ctx.fromAudio && /^(s[ií]|confirmar|no|cancelar)$/.test(normalized)
         ? await this.prisma.aiPendingAction.findFirst({ where: { conversationId: conversation.id, profileId: ctx.profileId, status: { in: ['pending', 'executing'] } }, orderBy: { createdAt: 'desc' } })
         : null
       if (action && /^(s[ií]|confirmar)$/.test(normalized)) return { reply: (await this.orchestrator.confirmPending({ profileId: ctx.profileId, pendingActionId: action.id })).text, intent: 'other' }

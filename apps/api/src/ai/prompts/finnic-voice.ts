@@ -55,12 +55,13 @@ export function withFinnicVoice(prompt: string) {
 }
 
 /** Shared presentation rule; never shorten by slicing away amounts or confirmations. */
-export function finnicText(text: string) {
-  return text.replace(/[¿¡]/g, '')
+export function finnicText(text: string, channel?: 'app' | 'whatsapp') {
+  const casual = text.replace(/[¿¡]/g, '')
+  return channel === 'whatsapp' ? casual.replace(/\*\*([^*]+)\*\*/g, '$1') : casual
 }
 
 export function finnicChannelVoice(channel: 'app' | 'whatsapp' = 'app') {
   return channel === 'whatsapp'
-    ? '\nCANAL WHATSAPP: Escribí como en una conversación de WhatsApp. Usá texto plano y párrafos cortos; sin tablas, títulos Markdown, enlaces relativos ni negritas con doble asterisco. Las listas de tickets sí pueden ser largas. Preguntá una cosa por vez y permití responder con palabras, no solo con números.'
+    ? '\nCANAL WHATSAPP: Escribí como en una conversación de WhatsApp. Usá texto plano y párrafos cortos; sin tablas, títulos Markdown, enlaces relativos ni negritas con doble asterisco. Por defecto 1–3 frases, hasta 60 palabras: conclusión, condición decisiva y como mucho un siguiente paso. No cierres ofreciendo otra revisión por costumbre. Ampliá solo si lo piden; nunca recortes productos, importes, advertencias decisivas ni confirmaciones de tickets. Preguntá una cosa por vez y permití responder con palabras, no solo con números.'
     : '\nCANAL APP: Escribí como en una conversación personal. Podés destacar una cifra con Markdown simple cuando ayude; evitá el formato de informe salvo que lo pidan.'
 }

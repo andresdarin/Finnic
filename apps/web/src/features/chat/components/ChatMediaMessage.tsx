@@ -2,8 +2,9 @@ import type { AiMessage } from '../types'
 
 export function chatAttachment(message: AiMessage) {
   const value = message.metadata?.attachment as { kind?: string; dataUrl?: string } | undefined
-  return value && (value.kind === 'sticker' || value.kind === 'image') && typeof value.dataUrl === 'string'
-    && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/.test(value.dataUrl) ? value : null
+  if (!value || typeof value.dataUrl !== 'string') return null
+  if (value.kind === 'document') return /^data:application\/pdf;base64,[A-Za-z0-9+/]+=*$/.test(value.dataUrl) ? value : null
+  return (value.kind === 'sticker' || value.kind === 'image') && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/.test(value.dataUrl) ? value : null
 }
 
 export default function ChatMediaMessage({ message }: { message: AiMessage }) {
@@ -11,6 +12,10 @@ export default function ChatMediaMessage({ message }: { message: AiMessage }) {
   if (!attachment) return null
   const sticker = attachment.kind === 'sticker'
   const user = message.role === 'USER'
+  if (attachment.kind === 'document') return <article aria-label="PDF adjunto" className={`${user ? 'ml-auto' : 'mr-auto'} max-w-[75%] rounded-xl border border-border px-4 py-3`}>
+    <a href={attachment.dataUrl} download="documento-finnic.pdf" className="text-sm font-medium text-primary underline">PDF adjunto · Descargar</a>
+    {message.content !== 'PDF adjunto' && <p className="mt-1 whitespace-pre-wrap text-sm">{message.content}</p>}
+  </article>
   return <article aria-label={sticker ? 'Sticker enviado' : 'Foto enviada'} className={`${user ? 'ml-auto' : 'mr-auto'} w-fit max-w-[75%]`}>
     <p className={`mb-1 text-xs text-muted-foreground ${user ? 'text-right' : 'text-left'}`}>{user ? 'Vos' : 'Finnic'}</p>
     <img src={attachment.dataUrl} alt={sticker ? 'Sticker' : 'Foto de ticket'}

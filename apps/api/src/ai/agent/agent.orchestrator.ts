@@ -5,6 +5,8 @@ import { GeminiClient } from '../client/gemini.client'
 import { ChatMessage } from '../client/gemini.types'
 import { FINNIC_PROMPT_ID } from '../prompts/finnic.prompt'
 import { runtimeKnowledge } from '../prompts/product-knowledge'
+import { financialFocus } from '../prompts/financial-focus'
+import { offTopicReply } from '../prompts/financial-scope'
 import { finnicChannelVoice, finnicText, withFinnicVoice } from '../prompts/finnic-voice'
 import { PromptRegistry } from '../prompts/prompt.registry'
 import { ToolExecutor } from '../tools/tool.executor'
@@ -55,11 +57,13 @@ export class AgentOrchestrator {
     try {
       const history = agentHistory(await this.conversations.getRecentWindow(req.conversationId, 20))
       await this.conversations.createMessage({ conversationId: req.conversationId, role: AiMessageRole.USER, content: req.message })
+      const redirect = offTopicReply(req.message)
+      if (redirect) return this.complete(run.id, req, redirect, [], 'explanation')
       history.push({ role: 'user', parts: [{ text: req.message }] })
       const personalStyle = await this.styleMemory?.instruction(req.profileId, req.conversationId, req.message) ?? ''
       const signal = AbortSignal.timeout(45_000)
       for (let i = 0; i < Math.min(effective.policy.limits.maxIterations, MAX_ITERATIONS); i++) {
-        const result = await this.gemini.chat({ model: effective.model.model, systemInstruction: withFinnicVoice(effective.prompt.content) + personalStyle + runtimeKnowledge(req.channel) + finnicChannelVoice(req.channel), history, tools, signal, generationConfig: { temperature: effective.model.temperature, maxOutputTokens: effective.model.maxTokens, responseMimeType: effective.model.responseMimeType } })
+        const result = await this.gemini.chat({ model: effective.model.model, systemInstruction: withFinnicVoice(effective.prompt.content) + personalStyle + runtimeKnowledge(req.channel) + finnicChannelVoice(req.channel) + financialFocus(req.message), history, tools, signal, generationConfig: { temperature: effective.model.temperature, maxOutputTokens: effective.model.maxTokens, responseMimeType: effective.model.responseMimeType } })
         if (!result.functionCalls?.length) {
           const kind = calls.some(call => !call.success) || !result.text ? 'error' : calls.length ? 'query' : 'explanation'
           return this.complete(run.id, req, result.text || FALLBACK, calls, kind)
@@ -103,7 +107,7 @@ export class AgentOrchestrator {
     return confirmAction({ pending: this.pending, executor: this.executor, conversations: this.conversations, observability: this.observability }, req, await this.resolveConfig(), !!this.resolver)
   }
   private async complete(id: string, req: AgentRequest, text: string, toolCalls: AgentResponse['toolCalls'], kind: NonNullable<AgentResponse['kind']>) {
-    text = finnicText(text)
+    text = finnicText(text, req.channel)
     await this.conversations.createMessage({ conversationId: req.conversationId, role: AiMessageRole.ASSISTANT, content: text, metadata: { kind } })
     await this.observability.endRun(id, { status: kind === 'error' ? 'failed' : 'completed', ...(kind === 'error' ? { error: 'agent_response_unavailable' } : {}) })
     await this.conversations.touch(req.conversationId)

@@ -25,7 +25,7 @@ export function useFinnicChat() {
   }, [])
   useEffect(() => { void refresh() }, [refresh])
 
-  const sendMessage = async (content: string, file?: File, kind?: 'image' | 'sticker', requestId: string = crypto.randomUUID()): Promise<boolean> => {
+  const sendMessage = async (content: string, file?: File, kind?: 'image' | 'document' | 'sticker', requestId: string = crypto.randomUUID()): Promise<boolean> => {
     const text = content.trim()
     if ((!text && !file) || busy.current) return false
     busy.current = true; setSending(true); setError(null)

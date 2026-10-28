@@ -19,7 +19,7 @@ export class MediaHistoryService {
   async save(ctx: InboundContext, outcome: HandlerResult) {
     if (outcome.result?.conversationHandled) return
     const conversation = ctx.conversationId ? { id: ctx.conversationId } : await this.channel.resolveConversation(ctx.profileId)
-    const attachment = ctx.attachment && (ctx.type === 'sticker' || ctx.type === 'image') ? {
+    const attachment = ctx.attachment && (ctx.type === 'sticker' || ctx.type === 'image' || ctx.type === 'document') ? {
       kind: ctx.type, mimeType: ctx.attachment.mimeType,
       dataUrl: `data:${ctx.attachment.mimeType};base64,${ctx.attachment.bytes.toString('base64')}`,
     } : undefined
@@ -27,7 +27,7 @@ export class MediaHistoryService {
     await this.prisma.$transaction([
       this.prisma.aiMessage.upsert({
         where: { id: `intake:${ctx.inboundId}:user` }, update: {},
-        create: { id: `intake:${ctx.inboundId}:user`, conversationId: conversation.id, role: 'USER', content: ctx.text || (ctx.type === 'sticker' ? 'Sticker' : 'Foto de ticket'), metadata: { source: ctx.channel ?? 'whatsapp', ...(attachment ? { attachment } : {}) } },
+        create: { id: `intake:${ctx.inboundId}:user`, conversationId: conversation.id, role: 'USER', content: ctx.text || (ctx.type === 'document' ? 'PDF adjunto' : ctx.type === 'sticker' ? 'Sticker' : 'Foto de ticket'), metadata: { source: ctx.channel ?? 'whatsapp', ...(attachment ? { attachment } : {}) } },
       }),
       this.prisma.aiMessage.upsert({
         where: { id: `intake:${ctx.inboundId}:reply` }, update: {},

@@ -31,6 +31,7 @@ export function resolveAccount(input: {
 }): AccountResolution {
   if (input.accountless) return { status: 'RESOLVED', account: null, reason: 'accountless' }
   const operating = input.accounts.filter(a => a.isActive && a.purpose === 'OPERATING')
+  if (!operating.length && input.method === 'CREDIT') return { status: 'ASK', options: [], reason: 'no_match' }
   if (!operating.length) return { status: 'RESOLVED', account: null, reason: 'no_accounts' }
   const inCurrency = operating.filter(a => a.currency === input.currency)
 

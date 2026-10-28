@@ -33,9 +33,13 @@ export type ExpenseProposal = {
   receipt?: { sha256: string | null; subtotal: string | null; confidence: number | null; discounts?: string | null }
   duplicateAcknowledged?: boolean
   receiptConfirmed?: boolean
+  audioConfirmationRequired?: boolean
+  receiptItemsEdited?: boolean
+  movementType?: 'EXPENSE' | 'INCOME'
+  transferDocument?: boolean
 }
 
-export type PendingField = 'amount' | 'currency' | 'account' | 'date' | 'duplicate' | 'receipt_confirmation' | 'which_expense'
+export type PendingField = 'movement_direction' | 'amount' | 'currency' | 'account' | 'date' | 'duplicate' | 'receipt_confirmation' | 'which_expense'
 
 export type HandlerResult = {
   reply: string
@@ -48,7 +52,8 @@ export type InboundContext = {
   wamid: string
   profileId: string
   text: string
-  type: 'text' | 'image' | 'sticker' | 'unsupported'
+  type: 'text' | 'image' | 'document' | 'sticker' | 'audio' | 'unsupported'
+  fromAudio?: boolean
   conversationId?: string
   channel?: 'app' | 'whatsapp'
   attachment?: { bytes: Buffer; mimeType: string; sha256: string }
