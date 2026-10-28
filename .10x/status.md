@@ -6,8 +6,8 @@
 | 1 Estrategia | ✅ | ✅ | ✅ |
 | 2 Diseño | ✅ ADR-001 | ✅ ADR-002 | ✅ ADR-003, ADR-004 |
 | 3 Planificación | ✅ | ✅ | ✅ T1–T9 |
-| 4 Implementación | ✅ | ✅ | ✅ T1–T8 |
-| 5 Verificación | ✅ 44 e2e, 317 unit | ✅ axe 0 serias | ⏳ |
+| 4 Implementación | ✅ | ✅ | ✅ T1–T9 |
+| 5 Verificación | ✅ 44 e2e, 317 unit | ✅ axe 0 serias | ✅ 51 e2e, 79 unit web, axe 0 serias |
 | 6 Entrega | ⏳ CI listo, sin push | ⏳ sin push | ⏳ |
 
 ## Pendientes (deuda priorizada)
@@ -30,5 +30,9 @@ Spec: `specs/2026-10-28-desktop-experience-design.md`. Sub-proyectos en orden: d
 - [x] T5 FinnicPanel
 - [x] T6 Sidebar (Nuevo, Finnic, colapso) + PageContainer
 - [x] T7 Paleta ⌘K + atajos
-- [ ] T8 /chat en desktop
-- [ ] T9 e2e + suite completa
+- [x] T8 /chat en desktop
+- [x] T9 e2e + suite completa
+
+### desktop-shell — siguiente
+- Entrega: push de `main` (CI corre test + e2e). Sin push hecho.
+- Sub-proyectos pendientes: desktop-movements → desktop-dashboard → desktop-finance.

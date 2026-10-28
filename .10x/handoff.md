@@ -1,3 +1,3 @@
 # Handoff
-**De:** SDE → **A:** QA + Security (fase 5 de `desktop-shell`)
-Construido: ver `decisions/sde/desktop-shell.md`. Probar: panel acoplado (1440) y diálogo (1100), conversación que sobrevive a la navegación, refresco de pantallas tras confirmar con Finnic o guardar desde "Nuevo", ⌘K/⌘J/N, `/chat` en desktop y móvil sin cambios. e2e nuevo: `apps/web/e2e/desktop-shell.spec.ts`.
+**De:** QA + Security → **A:** DevOps / dueño (fase 6 de `desktop-shell`)
+Listo para release: 51 e2e, 79 unit, sin hallazgos de seguridad. Commits locales en `main`, sin push. Al pushear corren los jobs `test` y `e2e`. Próximo sub-proyecto: `desktop-movements` (necesita su propio diseño).
