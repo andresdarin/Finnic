@@ -14,7 +14,7 @@ const proposal = () => proposalFromText('Gasté 1271,61 pesos con crédito', nul
 describe('credit account compatibility', () => {
   it('never offers cash or debit when the purchase used credit, even when named explicitly', () => {
     expect(resolveAccount({ accounts, currency: 'UYU', method: 'CREDIT', hint: 'Efectivo', defaultAccountId: 'bank' })).toEqual({ status: 'ASK', options: [], reason: 'no_match' })
-    expect(nextStep(proposal(), ctx)).toMatchObject({ kind: 'ask', field: 'account', options: [], question: expect.stringContaining('no tenés una tarjeta de crédito configurada') })
+    expect(nextStep(proposal(), ctx)).toMatchObject({ kind: 'ask', field: 'account', options: [], question: expect.stringContaining('no tenés una tarjeta de crédito cargada') })
   })
   it('rejects an incompatible selection from the old account menu', () => {
     expect(nextStep({ ...proposal(), financeAccountId: 'bank' }, ctx)).toMatchObject({ kind: 'ask', field: 'account', options: [] })
