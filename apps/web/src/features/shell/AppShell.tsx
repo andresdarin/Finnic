@@ -6,6 +6,7 @@ import Sidebar from './sidebar/Sidebar'
 import Topbar from './Topbar'
 import MobileNav from './MobileNav'
 import { FinnicChatProvider } from '@/features/chat/FinnicChatProvider'
+import { NewActionProvider } from './new-action/NewActionProvider'
 
 interface AppShellProps {
   children: React.ReactNode
@@ -32,6 +33,7 @@ export default function AppShell({ children, profile, onLogout }: AppShellProps)
 
   return (
     <FinnicChatProvider>
+    <NewActionProvider>
     <div className="app-backdrop min-h-screen text-foreground overflow-x-hidden relative">
       {/* Sidebar (Desktop) */}
       <Sidebar
@@ -60,6 +62,7 @@ export default function AppShell({ children, profile, onLogout }: AppShellProps)
       {/* Bottom Nav (Mobile) - Oculto en el chat para input fixed */}
       {!isChat && <MobileNav profile={profile} />}
     </div>
+    </NewActionProvider>
     </FinnicChatProvider>
   )
 }
