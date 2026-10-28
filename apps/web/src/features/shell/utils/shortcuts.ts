@@ -39,3 +39,9 @@ export function isEditable(element: Element | null): boolean {
 export function isLayerOpen(): boolean {
   return document.querySelector('[aria-modal="true"], [role="menu"]') !== null
 }
+
+/** Rótulo de la tecla modificadora para mostrar atajos: ⌘ en Mac, Ctrl en el resto. */
+export function modKeyLabel(): string {
+  if (typeof navigator === 'undefined') return 'Ctrl'
+  return /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘' : 'Ctrl'
+}

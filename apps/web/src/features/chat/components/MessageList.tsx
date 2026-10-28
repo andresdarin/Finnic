@@ -118,7 +118,11 @@ export default function MessageList({
         const el = scroll.current
         if (el) atBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100
       }}
-      className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-5 sm:px-4 sm:py-6"
+      // Enfocable para poder recorrer el historial con el teclado (WCAG 2.1.1)
+      tabIndex={0}
+      role="region"
+      aria-label="Historial con Finnic"
+      className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-5 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/45 sm:px-4 sm:py-6"
     >
       {!validMessages.length ? (
         <div className="mx-auto flex min-h-full max-w-md flex-col justify-center gap-5">

@@ -6,6 +6,7 @@ import FinnicOwlIcon from '@/components/ui/FinnicOwlIcon'
 import ChatConversation from '@/features/chat/components/ChatConversation'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { useFinnicPanel } from './FinnicPanelProvider'
+import { modKeyLabel } from '../utils/shortcuts'
 
 const PANEL = 'fixed bottom-5 right-5 top-5 z-40 flex w-[400px] flex-col overflow-hidden rounded-[2rem] border border-border/60 bg-background text-foreground shadow-xl'
 
@@ -34,7 +35,7 @@ export default function FinnicPanel() {
   const content = (
     <>
       <header className="flex shrink-0 items-center gap-3 border-b border-border/60 px-5 py-4">
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-soft">
+        <span aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-soft">
           <FinnicOwlIcon color="navy" className="h-6 w-6 dark:hidden" />
           <FinnicOwlIcon color="cream" className="hidden h-6 w-6 dark:block" />
         </span>
@@ -46,7 +47,7 @@ export default function FinnicPanel() {
           type="button"
           onClick={closePanel}
           aria-label="Cerrar Finnic"
-          title="Cerrar (⌘J)"
+          title={`Cerrar (${modKeyLabel()} J)`}
           className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface-soft hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/45"
         >
           <X className="h-4 w-4" />
