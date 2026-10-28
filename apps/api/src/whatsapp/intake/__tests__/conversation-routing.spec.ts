@@ -8,12 +8,23 @@ function setup() {
   const prisma = { profile: { findFirst: vi.fn(async () => ({ id: 'p' })) }, whatsAppExpenseAction: { findUnique: vi.fn(async () => null) } }
   const context = { load: vi.fn(async () => ({ accounts: [], budgetCategories: [] })) }
   const queries = { financialQuestion: vi.fn(async () => null) }
-  const processor = new WhatsAppMessageProcessor(prisma as never, {} as never, extractor as never, context as never, { findOpen: vi.fn(async () => null) } as never, expenses as never, {} as never, {} as never, {} as never, queries as never, chat as never)
+  const drafts = { findOpen: vi.fn(async (): Promise<unknown> => null) }
+  const responder = { answer: vi.fn() }
+  const processor = new WhatsAppMessageProcessor(prisma as never, {} as never, extractor as never, context as never, drafts as never, expenses as never, {} as never, {} as never, responder as never, queries as never, chat as never)
   const message = (body: string) => ({ id: 'in', wamid: 'wa', from: '59899123456', body, type: 'text', createdAt: new Date(), messageTimestamp: null })
-  return { processor, chat, extractor, expenses, message }
+  return { processor, chat, extractor, expenses, message, drafts, responder }
 }
 
 describe('conversational WhatsApp routing', () => {
+  it.each(['Es con mi Oca, la del ticket es la misma', '$22.000', 'No sé la deuda, quiero empezar desde ahora'])('routes pending clarification to the agent instead of phrase matching: %s', async text => {
+    const { processor, chat, drafts, responder, message, extractor } = setup()
+    const draft = { id: 'draft', pendingField: 'account', proposal: {} }
+    drafts.findOpen.mockResolvedValue(draft)
+    await processor.handle(message(text) as never)
+    expect(chat.reply).toHaveBeenCalledWith(expect.objectContaining({ text }), draft)
+    expect(responder.answer).not.toHaveBeenCalled()
+    expect(extractor.extractText).not.toHaveBeenCalled()
+  })
   it('routes text-style requests directly to chat and applies punctuation before returning', async () => {
     const { processor, chat, extractor, message } = setup()
     chat.reply.mockResolvedValue({ reply: '¡Dale! ¿Seguimos?', intent: 'other' })

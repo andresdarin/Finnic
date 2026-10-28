@@ -32,8 +32,8 @@ export function initialBalanceAnswer(text: string): string | null {
 export function accountQuestion(account: AccountOnboarding) {
   if (account.stage === 'offer') return `Querés agregar ${account.name ?? 'ese medio de pago'} o dejar el gasto sin cuenta?`
   if (account.stage === 'type') return `${account.name} es débito, crédito o efectivo?`
-  if (account.prospective) return `Podemos empezar ${account.name} desde cero para llevar los gastos nuevos, sin incluir ${account.type === 'CREDIT' ? 'la deuda' : 'el saldo'} anterior. Lo hacemos así?`
   if (!account.name) return account.type === 'CREDIT' ? 'Cómo se llama la tarjeta de crédito?' : 'Qué nombre le ponemos a la cuenta?'
+  if (account.prospective) return `Podemos empezar ${account.name} desde cero para llevar los gastos nuevos, sin incluir ${account.type === 'CREDIT' ? 'la deuda' : 'el saldo'} anterior. Lo hacemos así?`
   if (!account.initialBalance) return account.type === 'CREDIT' ? `Qué deuda tenía ${account.name} antes de este gasto? Si no tenía, decime 0.` : `Qué saldo tenía ${account.name} antes de este gasto? Si estaba vacía, decime 0.`
   const label = account.type === 'CREDIT' ? 'tarjeta de crédito' : account.type === 'CASH' ? 'efectivo' : 'cuenta de débito'
   return `Agrego ${account.name} como ${label} en ${account.currency === 'USD' ? 'dólares' : 'pesos'}, con ${account.type === 'CREDIT' ? 'deuda' : 'saldo'} inicial de ${account.initialBalance.replace('.', ',')}. La guardo y seguimos con el gasto?`

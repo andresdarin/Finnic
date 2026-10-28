@@ -15,6 +15,13 @@ export function purchaseCalculation(text: string, previous?: PurchaseCalculation
   if (!quantity || !Number.isInteger(quantity) || quantity > 10000 || unitCents === null || unitCents <= 0n || discount < 0 || discount >= 100) return null
   // Reject multiple prices/items rather than silently choosing a partial total.
   if ([...text.matchAll(new RegExp(`${number}\\s*(?:pesos|d[oó]lares|UYU|USD)?\\s*(?:cada\\s+(?:uno|una)|c\\/u)`, 'gi'))].length > 1) return null
+  return calculatePurchase(quantity, centsToMoney(unitCents), discount)
+}
+
+/** Shared by text intake and semantic draft tools. */
+export function calculatePurchase(quantity: number, unitPrice: string, discount = 0): PurchaseCalculation | null {
+  const unitCents = parseAmountToCents(unitPrice)
+  if (!Number.isInteger(quantity) || quantity <= 0 || quantity > 10000 || unitCents === null || unitCents <= 0n || !Number.isFinite(discount) || discount < 0 || discount >= 100) return null
   const basisPoints = BigInt(Math.round(discount * 100))
   const totalCents = (BigInt(quantity) * unitCents * (10000n - basisPoints) + 5000n) / 10000n
   if (totalCents <= 0n || totalCents > 99999999999n) return null

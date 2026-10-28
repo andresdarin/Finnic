@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { DraftAgentToolsService } from './expense/draft-agent-tools.service'
+import { Injectable, Logger, Optional } from '@nestjs/common'
 import { AgentOrchestrator } from '../../ai/agent/agent.orchestrator'
 import { AiPendingActionService } from '../../ai/pending/ai-pending-action.service'
 import { WhatsAppChannelService } from '../../ai/whatsapp/whatsapp-channel.service'
@@ -21,6 +22,7 @@ export class ChatFallback {
     private readonly channel: WhatsAppChannelService,
     private readonly orchestrator: AgentOrchestrator,
     private readonly pending: AiPendingActionService,
+    @Optional() private readonly draftAgentTools?: DraftAgentToolsService,
   ) {}
 
   async reply(ctx: InboundContext, draft?: StoredDraft): Promise<HandlerResult> {
@@ -34,7 +36,7 @@ export class ChatFallback {
       if (action && /^(s[ií]|confirmar)$/.test(normalized)) return { reply: (await this.orchestrator.confirmPending({ profileId: ctx.profileId, pendingActionId: action.id })).text, intent: 'other' }
       if (action) { await this.pending.cancel(ctx.profileId, action.id); return { reply: 'Operación cancelada.', intent: 'other' } }
       const pendingExpense = draft ? { amount: draft.proposal.amount, currency: draft.proposal.currency, title: draft.proposal.title, calculation: draft.proposal.calculation, pendingField: draft.pendingField, accountSetup: draft.meta.accountCreation, question: draft.question } : undefined
-      const response = await this.orchestrator.run({ profileId: ctx.profileId, conversationId: conversation.id, message: ctx.text, channel: ctx.channel ?? 'whatsapp', pendingExpense })
+      const response = await this.orchestrator.run({ profileId: ctx.profileId, conversationId: conversation.id, message: ctx.text, channel: ctx.channel ?? 'whatsapp', pendingExpense, draftTools: draft ? this.draftAgentTools?.forRequest(ctx, draft) : undefined })
       return { reply: ctx.channel === 'app' ? response.text || HELP_TEXT : whatsAppChatText(response.text || HELP_TEXT), intent: 'other', result: { conversationHandled: true, voiceAllowed: !response.pendingActionId && (response.kind === 'query' || response.kind === 'explanation') } }
     } catch {
       this.logger.warn({ event: 'whatsapp_chat_fallback_failed', inboundId: ctx.inboundId })

@@ -1,3 +1,4 @@
+import { DraftAgentToolsService } from './expense/draft-agent-tools.service'
 import { AccountOnboardingService } from './expense/account-onboarding.service'
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
@@ -36,7 +37,7 @@ import { VoiceReplyService } from './audio/voice-reply.service'
   providers: [
     AdminGuard, WhatsAppLinkService, WhatsAppInboxService, WhatsAppWorker, WhatsAppMessageProcessor, WhatsAppExtractorService,
     AccountOnboardingService, IntakeContextService, DraftRepository, DraftResponder, ExpenseIntakeService, ReceiptIntakeService, CorrectionIntakeService,
-    QueryIntakeService, ChatFallback, MediaHistoryService, AudioIntakeService, DocumentIncomeService, VoiceReplyService,
+    DraftAgentToolsService, QueryIntakeService, ChatFallback, MediaHistoryService, AudioIntakeService, DocumentIncomeService, VoiceReplyService,
   ],
   exports: [WhatsAppInboxService, WhatsAppWorker],
 })

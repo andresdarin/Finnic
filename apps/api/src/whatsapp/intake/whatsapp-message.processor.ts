@@ -112,7 +112,9 @@ export class WhatsAppMessageProcessor {
     let intent = ruleIntent(ctx.text)
     const draft = await this.drafts.findOpen(ctx.profileId)
     if (isStyleRequest(ctx.text)) return this.chat.reply(ctx, draft ?? undefined)
-    if (draft && (intent === null || intent === 'cancel' || intent === 'correct_last')) {
+    if (draft) {
+      const confirmation = /^(si|sí|dale|ok|confirmo|confirmar|no)$/i.test(ctx.text.trim())
+      if (intent !== 'cancel' && !confirmation) return this.chat.reply(ctx, draft)
       const result = await this.draftResponder.answer(ctx, draft, profile, intent === 'cancel')
       return result.result?.unrecognizedDraftAnswer ? this.chat.reply(ctx, draft) : result
     }

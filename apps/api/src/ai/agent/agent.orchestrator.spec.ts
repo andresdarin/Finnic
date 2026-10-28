@@ -29,6 +29,22 @@ const makeSubject = (gemini: any, registry: any, executor: any, conversations = 
 const request = { profileId: 'p', conversationId: 'c1' }
 
 describe('AgentOrchestrator', () => {
+  it('executes the scoped draft tool and returns its persisted confirmation without another model response', async () => {
+    const update = vi.fn(async () => ({ data: { pendingField: 'account' }, reply: 'Agrego OCA con deuda inicial de 22000,00. Lo guardo?' }))
+    const gemini = { chat: vi.fn(async () => ({ functionCalls: [{ name: 'update_pending_expense', args: { accountName: 'OCA' } }] })) }
+    const executor = makeExecutor(), pending = makePending()
+    const tools = {
+      get_pending_expense: { declaration: { name: 'get_pending_expense', description: 'draft', parameters: {} }, schema: z.object({}), execute: async () => ({ data: {} }) },
+      update_pending_expense: { declaration: { name: 'update_pending_expense', description: 'draft update', parameters: {} }, schema: z.object({ accountName: z.string() }).strict(), execute: update },
+    }
+    const result = await makeSubject(gemini, makeRegistry(), executor, makeConversations(), pending).run({ ...request, message: 'la master es mi oca', pendingExpense: { amount: '1863.65', currency: 'UYU', title: 'Ticket', pendingField: 'account' }, draftTools: tools })
+    expect(update).toHaveBeenCalledWith({ accountName: 'OCA' })
+    expect(result.text).toContain('Agrego OCA')
+    expect(result.draftHandled).toBe(true)
+    expect(gemini.chat).toHaveBeenCalledTimes(1)
+    expect(executor.execute).not.toHaveBeenCalled()
+    expect(pending.create).not.toHaveBeenCalled()
+  })
   it('does not let read-only interruption text request confirmation of unpersisted changes', async () => {
     const result = await makeSubject({ chat: vi.fn(async () => ({ text: 'El total de tu tarjeta sería 23.863,65. Lo guardo así?' })) }, makeRegistry(), makeExecutor()).run({ ...request, message: '$22.000', pendingExpense: { amount: '1863.65', currency: 'UYU', title: 'Ticket', pendingField: 'account', question: 'Qué deuda tenía OCA MASTER antes de este gasto?' } })
     expect(result.text).toContain('El gasto sigue pendiente')
