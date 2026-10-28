@@ -33,7 +33,7 @@ export class ChatFallback {
         : null
       if (action && /^(s[ií]|confirmar)$/.test(normalized)) return { reply: (await this.orchestrator.confirmPending({ profileId: ctx.profileId, pendingActionId: action.id })).text, intent: 'other' }
       if (action) { await this.pending.cancel(ctx.profileId, action.id); return { reply: 'Operación cancelada.', intent: 'other' } }
-      const pendingExpense = draft ? { amount: draft.proposal.amount, currency: draft.proposal.currency, title: draft.proposal.title, calculation: draft.proposal.calculation, pendingField: draft.pendingField, accountSetup: draft.meta.accountCreation } : undefined
+      const pendingExpense = draft ? { amount: draft.proposal.amount, currency: draft.proposal.currency, title: draft.proposal.title, calculation: draft.proposal.calculation, pendingField: draft.pendingField, accountSetup: draft.meta.accountCreation, question: draft.question } : undefined
       const response = await this.orchestrator.run({ profileId: ctx.profileId, conversationId: conversation.id, message: ctx.text, channel: ctx.channel ?? 'whatsapp', pendingExpense })
       return { reply: ctx.channel === 'app' ? response.text || HELP_TEXT : whatsAppChatText(response.text || HELP_TEXT), intent: 'other', result: { conversationHandled: true, voiceAllowed: !response.pendingActionId && (response.kind === 'query' || response.kind === 'explanation') } }
     } catch {

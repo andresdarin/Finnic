@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { AccountOnboardingService } from './account-onboarding.service'
-import { accountMention, initialBalanceAnswer } from './account-onboarding'
+import { accountMention, initialBalanceAnswer, correctedAccountName } from './account-onboarding'
 import { proposalFromText } from './text-proposal'
 import type { IntakeProfileContext } from './intake-context.service'
 import type { StoredDraft } from './draft.repository'
@@ -17,6 +17,18 @@ const setup = () => {
 }
 
 describe('conversational account onboarding', () => {
+  it('accepts explicit identity corrections only for the payment being discussed', () => {
+    expect(correctedAccountName('La MASTER es la OCA', 'MASTER')).toBe('OCA')
+    expect(correctedAccountName('La VISA es la OCA', 'MASTER')).toBeNull()
+  })
+  it('selects an existing OCA account after the user identifies MASTER instead of creating another debt', async () => {
+    const { service, accounts, expenses } = setup()
+    const pending = draft(); pending.proposal.accountHint = 'MASTER'
+    pending.meta.accountCreation = { type: 'CREDIT', name: 'MASTER', currency: 'UYU', stage: 'offer' }
+    await service.answer(ctx('Es con oca'), pending, { ...profile, accounts: [{ id: 'existing', name: 'OCA', type: 'CREDIT', currency: 'UYU', purpose: 'OPERATING', isActive: true }] })
+    expect(accounts.create).not.toHaveBeenCalled()
+    expect(expenses.continue).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ financeAccountId: 'existing', accountHint: 'oca', receiptConfirmed: false }), expect.anything(), expect.objectContaining({ meta: {} }))
+  })
   it('offers prospective tracking when debt is unknown without inventing a known balance or writing', async () => {
     const { service, accounts, drafts } = setup()
     const pending = draft(); pending.meta.accountCreation = { type: 'CREDIT', currency: 'UYU', name: 'OCA', stage: 'balance' }

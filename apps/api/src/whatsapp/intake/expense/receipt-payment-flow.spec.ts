@@ -16,7 +16,7 @@ function conversation(provider: string) {
   const drafts = { save: vi.fn(async input => { pending = { id: 'draft', sourceInboundId: input.sourceInboundId, sourceWamid: input.sourceWamid, pendingField: input.field, question: input.question, proposal: input.proposal, meta: input.meta ?? {} }; return pending }), close: vi.fn() }
   const prisma = { whatsAppInboundMessage: { update: vi.fn(), findMany: vi.fn(async () => []) }, personalExpense: { findMany: vi.fn(async () => []) } }
   const write = { execute: vi.fn() }
-  const accounts = { create: vi.fn(async () => ({ id: 'new-card', name: provider, currency: 'UYU' })) }
+  const accounts = { create: vi.fn(async (_profileId: string, input: { name: string }) => ({ id: 'new-card', name: input.name, currency: 'UYU' })) }
   const expenses = new ExpenseIntakeService(prisma as never, write as never, drafts as never)
   const onboarding = new AccountOnboardingService(accounts as never, drafts as never, expenses)
   const responder = new DraftResponder(drafts as never, expenses, {} as never, onboarding)
@@ -27,6 +27,22 @@ function conversation(provider: string) {
 }
 
 describe('receipt with an unknown named payment instrument', () => {
+  it('persists MASTER → OCA MASTER through the actual screenshot replies without asking for MASTER again', async () => {
+    const flow = conversation('MASTER')
+    await flow.start()
+    expect((await flow.say('Es con oca')).reply).toContain('oca MASTER')
+    expect(flow.pending().proposal.accountHint).toBe('oca MASTER')
+    expect(flow.accounts.create).not.toHaveBeenCalled()
+    await flow.say('sí')
+    await flow.say('crédito')
+    expect((await flow.say('$22.000')).reply).toContain('22000,00')
+    expect(flow.pending().meta.accountCreation).toMatchObject({ name: 'oca MASTER', initialBalance: '22000.00', stage: 'confirm' })
+    expect((await flow.say('sí')).reply).toContain('Producto')
+    expect(flow.accounts.create).toHaveBeenCalledWith('p', expect.objectContaining({ name: 'oca MASTER', initialBalance: '22000.00' }), 'draft')
+    expect(flow.pending().pendingField).toBe('receipt_confirmation')
+    expect(flow.pending().proposal.amount).toBe('100.00')
+    expect(flow.write.execute).not.toHaveBeenCalled()
+  })
   it.each(['OCA', 'Billetera Nueva'])('keeps %s and the receipt through consent, type, unknown debt, and separate expense review', async provider => {
     const flow = conversation(provider)
     const first = await flow.start()

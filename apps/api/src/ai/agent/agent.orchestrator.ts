@@ -22,7 +22,7 @@ import { confirmAction } from './confirm-action'
 import { StyleMemoryService } from '../personality/style-memory.service'
 import { ChatUnavailableError } from '../client/chat-fallback'
 
-export type AgentRequest = { profileId: string; conversationId: string; message: string; channel?: 'app' | 'whatsapp'; pendingExpense?: { amount: string | null; currency: string | null; title: string; pendingField: string; calculation?: unknown; accountSetup?: unknown } }
+export type AgentRequest = { profileId: string; conversationId: string; message: string; channel?: 'app' | 'whatsapp'; pendingExpense?: { amount: string | null; currency: string | null; title: string; pendingField: string; calculation?: unknown; accountSetup?: unknown; question?: string | null } }
 export type AgentResponse = {
   text: string; conversationId: string; pendingActionId?: string; actionStatus?: PendingActionStatus
   kind?: 'explanation' | 'query' | 'action' | 'error'
@@ -108,6 +108,10 @@ export class AgentOrchestrator {
     return confirmAction({ pending: this.pending, executor: this.executor, conversations: this.conversations, observability: this.observability }, req, await this.resolveConfig(), !!this.resolver)
   }
   private async complete(id: string, req: AgentRequest, text: string, toolCalls: AgentResponse['toolCalls'], kind: NonNullable<AgentResponse['kind']>) {
+    if (req.pendingExpense && /(?:lo guardo|lo registramos|lo anoto|lo cargo|qued[oó] (?:registrado|guardado)|ya (?:registr[eé]|guard[eé])|registramos con)/i.test(text)) {
+      text = `El gasto sigue pendiente. ${req.pendingExpense.question ?? 'La confirmación del registro todavía no está preparada.'}`
+      kind = 'explanation'
+    }
     text = finnicText(text, req.channel)
     await this.conversations.createMessage({ conversationId: req.conversationId, role: AiMessageRole.ASSISTANT, content: text, metadata: { kind } })
     await this.observability.endRun(id, { status: kind === 'error' ? 'failed' : 'completed', ...(kind === 'error' ? { error: 'agent_response_unavailable' } : {}) })

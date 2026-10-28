@@ -4,7 +4,8 @@ import type { HandlerResult, InboundContext } from '../types'
 import { DraftRepository, type StoredDraft } from './draft.repository'
 import { ExpenseIntakeService } from './expense-intake.service'
 import type { IntakeProfileContext } from './intake-context.service'
-import { accountMention, accountQuestion, initialBalanceAnswer, validAccountName } from './account-onboarding'
+import { accountMention, accountQuestion, initialBalanceAnswer, validAccountName, correctedAccountName } from './account-onboarding'
+import { compatibleAccount, matchesName } from '../parsing/account-resolution'
 import { currencySignal, normalizeText, paymentSignal } from '../parsing/signals'
 
 @Injectable()
@@ -14,6 +15,21 @@ export class AccountOnboardingService {
   async answer(ctx: InboundContext, draft: StoredDraft, profile: IntakeProfileContext): Promise<HandlerResult | null> {
     const saved = draft.meta.accountCreation
     if (!saved && draft.pendingField !== 'account') return null
+    const correctedName = correctedAccountName(ctx.text, draft.proposal.accountHint)
+    if (correctedName && draft.proposal.currency) {
+      const compatible = profile.accounts.filter(a => compatibleAccount(a, draft.proposal.currency!, draft.proposal.paymentMethod) && matchesName(a, correctedName))
+      if (compatible.length) {
+        const meta = { ...draft.meta }; delete meta.accountCreation
+        return this.expenses.continue(ctx, { ...draft.proposal, accountHint: correctedName, financeAccountId: compatible.length === 1 ? compatible[0]!.id : null, receiptConfirmed: false, confirmationRequired: true }, profile, { ...draft, meta })
+      }
+      const sourceName = draft.proposal.accountHint
+      const combined = sourceName && normalizeText(sourceName).includes(normalizeText(correctedName)) ? sourceName : sourceName && !normalizeText(correctedName).includes(normalizeText(sourceName)) ? `${correctedName} ${sourceName}`.slice(0, 80) : correctedName
+      const creation = { type: draft.proposal.paymentMethod === 'CREDIT' ? 'CREDIT' as const : 'BANK' as const, name: combined, currency: draft.proposal.currency, needsType: !draft.proposal.paymentMethod || draft.proposal.paymentMethod === 'CARD', stage: 'offer' as const }
+      const proposal = { ...draft.proposal, accountHint: combined, financeAccountId: null, receiptConfirmed: false }
+      const question = `Entendido: ${combined} es el medio de pago de este ticket. ${accountQuestion(creation)}`
+      await this.drafts.save({ profileId: ctx.profileId, sourceInboundId: draft.sourceInboundId, sourceWamid: draft.sourceWamid, field: 'account', proposal, meta: { ...draft.meta, accountCreation: creation }, question })
+      return { reply: question, intent: 'clarification', result: { draftId: draft.id } }
+    }
     const type = draft.proposal.paymentMethod === 'CREDIT' ? 'CREDIT' : draft.proposal.paymentMethod === 'CASH' ? 'CASH' : 'BANK'
     const mention = accountMention(ctx.text, type)
     if (!saved && !mention && !/\b(?:agreg|crea|carg)[\p{L}]*/iu.test(ctx.text)) return null
