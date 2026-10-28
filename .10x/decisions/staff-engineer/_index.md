@@ -2,3 +2,4 @@
 - [DISCOVERED] AGENTS.md: código por dominio (`features/<domain>/<feature>`), globales en `components/ui`, límites de líneas (componente 150, hook 80, página 80), tests junto al código.
 - [DISCOVERED] Tests: Vitest en web y API. CI: lint, typecheck, build (sin tests).
 - desktop-shell: [desktop-shell](desktop-shell.md) (ADR-003, ADR-004)
+- desktop-movements: [desktop-movements](desktop-movements.md)

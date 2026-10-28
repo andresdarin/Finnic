@@ -1,14 +1,14 @@
 # Estado
 
-| Fase | e2e-regression | ux-a11y-infohint | desktop-shell |
-|---|---|---|---|
-| 0 Brainstorming | ✅ | ✅ | ✅ spec 2026-10-28 |
-| 1 Estrategia | ✅ | ✅ | ✅ |
-| 2 Diseño | ✅ ADR-001 | ✅ ADR-002 | ✅ ADR-003, ADR-004 |
-| 3 Planificación | ✅ | ✅ | ✅ T1–T9 |
-| 4 Implementación | ✅ | ✅ | ✅ T1–T9 |
-| 5 Verificación | ✅ 44 e2e, 317 unit | ✅ axe 0 serias | ✅ 51 e2e, 79 unit web, axe 0 serias |
-| 6 Entrega | ⏳ CI listo, sin push | ⏳ sin push | ⏳ |
+| Fase | e2e-regression | ux-a11y-infohint | desktop-shell | desktop-movements |
+|---|---|---|---|---|
+| 0 Brainstorming | ✅ | ✅ | ✅ spec 2026-10-28 | ✅ spec |
+| 1 Estrategia | ✅ | ✅ | ✅ | ✅ |
+| 2 Diseño | ✅ ADR-001 | ✅ ADR-002 | ✅ ADR-003, ADR-004 | ✅ ADR-005 |
+| 3 Planificación | ✅ | ✅ | ✅ T1–T9 | ✅ M1–M5 |
+| 4 Implementación | ✅ | ✅ | ✅ T1–T9 | ⏳ |
+| 5 Verificación | ✅ 44 e2e, 317 unit | ✅ axe 0 serias | ✅ 51 e2e, 79 unit web, axe 0 serias | ⏳ |
+| 6 Entrega | ⏳ CI listo, sin push | ⏳ sin push | ⏳ | ⏳ |
 
 ## Pendientes (deuda priorizada)
 1. Editar y borrar gastos desde el detalle (alto).
