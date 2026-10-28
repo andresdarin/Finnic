@@ -47,7 +47,7 @@ export default function NewExpensePage() {
       />
 
       {/* Contenido en Surface Clara: Revisión del Escaneo, Formulario y Resumen */}
-      <div className="w-full max-w-xl mx-auto px-3.5 sm:px-4 pt-4 sm:pt-5 space-y-4">
+      <div className="w-full max-w-xl mx-auto px-3.5 sm:px-4 pt-4 sm:pt-5 space-y-4 lg:max-w-6xl lg:px-8">
         {/* Error de escaneo si existe */}
         {scan.error && (
           <div className="rounded-2xl border border-danger/40 bg-danger/10 p-4 text-xs font-semibold text-danger">
@@ -66,37 +66,42 @@ export default function NewExpensePage() {
         {/* 3, 4 & 5. Datos del Egreso, Lista de Productos y Resumen Final con CTA */}
         <form
           onSubmit={(e) => { e.preventDefault(); form.handleSubmit() }}
-          className="space-y-4"
+          className="space-y-4 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-6 lg:space-y-0"
         >
-          <ExpenseFormFields
-            form={form.form}
-            profileName={profileName}
-            onUpdate={form.updateForm}
-          />
+          {/* Desktop: datos e ítems a la izquierda, resumen y Guardar fijos a la derecha */}
+          <div className="space-y-4">
+            <ExpenseFormFields
+              form={form.form}
+              profileName={profileName}
+              onUpdate={form.updateForm}
+            />
 
-          <ExpenseItemList
-            items={form.items}
-            onAddItem={form.addItem}
-            onRemoveItem={form.removeItem}
-            onUpdateItem={form.updateItem}
-            onUseItemsTotal={form.useItemsTotalAsAmount}
-          />
+            <ExpenseItemList
+              items={form.items}
+              onAddItem={form.addItem}
+              onRemoveItem={form.removeItem}
+              onUpdateItem={form.updateItem}
+              onUseItemsTotal={form.useItemsTotalAsAmount}
+            />
+          </div>
 
-          <ExpenseSummary
-            itemsTotal={form.itemsTotal}
-            declaredTotal={form.declaredTotal}
-            discounts={scan.result?.discounts ?? 0}
-            difference={form.difference}
-            hasBlockingDifference={form.hasBlockingDifference}
-            isSupermarketExpense={form.isSupermarketExpense}
-            itemsCount={form.items.length}
-            canSubmit={form.canSubmit}
-            isSubmitting={form.isSubmitting}
-            error={form.error}
-            success={form.success}
-            onSubmit={form.handleSubmit}
-            onGoToMovements={form.goToMovements}
-          />
+          <div className="lg:sticky lg:top-6">
+            <ExpenseSummary
+              itemsTotal={form.itemsTotal}
+              declaredTotal={form.declaredTotal}
+              discounts={scan.result?.discounts ?? 0}
+              difference={form.difference}
+              hasBlockingDifference={form.hasBlockingDifference}
+              isSupermarketExpense={form.isSupermarketExpense}
+              itemsCount={form.items.length}
+              canSubmit={form.canSubmit}
+              isSubmitting={form.isSubmitting}
+              error={form.error}
+              success={form.success}
+              onSubmit={form.handleSubmit}
+              onGoToMovements={form.goToMovements}
+            />
+          </div>
         </form>
       </div>
     </div>
