@@ -4,6 +4,7 @@ import { WhatsAppClient } from '../../whatsapp-client.service'
 import { WhatsAppMessageProcessor } from '../whatsapp-message.processor'
 import { WhatsAppInboxService } from './whatsapp-inbox.service'
 import { FinnicStickersService, isFinnicSticker } from '../../../ai/personality/finnic-stickers.service'
+import { VoiceReplyService } from '../audio/voice-reply.service'
 
 const DEAD_REPLY = 'No pude terminar de procesar tu mensaje. Revisá tus últimos movimientos antes de volver a mandarlo, por si el gasto llegó a guardarse.'
 const POLL_MS = 5_000
@@ -23,6 +24,7 @@ export class WhatsAppWorker implements OnModuleInit, OnModuleDestroy {
     private readonly client: WhatsAppClient,
     private readonly config: ConfigService,
     @Optional() private readonly stickers?: FinnicStickersService,
+    @Optional() private readonly voice?: VoiceReplyService,
   ) {}
 
   private get disabled() { return this.config.get('WHATSAPP_WORKER_DISABLED') === 'true' }
@@ -75,10 +77,12 @@ export class WhatsAppWorker implements OnModuleInit, OnModuleDestroy {
           } catch { this.logger.warn({ event: 'whatsapp_typing_unavailable', id: reply.id }) }
         }
         const sticker = (reply.result as { outboundSticker?: unknown } | null)?.outboundSticker
+        const audio = this.voice?.eligible(reply) ?? false
         const sent = this.stickers && isFinnicSticker(sticker)
           ? await this.client.sendSticker({ ...options, bytes: await this.stickers.bytes(sticker) })
-          : await this.client.sendText({ ...options, body: reply.replyText ?? '' })
+          : await this.client.sendText({ ...options, body: (reply.replyText ?? '') + (audio ? '\n\nVoz: elevenlabs.io' : '') })
         await this.inbox.replySent(reply.id, sent.wamid)
+        if (audio) await this.voice?.send({ ...options, text: reply.replyText ?? '' })
       } catch (error) {
         await this.inbox.replyFailed(reply, error)
         this.logger.warn({ event: 'whatsapp_reply_failed', id: reply.id, attempts: reply.replyAttempts })

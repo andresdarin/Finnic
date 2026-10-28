@@ -84,6 +84,20 @@ export class WhatsAppClient {
     return { wamid: payload.messages?.[0]?.id ?? null }
   }
 
+  async sendAudio({ to, bytes, phoneNumberId }: { to: string; bytes: Buffer; phoneNumberId: string }): Promise<{ wamid: string | null }> {
+    if (bytes.length > 1024 * 1024 || !matchesMagic(bytes, 'audio/mpeg')) throw new BadRequestException('Audio inválido')
+    const form = new FormData()
+    form.set('messaging_product', 'whatsapp')
+    form.set('file', new Blob([new Uint8Array(bytes)], { type: 'audio/mpeg' }), 'finnic.mp3')
+    const base = `${GRAPH_HOST}/${this.apiVersion()}/${encodeURIComponent(phoneNumberId)}`
+    const upload = await this.request(`${base}/media`, { method: 'POST', body: form }, 'audio_upload')
+    const media = await upload.json() as { id?: string }
+    if (!media.id || !/^[A-Za-z0-9_-]+$/.test(media.id)) throw new ServiceUnavailableException('WhatsApp no recibió el audio')
+    const response = await this.request(`${base}/messages`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messaging_product: 'whatsapp', to, type: 'audio', audio: { id: media.id } }) }, 'audio_send')
+    const payload = await response.json() as { messages?: Array<{ id?: string }> }
+    return { wamid: payload.messages?.[0]?.id ?? null }
+  }
+
   private apiVersion() { return this.config.get<string>('WHATSAPP_API_VERSION') || 'v21.0' }
 
   private async request(url: string, init: RequestInit, operation: string, timeoutMs = 10_000): Promise<Response> {

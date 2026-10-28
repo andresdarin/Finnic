@@ -13,6 +13,13 @@ const file = (bytes: Buffer, length = bytes.length) => ({ ok: true, status: 200,
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks() })
 
 describe('WhatsAppClient', () => {
+  it('uploads an MP3 and sends it as WhatsApp audio', async () => {
+    const fetch = vi.fn().mockResolvedValueOnce(json({ id: '12345' })).mockResolvedValueOnce(json({ messages: [{ id: 'wamid.audio' }] }))
+    vi.stubGlobal('fetch', fetch)
+    await expect(client().sendAudio({ to: '59899123456', phoneNumberId: '123', bytes: Buffer.from('ID3sample') })).resolves.toEqual({ wamid: 'wamid.audio' })
+    expect(fetch.mock.calls[0]![1].body).toBeInstanceOf(FormData)
+    expect(JSON.parse(fetch.mock.calls[1]![1].body)).toMatchObject({ type: 'audio', audio: { id: '12345' } })
+  })
   it('marks the inbound message read and requests the native typing indicator', async () => {
     const fetch = vi.fn().mockResolvedValue(json({ success: true }))
     vi.stubGlobal('fetch', fetch)
