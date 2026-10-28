@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { usePersistentFlag } from '@/hooks/usePersistentFlag'
 import Sidebar from './sidebar/Sidebar'
@@ -8,6 +8,9 @@ import Topbar from './Topbar'
 import MobileNav from './MobileNav'
 import FinnicPanel from './finnic-panel/FinnicPanel'
 import { useFinnicPanel } from './finnic-panel/FinnicPanelProvider'
+import { useNewAction } from './new-action/NewActionProvider'
+import CommandPalette from './command-palette/CommandPalette'
+import { useGlobalShortcuts } from './hooks/useGlobalShortcuts'
 import { FULL_BLEED_ROUTES, SIDEBAR_COLLAPSED_KEY } from './constants'
 import type { ShellProfile } from './types'
 
@@ -20,7 +23,14 @@ interface ShellFrameProps {
 /** Marco visual: sidebar y panel de Finnic en desktop, Topbar y nav inferior en móvil. */
 export default function ShellFrame({ children, profile, onLogout }: ShellFrameProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = usePersistentFlag(SIDEBAR_COLLAPSED_KEY, false)
-  const { visible: panelVisible, docked } = useFinnicPanel()
+  const { visible: panelVisible, docked, isDesktop, togglePanel } = useFinnicPanel()
+  const { setMenuOpen } = useNewAction()
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  useGlobalShortcuts(isDesktop, {
+    palette: () => setPaletteOpen(true),
+    finnic: togglePanel,
+    new: () => setMenuOpen(true),
+  })
   const pathname = usePathname()
   const isFullBleedHero = FULL_BLEED_ROUTES.includes(pathname)
   const isChat = pathname === '/chat'
@@ -54,6 +64,7 @@ export default function ShellFrame({ children, profile, onLogout }: ShellFramePr
       </main>
 
       <FinnicPanel />
+      {isDesktop && <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} isAdmin={profile?.isAdmin === true} />}
 
       {/* Bottom Nav (Mobile) - Oculto en el chat para input fixed */}
       {!isChat && <MobileNav profile={profile} />}
