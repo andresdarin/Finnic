@@ -14,7 +14,7 @@ interface GlobalActionSheetProps {
 
 /** Hoja "Nuevo Registro" del botón + móvil. Las acciones salen de NEW_ACTIONS. */
 export default function GlobalActionSheet({ isOpen, onClose }: GlobalActionSheetProps) {
-  const runAction = useNewAction()
+  const { runAction } = useNewAction()
 
   const handleAction = (type: NewActionType) => {
     onClose()

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import IncomeFormModal from '@/features/personal-finance/IncomeFormModal'
 import TransferFormModal from '@/features/personal-finance/TransferFormModal'
@@ -8,7 +8,15 @@ import CurrencyExchangeModal from '@/features/personal-finance/CurrencyExchangeM
 import type { NewActionType } from './constants'
 
 type ModalAction = Extract<NewActionType, 'income' | 'transfer' | 'exchange'>
-const NewActionContext = createContext<((type: NewActionType) => void) | null>(null)
+
+interface NewActionState {
+  runAction: (type: NewActionType) => void
+  /** Menú "Nuevo" de la sidebar desktop (también lo abre la tecla N). */
+  menuOpen: boolean
+  setMenuOpen: (open: boolean) => void
+}
+
+const NewActionContext = createContext<NewActionState | null>(null)
 
 /**
  * Ejecuta las operaciones de "Nuevo" desde cualquier punto del shell (ADR-003).
@@ -17,16 +25,20 @@ const NewActionContext = createContext<((type: NewActionType) => void) | null>(n
 export function NewActionProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const [modal, setModal] = useState<ModalAction | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
   const close = () => setModal(null)
 
   const runAction = useCallback((type: NewActionType) => {
+    setMenuOpen(false)
     if (type === 'expense') router.push('/expenses/new')
     else if (type === 'scan') router.push('/expenses/new?tab=scan')
     else setModal(type)
   }, [router])
 
+  const value = useMemo(() => ({ runAction, menuOpen, setMenuOpen }), [runAction, menuOpen])
+
   return (
-    <NewActionContext.Provider value={runAction}>
+    <NewActionContext.Provider value={value}>
       {children}
       {/* Montados solo mientras están abiertos: cada uno pide las cuentas al montarse. */}
       {modal === 'income' && <IncomeFormModal isOpen onClose={close} />}
@@ -37,7 +49,7 @@ export function NewActionProvider({ children }: { children: ReactNode }) {
 }
 
 export function useNewAction() {
-  const runAction = useContext(NewActionContext)
-  if (!runAction) throw new Error('useNewAction debe usarse dentro de NewActionProvider')
-  return runAction
+  const value = useContext(NewActionContext)
+  if (!value) throw new Error('useNewAction debe usarse dentro de NewActionProvider')
+  return value
 }

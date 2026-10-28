@@ -6,15 +6,12 @@ import { NAV_ITEMS, useAnimatedIndicator, navHrefFor } from './hooks'
 import SidebarHeader from './SidebarHeader'
 import SidebarNav from './SidebarNav'
 import SidebarFooter from './SidebarFooter'
+import SidebarFinnicButton from './SidebarFinnicButton'
+import NewActionMenu from '../new-action/NewActionMenu'
+import type { ShellProfile } from '../types'
 
 interface SidebarProps {
-  profile: {
-    displayName: string | null
-    email: string
-    color: string
-    isAdmin?: boolean
-    role?: string | null
-  } | null
+  profile: ShellProfile | null
   onLogout: () => void
   collapsed: boolean
   onToggle: () => void
@@ -33,6 +30,7 @@ export default function Sidebar({ profile, onLogout, collapsed, onToggle }: Side
       }`}
     >
       <SidebarHeader collapsed={collapsed} onToggle={onToggle} />
+      <NewActionMenu collapsed={collapsed} />
       <SidebarNav
         collapsed={collapsed}
         profile={profile}
@@ -42,6 +40,7 @@ export default function Sidebar({ profile, onLogout, collapsed, onToggle }: Side
         hoveredHref={hoveredHref}
         onHoverChange={setHoveredHref}
       />
+      <SidebarFinnicButton collapsed={collapsed} />
       <SidebarFooter collapsed={collapsed} profile={profile} onLogout={onLogout} />
     </aside>
   )
