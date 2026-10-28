@@ -13,6 +13,12 @@ const file = (bytes: Buffer, length = bytes.length) => ({ ok: true, status: 200,
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks() })
 
 describe('WhatsAppClient', () => {
+  it('marks the inbound message read and requests the native typing indicator', async () => {
+    const fetch = vi.fn().mockResolvedValue(json({ success: true }))
+    vi.stubGlobal('fetch', fetch)
+    await client().showTyping({ phoneNumberId: '123', messageId: 'wamid.in' })
+    expect(JSON.parse(fetch.mock.calls[0]![1].body)).toEqual({ messaging_product: 'whatsapp', status: 'read', message_id: 'wamid.in', typing_indicator: { type: 'text' } })
+  })
   it('uploads a private WebP and sends it with the native sticker type', async () => {
     const fetch = vi.fn().mockResolvedValueOnce(json({ id: '12345' })).mockResolvedValueOnce(json({ messages: [{ id: 'wamid.sticker' }] }))
     vi.stubGlobal('fetch', fetch)

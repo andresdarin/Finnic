@@ -19,6 +19,15 @@ export class WhatsAppClient {
 
   constructor(private readonly config: ConfigService) {}
 
+  /** Meta clears the native indicator when the reply is delivered. */
+  async showTyping({ phoneNumberId, messageId }: { phoneNumberId: string; messageId: string }): Promise<void> {
+    await this.request(`${GRAPH_HOST}/v26.0/${encodeURIComponent(phoneNumberId)}/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messaging_product: 'whatsapp', status: 'read', message_id: messageId, typing_indicator: { type: 'text' } }),
+    }, 'typing', 2_000)
+  }
+
   /** Sends a text message and returns Meta's outbound message id. */
   async sendText({ to, body, phoneNumberId }: SendTextOptions): Promise<{ wamid: string | null }> {
     const response = await this.request(`${GRAPH_HOST}/${this.apiVersion()}/${encodeURIComponent(phoneNumberId)}/messages`, {
@@ -77,11 +86,11 @@ export class WhatsAppClient {
 
   private apiVersion() { return this.config.get<string>('WHATSAPP_API_VERSION') || 'v21.0' }
 
-  private async request(url: string, init: RequestInit, operation: string): Promise<Response> {
+  private async request(url: string, init: RequestInit, operation: string, timeoutMs = 10_000): Promise<Response> {
     const token = this.config.get<string>('WHATSAPP_ACCESS_TOKEN')
     if (!token) throw new ServiceUnavailableException('WHATSAPP_ACCESS_TOKEN no configurado')
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 10_000)
+    const timeout = setTimeout(() => controller.abort(), timeoutMs)
     try {
       const response = await fetch(url, { ...init, headers: { ...(init.headers as Record<string, string>), Authorization: `Bearer ${token}` }, signal: controller.signal })
       if (!response.ok) {

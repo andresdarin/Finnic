@@ -67,6 +67,13 @@ export class WhatsAppWorker implements OnModuleInit, OnModuleDestroy {
       if (!reply) break
       try {
         const options = { to: reply.from, phoneNumberId: reply.phoneNumberId ?? this.config.get<string>('WHATSAPP_PHONE_NUMBER_ID') ?? '' }
+        if (reply.wamid?.startsWith('wamid.')) {
+          // Cosmetic failure must never prevent or retry a financial reply.
+          try {
+            await this.client.showTyping({ phoneNumberId: options.phoneNumberId, messageId: reply.wamid })
+            await new Promise(resolve => setTimeout(resolve, 1_000))
+          } catch { this.logger.warn({ event: 'whatsapp_typing_unavailable', id: reply.id }) }
+        }
         const sticker = (reply.result as { outboundSticker?: unknown } | null)?.outboundSticker
         const sent = this.stickers && isFinnicSticker(sticker)
           ? await this.client.sendSticker({ ...options, bytes: await this.stickers.bytes(sticker) })
