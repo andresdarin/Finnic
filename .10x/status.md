@@ -2,8 +2,8 @@
 
 | Fase | e2e-regression | ux-a11y-infohint | desktop-shell |
 |---|---|---|---|
-| 0 Brainstorming | ✅ | ✅ | ✅ spec 2026-10-28 (revisión pendiente) |
-| 1 Estrategia | ✅ | ✅ | ⏳ |
+| 0 Brainstorming | ✅ | ✅ | ✅ spec 2026-10-28 |
+| 1 Estrategia | ✅ | ✅ | ✅ |
 | 2 Diseño | ✅ ADR-001 | ✅ ADR-002 | ⏳ |
 | 3 Planificación | ✅ | ✅ | ⏳ |
 | 4 Implementación | ✅ | ✅ | ⏳ |
