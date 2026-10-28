@@ -18,7 +18,8 @@ describe('receipt global discounts', () => {
     expect(result.items.reduce((sum, item) => sum + Math.round(item.totalPrice * 100), 0)).toBe(127161)
     expect(result.items.every((item, index) => item.unitPrice === proposal.items![index]!.unitPrice && item.rawLine?.includes('Importe impreso'))).toBe(true)
     const review = receiptReview(proposal, null)
-    expect(review).toContain('reparto el descuento entre los productos')
+    expect(review).toContain('Descuento incluido:')
+    expect(review).not.toContain('reparto el descuento entre los productos')
     expect(review).not.toContain('guardo solo el importe, sin el detalle')
   })
   it('does not subtract the discount a second time from already net prices', () => {
