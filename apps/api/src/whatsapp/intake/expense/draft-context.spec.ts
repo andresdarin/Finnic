@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { DraftResponder } from './draft-responder'
 import { proposalFromText } from './text-proposal'
-import { purchaseCalculation } from '../parsing/purchase-calculation'
 import { pickAccountAnswer } from '../parsing/account-resolution'
 import type { IntakeProfileContext } from './intake-context.service'
 import type { InboundContext } from '../types'
