@@ -5,7 +5,7 @@ import { currencySignal, normalizeText, paymentSignal } from '../parsing/signals
 import type { ExpenseProposal, PendingField } from '../types'
 import { movementDirection } from './movement-direction'
 
-export type DraftMeta = { options?: Array<{ id: string; name: string; type?: 'CASH' | 'BANK' | 'CREDIT'; label?: string }>; amountOptions?: string[] }
+export type DraftMeta = { accountCreation?: import('./account-onboarding').AccountOnboarding; options?: Array<{ id: string; name: string; type?: 'CASH' | 'BANK' | 'CREDIT'; label?: string }>; amountOptions?: string[] }
 export type DraftAnswer = { kind: 'updated'; proposal: ExpenseProposal } | { kind: 'cancel' } | { kind: 'not_understood' }
 
 const YES = /^(si|sii|dale|ok|okay|registralo|registrar|confirmo|confirmar|de una|correcto)$/

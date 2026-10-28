@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common'
+import { AccountOnboardingService } from './account-onboarding.service'
+import { Injectable, Optional } from '@nestjs/common'
 import { CorrectionIntakeService } from '../correction/correction-intake.service'
 import type { CorrectionRequest } from '../correction/correction-patch'
 import type { HandlerResult, InboundContext } from '../types'
@@ -20,6 +21,7 @@ export class DraftResponder {
     private readonly drafts: DraftRepository,
     private readonly expenses: ExpenseIntakeService,
     private readonly corrections: CorrectionIntakeService,
+    @Optional() private readonly accountOnboarding?: AccountOnboardingService,
   ) {}
 
   async answer(ctx: InboundContext, draft: StoredDraft, profile: IntakeProfileContext, cancel: boolean): Promise<HandlerResult> {
@@ -27,6 +29,8 @@ export class DraftResponder {
       await this.drafts.close(draft.id, ctx.profileId, 'cancelled')
       return { reply: 'Listo, no registré nada.', intent: 'cancel' }
     }
+    const onboarding = await this.accountOnboarding?.answer(ctx, draft, profile)
+    if (onboarding) return onboarding
     if (draft.pendingField === 'which_expense') return this.whichExpense(ctx, draft, profile)
     const calculation = draft.proposal.inputMethod === 'MANUAL' ? purchaseCalculation(ctx.text, draft.proposal.calculation) : null
     if (calculation) {

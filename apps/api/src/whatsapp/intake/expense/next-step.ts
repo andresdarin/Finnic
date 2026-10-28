@@ -52,7 +52,7 @@ export function nextStep(input: ExpenseProposal & { currencyConflict?: boolean; 
     const intro = options.length
       ? `${proposal.movementType === 'INCOME' ? `¿A qué cuenta sumo ${amount}?` : expenseQuestion}${accountTypes.size === 1 ? ` Tenés ${options.map(option => option.label).join(' o ')}.` : ''}`
       : proposal.paymentMethod === 'CREDIT'
-        ? `Todavía no tenés una tarjeta de crédito cargada. ¿Lo dejo sin cuenta o preferís agregarla en Balance?`
+        ? `Todavía no tenés una tarjeta de crédito cargada. Podemos agregarla acá o dejar el gasto sin cuenta. Cómo se llama la tarjeta?`
         : `No tenés una cuenta de ${proposal.currency} para ese pago. ¿Lo dejo sin cuenta o querés agregarla en Balance?`
     return { kind: 'ask', field: 'account', proposal, question: intro, options }
   }

@@ -37,7 +37,9 @@ export class ExpenseIntakeService {
     if (input.transferDocument && input.movementType === 'INCOME') input = { ...input, paymentMethod: 'TRANSFER' }
     const step = nextStep(input, input.transferDocument ? { ...profile, defaultCurrency: null } : profile)
     if (step.kind === 'ask') {
-      const saved = await this.drafts.save({ profileId: ctx.profileId, sourceInboundId: origin.inboundId, sourceWamid: origin.wamid, field: step.field, question: step.question, proposal: step.proposal, meta: { ...(draft?.meta ?? {}), options: step.options } })
+      const accountCreation = step.field === 'account' && step.proposal.paymentMethod === 'CREDIT' && !step.options?.length && step.proposal.currency
+        ? { type: 'CREDIT' as const, currency: step.proposal.currency, stage: 'name' as const } : undefined
+      const saved = await this.drafts.save({ profileId: ctx.profileId, sourceInboundId: origin.inboundId, sourceWamid: origin.wamid, field: step.field, question: step.question, proposal: step.proposal, meta: { ...(draft?.meta ?? {}), options: step.options, accountCreation } })
       return { reply: [...notes, step.question].join('\n'), intent: 'clarification', result: { draftId: saved.id, pendingField: step.field } }
     }
 

@@ -1,4 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
+import { createHash } from 'node:crypto'
 import { PrismaService } from '../prisma/prisma.service'
 import {
   createFinanceAccountSchema,
@@ -45,10 +46,10 @@ export class FinanceAccountService {
     return existing.map(this.mapOutput)
   }
 
-  async create(profileId: string, rawInput: CreateFinanceAccountInput) {
+  async create(profileId: string, rawInput: CreateFinanceAccountInput, requestId?: string) {
     const input = createFinanceAccountSchema.parse(rawInput)
-    const account = await this.prisma.financeAccount.create({
-      data: {
+    const accountId = requestId ? `chat-account:${createHash('sha256').update(JSON.stringify([profileId, requestId, input])).digest('hex')}` : null
+    const data = {
         profileId,
         name: input.name.trim(),
         type: input.type,
@@ -58,8 +59,10 @@ export class FinanceAccountService {
         closingDay: input.closingDay ?? null,
         dueDay: input.dueDay ?? null,
         isSpendable: input.isSpendable ?? true,
-      },
-    })
+      }
+    const account = requestId
+      ? await this.prisma.financeAccount.upsert({ where: { id: accountId! }, update: {}, create: { ...data, id: accountId! } })
+      : await this.prisma.financeAccount.create({ data })
     return this.mapOutput(account)
   }
 

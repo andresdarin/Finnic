@@ -1,3 +1,4 @@
+import { AccountOnboardingService } from './expense/account-onboarding.service'
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { PrismaModule } from '../../prisma/prisma.module'
@@ -34,7 +35,7 @@ import { VoiceReplyService } from './audio/voice-reply.service'
   controllers: [WhatsAppLinkController, WhatsAppOpsController, AppChatController],
   providers: [
     AdminGuard, WhatsAppLinkService, WhatsAppInboxService, WhatsAppWorker, WhatsAppMessageProcessor, WhatsAppExtractorService,
-    IntakeContextService, DraftRepository, DraftResponder, ExpenseIntakeService, ReceiptIntakeService, CorrectionIntakeService,
+    AccountOnboardingService, IntakeContextService, DraftRepository, DraftResponder, ExpenseIntakeService, ReceiptIntakeService, CorrectionIntakeService,
     QueryIntakeService, ChatFallback, MediaHistoryService, AudioIntakeService, DocumentIncomeService, VoiceReplyService,
   ],
   exports: [WhatsAppInboxService, WhatsAppWorker],
