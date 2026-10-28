@@ -4,7 +4,8 @@ import { PublicExchangeService } from './public-exchange.service'
 const quote = { origin: 'prex', code: 'USD', type: '', date: '2026-10-27T03:00:00Z', buy: 40.02, sell: 40.43 }
 function upstream(body: unknown = quote, status = 200) {
   vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date('2026-10-27T15:00:00Z'))
-  const fetcher = vi.fn(async () => new Response(JSON.stringify(body), { status }))
+  const payload = Array.isArray(body) ? body : [body]
+  const fetcher = vi.fn(async () => new Response(JSON.stringify(payload), { status }))
   vi.stubGlobal('fetch', fetcher)
   return fetcher
 }

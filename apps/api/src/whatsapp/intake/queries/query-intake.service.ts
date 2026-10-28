@@ -16,7 +16,7 @@ import { comparisonReply, productReply } from './monthly-replies'
 import { FinanceMetricsService } from '../../../finance/application/finance-metrics.service'
 import { financialQuestionKind, metricAnswer } from './metric-answers'
 import { PublicExchangeService } from '../../../finance/fx/public-exchange.service'
-import { isPrexQuoteQuestion, prexQuoteAnswer } from './exchange-answer'
+import { isExchangeQuoteQuestion, exchangeQuoteAnswer } from './exchange-answer'
 
 /** Read-only answers built from the same use cases as the app. Currencies are never summed together. */
 @Injectable()
@@ -71,7 +71,7 @@ export class QueryIntakeService {
   }
 
   async financialQuestion(ctx: InboundContext): Promise<HandlerResult | null> {
-    if (this.exchange && isPrexQuoteQuestion(ctx.text)) return { reply: await prexQuoteAnswer(this.exchange), intent: 'other' }
+    if (this.exchange && isExchangeQuoteQuestion(ctx.text)) return { reply: await exchangeQuoteAnswer(this.exchange, ctx.text), intent: 'other' }
     const kind = financialQuestionKind(ctx.text)
     if (!kind) return null
     if (kind === 'monthly') return this.monthSpending(ctx)
