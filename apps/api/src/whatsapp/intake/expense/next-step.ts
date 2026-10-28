@@ -1,13 +1,17 @@
 import { compatibleAccount, resolveAccount, type IntakeAccount } from '../parsing/account-resolution'
-import { formatMoney, optionList, PAYMENT_LABELS } from '../reply/format'
+import { formatMoney, optionList } from '../reply/format'
 import type { Currency, ExpenseProposal, PendingField } from '../types'
 import type { IntakeProfileContext } from './intake-context.service'
 
 export type NextStep =
-  | { kind: 'ask'; field: PendingField; question: string; proposal: ExpenseProposal; options?: Array<{ id: string; name: string }> }
+  | { kind: 'ask'; field: PendingField; question: string; proposal: ExpenseProposal; options?: Array<{ id: string; name: string; type: IntakeAccount['type']; label: string }> }
   | { kind: 'ready'; proposal: ExpenseProposal & { amount: string; currency: Currency; date: string }; account: IntakeAccount | null }
 
-const accountLabel = (a: IntakeAccount) => `${a.name} (${a.type === 'CREDIT' ? 'crédito' : a.type === 'CASH' ? 'efectivo' : 'banco/débito'} · ${a.currency})`
+const accountLabel = (a: IntakeAccount) => {
+  if (a.type === 'CASH') return /efectivo/i.test(a.name) ? a.name : `${a.name} · efectivo`
+  if (a.type === 'CREDIT') return `${a.name} · crédito`
+  return /cuenta bancaria|banco\s*\/\s*d[eé]bito/i.test(a.name) ? 'Débito' : `${a.name} · débito`
+}
 
 /**
  * Decides the single next question, in a fixed order, or declares the proposal ready.
@@ -40,13 +44,17 @@ export function nextStep(input: ExpenseProposal & { currencyConflict?: boolean; 
     : resolveAccount({ accounts: ctx.accounts, currency: proposal.currency, method: proposal.paymentMethod, hint: proposal.accountHint, defaultAccountId: ctx.defaultAccountId, accountless: proposal.accountless })
   if (resolution.status === 'ASK') {
     const amount = formatMoney(proposal.amount, proposal.currency)
-    const method = proposal.paymentMethod ? ` con ${PAYMENT_LABELS[proposal.paymentMethod]}` : ''
-    const intro = resolution.options.length
-      ? `${proposal.movementType === 'INCOME' ? '¿En qué cuenta recibiste' : '¿Con qué cuenta pagaste'} ${amount}${proposal.movementType === 'INCOME' ? '' : method}?\n${optionList(resolution.options.map(accountLabel))}\nDecime el nombre o el número. También podés decir "sin cuenta" y lo dejamos sin asociar a un saldo.`
+    const options = resolution.options.map(account => ({ id: account.id, name: account.name, type: account.type, label: accountLabel(account) }))
+    const accountTypes = new Set(options.map(option => option.type))
+    const expenseQuestion = accountTypes.has('CASH') && accountTypes.has('BANK')
+      ? '¿Lo pagaste en efectivo o con débito?'
+      : '¿Con qué cuenta lo pagaste?'
+    const intro = options.length
+      ? `${proposal.movementType === 'INCOME' ? `¿A qué cuenta sumo ${amount}?` : expenseQuestion}\n${optionList(options.map(option => option.label))}\nSi querés, lo dejo sin cuenta.`
       : proposal.paymentMethod === 'CREDIT'
-        ? `Pagaste ${amount} con crédito, pero todavía no tenés una tarjeta de crédito configurada en ${proposal.currency}. Decime "sin cuenta" para dejarlo así por ahora, sin actualizar la deuda de una tarjeta. Si preferís asociarlo, creá la tarjeta en Balance y decime el nombre.`
-        : `No tenés una cuenta compatible en ${proposal.currency}${method} para ${amount}. Respondé "sin cuenta" para registrarlo sin mover saldos, o creá la cuenta en Balance y escribime el nombre.`
-    return { kind: 'ask', field: 'account', proposal, question: intro, options: resolution.options.map(a => ({ id: a.id, name: a.name })) }
+        ? `Todavía no tenés una tarjeta de crédito cargada. ¿Lo dejo sin cuenta o preferís agregarla en Balance?`
+        : `No tenés una cuenta de ${proposal.currency} para ese pago. ¿Lo dejo sin cuenta o querés agregarla en Balance?`
+    return { kind: 'ask', field: 'account', proposal, question: intro, options }
   }
   return {
     kind: 'ready',

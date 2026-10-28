@@ -51,11 +51,16 @@ export function resolveAccount(input: {
 }
 
 /** Interprets a reply to "¿Con qué cuenta?": an option number, an account name or "sin cuenta". */
-export function pickAccountAnswer(answer: string, options: Array<Pick<IntakeAccount, 'id' | 'name'>>): string | 'NONE' | null {
+export function pickAccountAnswer(answer: string, options: Array<Pick<IntakeAccount, 'id' | 'name'> & { type?: IntakeAccount['type'] }>): string | 'NONE' | null {
   const text = normalizeText(answer)
   if (/^(sin cuenta|ninguna|ninguno|no tengo|sin)$/.test(text)) return 'NONE'
   const index = /^(\d{1,2})$/.exec(text)
   if (index) return options[Number(index[1]) - 1]?.id ?? null
   const matches = options.filter(option => matchesName(option as IntakeAccount, answer))
-  return matches.length === 1 ? matches[0]!.id : null
+  if (matches.length === 1) return matches[0]!.id
+  if (/\b(itau|brou|republica|santander|bbva|scotia|hsbc|banco)\b/.test(text)) {
+    const banks = options.filter(option => option.type === 'BANK' || /banco|d[eé]bito/i.test(option.name))
+    if (banks.length === 1) return banks[0]!.id
+  }
+  return null
 }

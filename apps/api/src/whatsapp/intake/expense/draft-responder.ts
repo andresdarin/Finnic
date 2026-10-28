@@ -45,7 +45,13 @@ export class DraftResponder {
       await this.drafts.close(draft.id, ctx.profileId, 'cancelled')
       return { reply: `Listo, no registré ese ${draft.proposal.transferDocument ? 'movimiento' : 'gasto'}.`, intent: 'cancel' }
     }
-    if (answer.kind === 'not_understood') return { reply: `Me falta aclarar esto: ${draft.question ?? ''}\nSi preferís dejarlo, decime "cancelar".`.trim(), intent: 'clarification', result: { draftId: draft.id } }
+    if (answer.kind === 'not_understood') {
+      const options = draft.meta.options ?? []
+      const reply = draft.pendingField === 'account' && options.length
+        ? `No te entendí. ¿Fue ${options.map(option => option.label ?? option.name).join(' o ')}? Si querés, lo dejo sin cuenta.`
+        : `Perdón, no te entendí. ${draft.question ?? '¿Me lo decís de otra forma?'}`
+      return { reply, intent: 'clarification', result: { draftId: draft.id } }
+    }
     return this.expenses.continue(ctx, answer.proposal, profile, draft)
   }
 
