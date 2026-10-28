@@ -6,8 +6,8 @@
 | 1 Estrategia | ✅ | ✅ | ✅ | ✅ |
 | 2 Diseño | ✅ ADR-001 | ✅ ADR-002 | ✅ ADR-003, ADR-004 | ✅ ADR-005 |
 | 3 Planificación | ✅ | ✅ | ✅ T1–T9 | ✅ M1–M5 |
-| 4 Implementación | ✅ | ✅ | ✅ T1–T9 | ⏳ |
-| 5 Verificación | ✅ 44 e2e, 317 unit | ✅ axe 0 serias | ✅ 51 e2e, 79 unit web, axe 0 serias | ⏳ |
+| 4 Implementación | ✅ | ✅ | ✅ T1–T9 | ✅ M1–M5 |
+| 5 Verificación | ✅ 44 e2e, 317 unit | ✅ axe 0 serias | ✅ 51 e2e, 79 unit web, axe 0 serias | ✅ 54 e2e, 87 unit, axe 0 serias |
 | 6 Entrega | ✅ en main (push previo) | ✅ en main (push previo) | ✅ CI + CD verdes 2026-10-28 | ⏳ |
 
 ## Pendientes (deuda priorizada)
@@ -37,3 +37,7 @@ Spec: `specs/2026-10-28-desktop-experience-design.md`. Sub-proyectos en orden: d
 - Entregado: CI 40782078797 y CD 40782079196 verdes (Vercel + Render).
 - Recomendado: que CD dependa de CI.
 - Sub-proyectos pendientes: desktop-movements → desktop-dashboard → desktop-finance.
+
+### desktop-movements
+- En rama `feat/desktop-movements`, sin integrar a main ni pushear.
+- Pendiente aparte: editar/borrar movimientos (backend con reversión de saldos).
