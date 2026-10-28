@@ -53,7 +53,7 @@ export function resolveAccount(input: {
 /** Interprets a reply to "¿Con qué cuenta?": an option number, an account name or "sin cuenta". */
 export function pickAccountAnswer(answer: string, options: Array<Pick<IntakeAccount, 'id' | 'name'> & { type?: IntakeAccount['type'] }>): string | 'NONE' | null {
   const text = normalizeText(answer)
-  if (/^(sin cuenta|ninguna|ninguno|no tengo|sin)$/.test(text)) return 'NONE'
+  if (/^(sin cuenta|ninguna|ninguno|no tengo|sin)$/.test(text) || /^(?:(?:si|dale|ok)[, ]+)?(?:(?:dejalo|dejala|deja|anotalo|registralo|guardalo|prefiero|quiero|lo dejo|lo dejamos)\s+)?sin (?:una )?cuenta(?:\s+(?:por ahora|de momento|nom[aá]s))?[.!]*$/.test(text)) return 'NONE'
   const index = /^(\d{1,2})$/.exec(text)
   if (index) return options[Number(index[1]) - 1]?.id ?? null
   const matches = options.filter(option => matchesName(option as IntakeAccount, answer))

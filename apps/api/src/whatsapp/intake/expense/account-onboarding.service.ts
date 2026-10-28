@@ -20,6 +20,7 @@ export class AccountOnboardingService {
     if (!saved && !draft.proposal.currency) return null
     const creation = { ...(saved ?? { type, name: mention ?? undefined, currency: draft.proposal.currency!, stage: mention ? 'balance' as const : 'name' as const }) }
     const text = normalizeText(ctx.text)
+    if (saved && /\?|^(?:como|cuanto|por que|que pasa|me registraste|ya registraste)\b/.test(text)) return null
     if (saved && /^(no|cancelar|cancela)$/.test(text)) {
       const meta = { ...draft.meta }; delete meta.accountCreation
       await this.save(ctx, draft, meta, draft.question ?? 'Cómo lo pagaste?')

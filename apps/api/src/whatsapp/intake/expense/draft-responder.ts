@@ -11,6 +11,8 @@ import { correctReceiptItem } from './receipt-item-correction'
 import { movementDirection } from './movement-direction'
 import { purchaseCalculation } from '../parsing/purchase-calculation'
 import { formatMoney } from '../reply/format'
+import { pickAccountAnswer } from '../parsing/account-resolution'
+import { normalizeText } from '../parsing/signals'
 
 type WhichExpense = { pending: { action: 'correct' | 'undo'; request?: CorrectionRequest }; options: string[] }
 
@@ -28,6 +30,15 @@ export class DraftResponder {
     if (cancel) {
       await this.drafts.close(draft.id, ctx.profileId, 'cancelled')
       return { reply: 'Listo, no registré nada.', intent: 'cancel' }
+    }
+    const text = normalizeText(ctx.text)
+    if (/\b(?:registraste|anotaste|guardaste|quedo registrado|quedo guardado)\b/.test(text) && /\?|\b(?:ya|me|lo|gasto)\b/.test(text)) {
+      const missing = draft.pendingField === 'account' ? 'Me falta resolver la cuenta o dejarlo sin cuenta.' : draft.pendingField === 'receipt_confirmation' ? 'Me falta tu confirmación para guardarlo.' : 'Todavía falta completar el dato que te pedí.'
+      return { reply: `El gasto de ${draft.proposal.title} sigue pendiente. ${missing}`, intent: 'clarification', result: { draftId: draft.id } }
+    }
+    if (draft.pendingField === 'account' && pickAccountAnswer(ctx.text, []) === 'NONE') {
+      const meta = { ...draft.meta }; delete meta.accountCreation
+      return this.expenses.continue(ctx, { ...draft.proposal, accountless: true, financeAccountId: null, confirmationRequired: true, receiptConfirmed: false }, profile, { ...draft, meta })
     }
     const onboarding = await this.accountOnboarding?.answer(ctx, draft, profile)
     if (onboarding) return onboarding
