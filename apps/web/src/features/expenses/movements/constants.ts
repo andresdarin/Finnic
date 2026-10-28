@@ -72,3 +72,6 @@ export function formatMonthLabel(value: string): string {
   if (!year || !m || m < 1 || m > 12) return value
   return `${monthNames[m - 1]} de ${year}`
 }
+
+/** Ancho útil mínimo del cuerpo de la página para mostrar el detalle en columna (tabla ~600 + columna 380 + separación). */
+export const DETAIL_COLUMN_MIN_WIDTH = 1000
