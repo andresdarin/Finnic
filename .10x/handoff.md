@@ -1,3 +1,3 @@
 # Handoff
-**De:** EM + Senior → **A:** SDE (fase 4 de `desktop-shell`)
-Tareas T1–T9 en `decisions/engineering-manager/desktop-shell.md`, enfoque por tarea en `decisions/senior-engineer/desktop-shell.md`. No tocar los archivos con cambios sin commitear del usuario (perfil, ProfileProvider, API).
+**De:** SDE → **A:** QA + Security (fase 5 de `desktop-shell`)
+Construido: ver `decisions/sde/desktop-shell.md`. Probar: panel acoplado (1440) y diálogo (1100), conversación que sobrevive a la navegación, refresco de pantallas tras confirmar con Finnic o guardar desde "Nuevo", ⌘K/⌘J/N, `/chat` en desktop y móvil sin cambios. e2e nuevo: `apps/web/e2e/desktop-shell.spec.ts`.
