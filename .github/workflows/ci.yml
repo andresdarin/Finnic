@@ -38,6 +38,8 @@ jobs:
       - run: pnpm --filter @lovehold/api exec prisma generate
       - run: pnpm --filter @lovehold/api exec tsc --noEmit
       - run: pnpm --filter @lovehold/web exec tsc --noEmit
+      - run: pnpm --filter @lovehold/admin exec tsc --noEmit
+      - run: pnpm --filter @lovehold/landing exec tsc --noEmit
 
   build:
     name: Build
@@ -68,6 +70,8 @@ jobs:
       - run: pnpm --filter @lovehold/api exec prisma generate
       - run: pnpm --filter @lovehold/web exec vitest run
       - run: pnpm --filter @lovehold/api exec vitest run
+      - run: pnpm --filter @lovehold/admin exec vitest run
+      - run: pnpm --filter @lovehold/landing exec vitest run
 
   e2e:
     name: E2E (Playwright + Supabase local)

@@ -30,3 +30,4 @@ export type {
   MonthlySummary,
   ProductRankingItem,
 } from './personal-finance'
+export type { AdminMetrics, AdminDailyCount, AdminUserRow, AdminUserPage, AdminUserDetail } from './admin'

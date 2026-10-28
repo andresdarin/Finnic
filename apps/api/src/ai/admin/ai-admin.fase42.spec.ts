@@ -14,7 +14,7 @@ describe('AI admin Fase 4.2', () => {
     await expect(auth.canActivate(ctx({}))).rejects.toMatchObject({ status: 401 })
     const admin = new AdminGuard()
     expect(() => admin.canActivate(ctx({ user: { authUserId: 'u' } }))).toThrow(/Admin/)
-    expect(admin.canActivate(ctx({ user: { role: 'admin' } }))).toBe(true)
+    expect(admin.canActivate(ctx({ user: { app_metadata: { role: 'admin' } } }))).toBe(true)
   })
 
   it('draft creation does not change the PROD effective prompt', async () => {

@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+/* Identidad Finnic (misma paleta que apps/web): navy + arena + dorado contenido. */
+@layer base {
+  :root {
+    --navy: #083A4F;
+    --navy-deep: #062B3B;
+    --teal: #407E8C;
+    --aqua: #C0D5D6;
+    --sand: #F5F2EE;
+    --sand-strong: #E5E1DD;
+    --gold: #A58D66;
+    --gold-ink: #7E6842;
+    --ink: #102D38;
+    --ink-soft: #4F626B;
+    --line: #DDD9D4;
+    --white: #FFFFFF;
+    --wa: #DCF8C6;
+    color-scheme: light;
+  }
+
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  body {
+    background: var(--sand);
+    color: var(--ink);
+    font-family: var(--font-ui), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 6px; }
+  ::selection { background: var(--aqua); color: var(--navy); }
+}
+
+@theme inline {
+  --color-navy: var(--navy);
+  --color-navy-deep: var(--navy-deep);
+  --color-teal: var(--teal);
+  --color-aqua: var(--aqua);
+  --color-sand: var(--sand);
+  --color-sand-strong: var(--sand-strong);
+  --color-gold: var(--gold);
+  --color-gold-ink: var(--gold-ink);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-wa: var(--wa);
+  --font-display: var(--font-display-source), Georgia, serif;
+}
+
+@utility eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}

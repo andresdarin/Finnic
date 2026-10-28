@@ -1,3 +1,4 @@
 # Handoff
-**De:** Verificación → **A:** DevOps / dueño
-Todo commiteado en local, sin push. Al pushear a main corren los jobs `test` y `e2e` nuevos. Pendientes en `status.md`. Reporte del recorrido en `reviews/2026-10-27-ux-a11y-walkthrough.md`.
+**De:** Verificación → **A:** DevOps / dueño · feature `landing-admin`
+Rama `feat/landing-admin` (worktree `../Lovehold-landing-admin`), sin push. Código, tests y verificación listos.
+Pasos de producción en orden en `decisions/devops/landing-admin.md` (empezar por `admin:grant`). Runbook en `decisions/sre/landing-admin.md`.

@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+/* Tokens de Finnic (subset de apps/web) para el panel interno. */
+@layer base {
+  :root {
+    --background: #F5F2EE;
+    --surface: #FFFFFF;
+    --surface-alt: #EFEBE6;
+    --foreground: #102D38;
+    --muted-foreground: #566770;
+    --border: #DDD9D4;
+    --primary: #083A4F;
+    --primary-hover: #0B465D;
+    --primary-foreground: #FFFFFF;
+    --accent-ink: #7E6842;
+    --success: #17694F;
+    --danger: #B52F38;
+    --chart: #007E9E;
+    --focus: #A58D66;
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: #071D27;
+      --surface: #0E2A35;
+      --surface-alt: #133541;
+      --foreground: #E8EEF0;
+      --muted-foreground: #A3B6BD;
+      --border: #2A5563;
+      --primary: #C0D5D6;
+      --primary-hover: #D6E5E6;
+      --primary-foreground: #071D27;
+      --accent-ink: #D4BE97;
+      --success: #35D39A;
+      --danger: #FF7272;
+      --chart: #1AA3BD;
+      color-scheme: dark;
+    }
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-ui), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent-ink: var(--accent-ink);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-chart: var(--chart);
+  --font-display: var(--font-display-source), Georgia, serif;
+}
