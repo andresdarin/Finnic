@@ -61,7 +61,7 @@ export function queryPeriod(raw: string, current: string, preference: DefaultQue
   const previousMonthAsked = /mes (?:pasado|anterior)/.test(text)
   const currentMonthAsked = /(?:este|actual|corriente) mes|mes actual|\b(?:del|en el|durante el) mes\b/.test(text)
   const explicitYear = /\b(?:en |durante )?(20\d{2})\b/.exec(text)
-  let kind: DefaultQueryPeriod = explicit.length && /quincena/.test(text) ? 'FORTNIGHT'
+  const kind: DefaultQueryPeriod = explicit.length && /quincena/.test(text) ? 'FORTNIGHT'
     : explicit.length || previousMonthAsked || currentMonthAsked || ago ? 'MONTH'
     : /quincena/.test(text) ? 'FORTNIGHT' : /semana/.test(text) ? 'WEEK'
       : /\bano\b/.test(text) || explicitYear ? 'YEAR'
