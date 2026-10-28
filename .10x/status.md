@@ -4,7 +4,7 @@
 |---|---|---|---|
 | 0 Brainstorming | ✅ | ✅ | ✅ spec 2026-10-28 |
 | 1 Estrategia | ✅ | ✅ | ✅ |
-| 2 Diseño | ✅ ADR-001 | ✅ ADR-002 | ⏳ |
+| 2 Diseño | ✅ ADR-001 | ✅ ADR-002 | ✅ ADR-003, ADR-004 |
 | 3 Planificación | ✅ | ✅ | ⏳ |
 | 4 Implementación | ✅ | ✅ | ⏳ |
 | 5 Verificación | ✅ 44 e2e, 317 unit | ✅ axe 0 serias | ⏳ |
