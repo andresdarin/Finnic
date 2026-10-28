@@ -5,7 +5,7 @@ import { DraftRepository, type StoredDraft } from './draft.repository'
 import { ExpenseIntakeService } from './expense-intake.service'
 import type { IntakeProfileContext } from './intake-context.service'
 import { accountMention, accountQuestion, initialBalanceAnswer, validAccountName } from './account-onboarding'
-import { currencySignal, normalizeText } from '../parsing/signals'
+import { currencySignal, normalizeText, paymentSignal } from '../parsing/signals'
 
 @Injectable()
 export class AccountOnboardingService {
@@ -20,6 +20,17 @@ export class AccountOnboardingService {
     if (!saved && !draft.proposal.currency) return null
     const creation = { ...(saved ?? { type, name: mention ?? undefined, currency: draft.proposal.currency!, stage: mention ? 'balance' as const : 'name' as const }) }
     const text = normalizeText(ctx.text)
+    if (saved?.stage === 'offer') {
+      if (/^(?:no|no gracias|dejalo sin cuenta|sin cuenta)(?: por ahora)?[.!]*$/.test(text)) {
+        const meta = { ...draft.meta }; delete meta.accountCreation
+        return this.expenses.continue(ctx, { ...draft.proposal, accountless: true, financeAccountId: null, confirmationRequired: true, receiptConfirmed: false }, profile, { ...draft, meta })
+      }
+      if (!/^(?:si|dale|ok|agregalo|agregala|si agregalo|si agregala|quiero agregarlo|quiero agregarla)[.!]*$/.test(text)) return null
+      creation.stage = !creation.name ? 'name' : creation.needsType ? 'type' : 'balance'
+      const question = accountQuestion(creation)
+      await this.save(ctx, draft, { ...draft.meta, accountCreation: creation }, question)
+      return { reply: question, intent: 'clarification', result: { draftId: draft.id } }
+    }
     if (saved && /\?|^(?:como|cuanto|por que|que pasa|me registraste|ya registraste)\b/.test(text)) return null
     if (saved && /^(no|cancelar|cancela)$/.test(text)) {
       const meta = { ...draft.meta }; delete meta.accountCreation
@@ -31,7 +42,12 @@ export class AccountOnboardingService {
       if (/^(?:sin cuenta|ninguna)$/i.test(name)) return null
       if (/^(?:si|sí|dale|ok|agregala|agreg[aá]la|creala)$/i.test(name)) return { reply: accountQuestion(creation), intent: 'clarification' }
       if (!validAccountName(name)) return { reply: 'Pasame solo un nombre corto para identificarla.', intent: 'clarification' }
-      creation.name = name; creation.stage = 'balance'
+      creation.name = name; creation.stage = creation.needsType ? 'type' : 'balance'
+    } else if (saved?.stage === 'type') {
+      const method = paymentSignal(ctx.text)
+      if (!method || method === 'CARD') return null
+      creation.type = method === 'CREDIT' ? 'CREDIT' : method === 'CASH' ? 'CASH' : 'BANK'
+      creation.needsType = false; creation.stage = 'balance'
     } else if (saved?.stage === 'balance') {
       if (/\b(?:no se|no tengo idea|no recuerdo|no lo se|desconozco|empezar (?:ahora|desde (?:ahora|cero))|arrancar (?:ahora|desde (?:ahora|cero)))\b/.test(text)) {
         creation.initialBalance = '0.00'; creation.prospective = true; creation.stage = 'confirm'

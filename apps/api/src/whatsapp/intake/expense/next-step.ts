@@ -1,4 +1,4 @@
-import { compatibleAccount, resolveAccount, type IntakeAccount } from '../parsing/account-resolution'
+import { compatibleAccount, resolveAccount, matchesName, type IntakeAccount } from '../parsing/account-resolution'
 import { formatMoney } from '../reply/format'
 import type { Currency, ExpenseProposal, PendingField } from '../types'
 import type { IntakeProfileContext } from './intake-context.service'
@@ -38,6 +38,10 @@ export function nextStep(input: ExpenseProposal & { currencyConflict?: boolean; 
 
   if (!proposal.date || input.dateAsk) return { kind: 'ask', field: 'date', proposal, question: '¿Qué día fue la compra? (por ejemplo "hoy", "ayer" o 21/10)' }
 
+  if (!proposal.accountless && proposal.accountHint && !ctx.accounts.some(a => compatibleAccount(a, proposal.currency!, proposal.paymentMethod) && matchesName(a, proposal.accountHint!))) {
+    return { kind: 'ask', field: 'account', proposal, options: [], question: `El ${proposal.inputMethod === 'RECEIPT_SCAN' ? 'ticket' : 'gasto'} indica ${proposal.accountHint} y no encuentro ese medio de pago registrado. Querés agregarlo o dejar este gasto sin cuenta?` }
+  }
+
   const selected = ctx.accounts.find(a => a.id === proposal.financeAccountId && compatibleAccount(a, proposal.currency!, proposal.paymentMethod))
   const resolution = selected && !proposal.accountless
     ? { status: 'RESOLVED' as const, account: selected, reason: 'name' as const }
@@ -52,7 +56,7 @@ export function nextStep(input: ExpenseProposal & { currencyConflict?: boolean; 
     const intro = options.length
       ? `${proposal.movementType === 'INCOME' ? `¿A qué cuenta sumo ${amount}?` : expenseQuestion}${accountTypes.size === 1 ? ` Tenés ${options.map(option => option.label).join(' o ')}.` : ''}`
       : proposal.paymentMethod === 'CREDIT'
-        ? `Todavía no tenés una tarjeta de crédito cargada. Podemos agregarla acá o dejar el gasto sin cuenta. Cómo se llama la tarjeta?`
+        ? `Todavía no tenés una tarjeta de crédito cargada. Querés agregarla o dejar el gasto sin cuenta?`
         : `No tenés una cuenta de ${proposal.currency} para ese pago. ¿Lo dejo sin cuenta o querés agregarla en Balance?`
     return { kind: 'ask', field: 'account', proposal, question: intro, options }
   }

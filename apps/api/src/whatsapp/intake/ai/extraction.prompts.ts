@@ -54,6 +54,7 @@ Devolvé SOLO JSON:
   "change": string | null,               // vuelto / cambio
   "totalCandidates": string[],           // otros importes que podrían ser el total si hay duda
   "paymentMethod": "DEBIT" | "CREDIT" | "CASH" | "TRANSFER" | "CARD" | null,
+  "paymentProvider": string | null, // nombre impreso del medio de pago (cualquier marca/banco/billetera), sin números de tarjeta; null si no aparece. No deduzcas crédito/débito por la marca.
   "items": [{ "name": string, "quantity": number | null, "unitPrice": number | null, "totalPrice": number }],
   "confidence": number,                  // 0 a 1 sobre el TOTAL
   "warnings": string[]

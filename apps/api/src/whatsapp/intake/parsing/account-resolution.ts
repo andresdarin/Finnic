@@ -14,7 +14,7 @@ const TYPES: Record<PaymentMethod, IntakeAccount['type'][]> = {
 export const compatibleAccount = (account: IntakeAccount, currency: Currency, method: PaymentMethod | null) =>
   account.isActive && account.purpose === 'OPERATING' && account.currency === currency && (!method || TYPES[method].includes(account.type))
 
-const matchesName = (account: IntakeAccount, hint: string) => {
+export const matchesName = (account: IntakeAccount, hint: string) => {
   const name = normalizeText(account.name)
   const wanted = normalizeText(hint)
   return wanted.length >= 3 && (name.includes(wanted) || wanted.includes(name))

@@ -36,6 +36,7 @@ export const receiptExtractionSchema = z.object({
   change: money,
   totalCandidates: z.array(z.union([z.string(), z.number()]).transform(String)).max(10).catch([]).default([]),
   paymentMethod: method,
+  paymentProvider: nullableString,
   items: z.array(z.object({
     name: z.string().trim().min(1).max(120),
     quantity: z.number().nonnegative().nullable().optional(),
