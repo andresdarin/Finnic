@@ -30,7 +30,7 @@ describe.skipIf(!url)('Receipt correction: pending edits, explicit confirmation 
     // An early yes must not save or silently discard the explicitly corrected products.
     expect(await waSay('sí')).toContain('no coincide'); expect(await count()).toBe(0)
     const review = await appSay('Cambiá la cantidad de pan a 2')
-    expect(review).toContain('Café × 1 — $U 120,00'); expect(review).toContain('Pan × 2 — $U 100,00')
+    expect(review).toContain('Café · $U 120'); expect(review).toContain('Pan × 2 · $U 100')
     expect(review).toContain('Lo guardo?'); expect(await count()).toBe(0)
     const confirmation = textMessage(owner.phone, 'sí')
     expect(await webhook(ctx.base)(confirmation)).toBe(200); await ctx.worker.drain()

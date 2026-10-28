@@ -48,7 +48,7 @@ export function savingsReply(d: TranquilityDashboard, goals: TranquilityGoal[], 
   else lines.push('• Fondo de emergencia: no pude calcularlo (revisá las advertencias en la app).')
   for (const goal of goals) {
     const needed = requiredMonthlyContribution(goal.targetAmount.toFixed(2), goal.allocatedAmount.toFixed(2), goal.targetDate.toISOString().slice(0, 10), today)
-    lines.push(`• ${goal.name}: ${formatMoney(goal.allocatedAmount.toFixed(2), goal.currency)} de ${formatMoney(goal.targetAmount.toFixed(2), goal.currency)} para el ${formatDate(goal.targetDate.toISOString())}${needed ? ` · necesitás aportar ${formatMoney(needed, goal.currency)}/mes` : ''}`)
+    lines.push(`• ${goal.name}: ${formatMoney(goal.allocatedAmount.toFixed(2), goal.currency)} de ${formatMoney(goal.targetAmount.toFixed(2), goal.currency)} para el ${formatDate(goal.targetDate.toISOString(), new Date(), false)}${needed ? ` · necesitás aportar ${formatMoney(needed, goal.currency)}/mes` : ''}`)
   }
   return lines.join('\n')
 }

@@ -31,3 +31,8 @@ The opt-in `FINNIC_DRAFT_LIVE=1` case in `draft-agent-tools.spec.ts` calls the r
 `FINNIC_CONVERSATION_LIVE=1` in `receipt-payment-flow.spec.ts` uses the actual agent and shared prompt assembly over multiple turns, including contradictory historical assistant replies and polite confirmation. The external database and financial effects remain isolated test substitutes.
 
 Architecture and evaluation references: the locally installed `improve-codebase-architecture` and `llm-evaluation` skills. No additional model calls, embedding store or runtime dependencies were introduced for this change.
+## Presentación de tickets y fechas
+
+La revisión muestra comercio y fecha en una cabecera breve, productos con viñetas sin numeración y una fila por producto. Omite cantidades iguales a uno y centavos cero en las filas; conserva los centavos significativos, las cantidades fraccionarias y los precios unitarios necesarios. El total mantiene dos decimales. El descuento se identifica como incluido, sin exponer su reparto interno. La pregunta final es «Lo guardo?».
+
+Los nombres OCR en mayúsculas se suavizan solo para mostrarlos; los datos guardados no se modifican. Las fechas se escriben con meses en palabras: «hoy, 28 de octubre», «ayer, 27 de octubre», «26 de octubre»; se incluye el año cuando es distinto al actual. Hoy y ayer se calculan con America/Montevideo. Una fecha objetivo usa la fecha escrita sin prefijo relativo para evitar «para el hoy».

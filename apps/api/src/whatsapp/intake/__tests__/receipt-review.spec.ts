@@ -25,25 +25,25 @@ describe('confirmación del ticket antes de guardar', () => {
     expect(drafts.save).toHaveBeenCalledWith(expect.objectContaining({ sourceWamid: 'receipt-wa', proposal: expect.objectContaining({ items: proposal.items, amount: '100.00' }) }))
     expect(createExpense.execute).not.toHaveBeenCalled()
   })
-  it('numbers products, localizes fractional quantities and avoids repeating identical unit prices', () => {
+  it('uses compact unnumbered rows, fractional quantities and only necessary unit prices', () => {
     const review = receiptReview({ ...proposal, amount: '40.00', items: [{ name: 'Pan', quantity: 1, unitPrice: 20, totalPrice: 20 }, { name: 'Papa', quantity: 0.5, unitPrice: 40, totalPrice: 20 }] }, 'Débito')
-    expect(review).toContain('1. Pan × 1 — $U 20,00\n2. Papa × 0,5 — $U 20,00 (a $U 40,00)')
-    expect(review).not.toContain('Pan × 1 — $U 20,00 (a')
+    expect(review).toContain('• Pan · $U 20\n• Papa × 0,5 · $U 20 (a $U 40)')
+    expect(review).not.toContain('Pan × 1')
     expect(review).toContain('Lo cargo a Débito.')
-    expect(review).toMatch(/¿Lo guardo\? Decime "sí" o "no"\.$/)
+    expect(review).toMatch(/Lo guardo\?$/)
   })
   it('muestra el descuento y los precios unitarios sin volver a restarlos del total', () => {
     const review = receiptReview({ ...proposal, amount: '64.00', items: [{ name: 'Salsa', quantity: 1, unitPrice: 92, totalPrice: 64 }], receipt: { sha256: null, subtotal: '92.00', confidence: 1, discounts: '28.00' } }, null)
-    expect(review).toContain('1. Salsa × 1 — $U 64,00 (a $U 92,00)')
-    expect(review).toContain('Descuento: $U 28,00')
+    expect(review).toContain('• Salsa · $U 64 ($U 92 c/u)')
+    expect(review).toContain('Descuento incluido: $U 28')
     expect(review).toContain('Total: $U 64,00')
     expect(review).not.toContain('guardo solo el importe, sin el detalle')
   })
   it('muestra productos, precios y total sin afirmar que ya guardó el gasto', () => {
     const review = receiptReview(proposal, null)
-    expect(review).toContain('1. Leche × 2 — $U 100,00')
+    expect(review).toContain('• Leche × 2 · $U 100')
     expect(review).toContain('Total: $U 100,00')
-    expect(review).toContain('¿Lo guardo?')
+    expect(review).toContain('Lo guardo?')
   })
 
   it('pide confirmación sin escribir un gasto ni modificar saldos', async () => {
@@ -69,6 +69,6 @@ describe('confirmación del ticket antes de guardar', () => {
     const review = receiptReview({ ...proposal, items: Array.from({ length: 200 }, () => ({ name: 'Producto largo '.repeat(10), totalPrice: 1 })) }, null)
     expect(review.length).toBeLessThan(4096)
     expect(review).toContain('productos más')
-    expect(review).toContain('¿Lo guardo?')
+    expect(review).toContain('Lo guardo?')
   })
 })

@@ -3,7 +3,7 @@ import { PrismaService } from '../../../prisma/prisma.service'
 import { CreateExpenseUseCase } from '../../../finance/application/create-expense.usecase'
 import { EXPENSE_CATEGORIES, type ExpenseCategoryKey } from '../constants'
 import { purchaseInstant } from '../parsing/local-date'
-import { formatDate, formatMoney, PAYMENT_LABELS } from '../reply/format'
+import { formatDate, formatMoney, PAYMENT_LABELS, receiptLabel } from '../reply/format'
 import { receiptReview } from '../reply/receipt-review'
 import type { HandlerResult, InboundContext } from '../types'
 import { DraftRepository, type StoredDraft } from './draft.repository'
@@ -51,7 +51,7 @@ export class ExpenseIntakeService {
     if (proposal.inputMethod === 'RECEIPT_SCAN' && !proposal.duplicateAcknowledged) {
       const duplicate = await findReceiptDuplicate(this.prisma, ctx.profileId, proposal, origin.wamid)
       if (duplicate) {
-        const question = `Este ${proposal.transferDocument ? 'comprobante' : 'ticket'} parece igual a uno que ya registré el ${formatDate(duplicate.date)} por ${formatMoney(duplicate.amount, duplicate.currency)}${duplicate.reason === 'same_image' ? ' (mismo archivo)' : ''}. ¿Lo registro igual? (sí / no)`
+        const question = `Este ${proposal.transferDocument ? 'comprobante' : 'ticket'} parece igual a uno que ya registré (${formatDate(duplicate.date)}) por ${formatMoney(duplicate.amount, duplicate.currency)}${duplicate.reason === 'same_image' ? ' (mismo archivo)' : ''}. ¿Lo registro igual? (sí / no)`
         const saved = await this.drafts.save({ profileId: ctx.profileId, sourceInboundId: origin.inboundId, sourceWamid: origin.wamid, field: 'duplicate', question, proposal, meta: draft?.meta })
         return { reply: question, intent: 'clarification', result: { draftId: saved.id, pendingField: 'duplicate', duplicateOf: duplicate.id } }
       }
@@ -64,7 +64,7 @@ export class ExpenseIntakeService {
       return { reply: question, intent: 'clarification', result: { draftId: saved.id, pendingField: 'receipt_confirmation' } }
     }
     if ((proposal.inputMethod === 'RECEIPT_SCAN' || proposal.confirmationRequired || proposal.audioConfirmationRequired || ctx.fromAudio) && !proposal.receiptConfirmed) {
-      const question = [...notes, proposal.transferDocument ? `${proposal.movementType === 'INCOME' ? 'Ingreso' : 'Egreso'} de ${formatMoney(proposal.amount, proposal.currency)}, el ${formatDate(proposal.date)}. ${step.account ? `${proposal.movementType === 'INCOME' ? 'Lo sumo a' : 'Lo descuento de'} ${step.account.name}.` : 'Sin cuenta, sin cambiar saldos.'}\nLo guardo? Decime sí o no.` : proposal.inputMethod === 'RECEIPT_SCAN' ? receiptReview(proposal, step.account?.name ?? null) : `Entendí ${formatMoney(proposal.amount, proposal.currency)} en ${proposal.title}, el ${formatDate(proposal.date)}. ${step.account ? `Lo cargo a ${step.account.name}.` : 'Queda sin cuenta.'}\nLo guardo? Decime sí o no por escrito.`].join('\n')
+      const question = [...notes, proposal.transferDocument ? `${proposal.movementType === 'INCOME' ? 'Ingreso' : 'Egreso'} de ${formatMoney(proposal.amount, proposal.currency)}, ${formatDate(proposal.date)}. ${step.account ? `${proposal.movementType === 'INCOME' ? 'Lo sumo a' : 'Lo descuento de'} ${step.account.name}.` : 'Sin cuenta, sin cambiar saldos.'}\nLo guardo? Decime sí o no.` : proposal.inputMethod === 'RECEIPT_SCAN' ? receiptReview(proposal, step.account?.name ?? null) : `Entendí ${formatMoney(proposal.amount, proposal.currency)} en ${proposal.title}, ${formatDate(proposal.date)}. ${step.account ? `Lo cargo a ${step.account.name}.` : 'Queda sin cuenta.'}\nLo guardo? Decime sí o no por escrito.`].join('\n')
       const saved = await this.drafts.save({ profileId: ctx.profileId, sourceInboundId: origin.inboundId, sourceWamid: origin.wamid, field: 'receipt_confirmation', question, proposal, meta: draft?.meta })
       return { reply: question, intent: 'clarification', result: { draftId: saved.id, pendingField: 'receipt_confirmation' } }
     }
@@ -104,7 +104,7 @@ export class ExpenseIntakeService {
     const account = row.financeAccount ? row.movementType === 'INCOME' ? `Lo sumé al saldo de ${row.financeAccount.name}.` : row.financeAccount.type === 'CREDIT' ? `Lo sumé a la deuda de ${row.financeAccount.name}.` : `Lo cargué a ${row.financeAccount.name}.` : 'Quedó sin cuenta, sin cambiar tus saldos.'
     const budget = row.tranquilityCategory ? `Presupuesto: ${row.tranquilityCategory.name} (${row.tranquilityCategory.bucket === 'NEEDS' ? 'esenciales' : 'gustos'})` : null
     const lines = [
-      `Listo, anoté ${row.movementType === 'INCOME' ? 'un ingreso de ' : ''}${formatMoney(row.amount.toFixed(2), row.currency)} en ${row.title}${row.merchant && row.merchant !== row.title ? ` (${row.merchant})` : ''}.`,
+      `Listo, anoté ${row.movementType === 'INCOME' ? 'un ingreso de ' : ''}${formatMoney(row.amount.toFixed(2), row.currency)} en ${receiptLabel(row.title)}${row.merchant && row.merchant !== row.title ? ` (${receiptLabel(row.merchant)})` : ''}.`,
       `${formatDate(localDay(row.date))} · ${category}`,
       account,
       ...(budget ? [budget] : []),
