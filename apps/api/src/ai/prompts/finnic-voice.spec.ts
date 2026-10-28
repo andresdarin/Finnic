@@ -9,8 +9,8 @@ it('keeps amounts but removes unsupported double-asterisk markup only in WhatsAp
 describe('Finnic conversational voice', () => {
   it('overrides old stored style instructions and stays idempotent', () => {
     const prompt = withFinnicVoice('[finnic-voice:v1] Respuestas extensas. Confirmación obligatoria.')
-    expect(prompt).toContain('[finnic-voice:v3]')
-    expect(prompt).toContain('15 a 45 palabras')
+    expect(prompt).toContain('[finnic-voice:v5]')
+    expect(prompt).toContain('35 palabras')
     expect(prompt).toContain('Confirmación obligatoria')
     expect(withFinnicVoice(prompt)).toBe(prompt)
   })

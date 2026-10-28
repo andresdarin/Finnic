@@ -8,6 +8,8 @@ import { ExpenseIntakeService } from './expense-intake.service'
 import type { IntakeProfileContext } from './intake-context.service'
 import { correctReceiptItem } from './receipt-item-correction'
 import { movementDirection } from './movement-direction'
+import { purchaseCalculation } from '../parsing/purchase-calculation'
+import { formatMoney } from '../reply/format'
 
 type WhichExpense = { pending: { action: 'correct' | 'undo'; request?: CorrectionRequest }; options: string[] }
 
@@ -26,6 +28,11 @@ export class DraftResponder {
       return { reply: 'Listo, no registré nada.', intent: 'cancel' }
     }
     if (draft.pendingField === 'which_expense') return this.whichExpense(ctx, draft, profile)
+    const calculation = draft.proposal.inputMethod === 'MANUAL' ? purchaseCalculation(ctx.text, draft.proposal.calculation) : null
+    if (calculation) {
+      const proposal = { ...draft.proposal, calculation, amount: calculation.total, receiptConfirmed: false, confirmationRequired: true }
+      return this.expenses.continue(ctx, proposal, profile, draft, [`Con ese detalle, el total queda en ${formatMoney(calculation.total, proposal.currency ?? 'UYU')}.`])
+    }
     if (draft.proposal.transferDocument && movementDirection(ctx.text) === 'OWN') {
       await this.drafts.close(draft.id, ctx.profileId, 'cancelled')
       return { reply: 'Entre tus cuentas no es ingreso ni gasto. No lo registré como tal; podés cargar esa transferencia entre cuentas desde Balance.', intent: 'other' }
@@ -48,9 +55,9 @@ export class DraftResponder {
     if (answer.kind === 'not_understood') {
       const options = draft.meta.options ?? []
       const reply = draft.pendingField === 'account' && options.length
-        ? `No te entendí. ¿Fue ${options.map(option => option.label ?? option.name).join(' o ')}? Si querés, lo dejo sin cuenta.`
+        ? 'Me falta saber cómo lo pagaste: efectivo, débito o crédito?'
         : `Perdón, no te entendí. ${draft.question ?? '¿Me lo decís de otra forma?'}`
-      return { reply, intent: 'clarification', result: { draftId: draft.id } }
+      return { reply, intent: 'clarification', result: { draftId: draft.id, unrecognizedDraftAnswer: true } }
     }
     return this.expenses.continue(ctx, answer.proposal, profile, draft)
   }

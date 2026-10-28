@@ -6,6 +6,7 @@ import { PrismaService } from '../../prisma/prisma.service'
 import { HELP_TEXT } from './constants'
 import { whatsAppChatText } from './reply/chat-text'
 import type { HandlerResult, InboundContext } from './types'
+import type { StoredDraft } from './expense/draft.repository'
 
 /**
  * Free conversation keeps using the existing Finnic agent (read tools + confirmed writes),
@@ -22,17 +23,18 @@ export class ChatFallback {
     private readonly pending: AiPendingActionService,
   ) {}
 
-  async reply(ctx: InboundContext): Promise<HandlerResult> {
+  async reply(ctx: InboundContext, draft?: StoredDraft): Promise<HandlerResult> {
     try {
       const conversation = ctx.conversationId ? { id: ctx.conversationId } : await this.channel.resolveConversation(ctx.profileId)
       await this.prisma.whatsAppInboundMessage.update({ where: { id: ctx.inboundId }, data: { conversationId: conversation.id } })
       const normalized = ctx.text.trim().toLowerCase()
-      const action = !ctx.fromAudio && /^(s[ií]|confirmar|no|cancelar)$/.test(normalized)
+      const action = !draft && !ctx.fromAudio && /^(s[ií]|confirmar|no|cancelar)$/.test(normalized)
         ? await this.prisma.aiPendingAction.findFirst({ where: { conversationId: conversation.id, profileId: ctx.profileId, status: { in: ['pending', 'executing'] } }, orderBy: { createdAt: 'desc' } })
         : null
       if (action && /^(s[ií]|confirmar)$/.test(normalized)) return { reply: (await this.orchestrator.confirmPending({ profileId: ctx.profileId, pendingActionId: action.id })).text, intent: 'other' }
       if (action) { await this.pending.cancel(ctx.profileId, action.id); return { reply: 'Operación cancelada.', intent: 'other' } }
-      const response = await this.orchestrator.run({ profileId: ctx.profileId, conversationId: conversation.id, message: ctx.text, channel: ctx.channel ?? 'whatsapp' })
+      const pendingExpense = draft ? { amount: draft.proposal.amount, currency: draft.proposal.currency, title: draft.proposal.title, calculation: draft.proposal.calculation, pendingField: draft.pendingField } : undefined
+      const response = await this.orchestrator.run({ profileId: ctx.profileId, conversationId: conversation.id, message: ctx.text, channel: ctx.channel ?? 'whatsapp', pendingExpense })
       return { reply: ctx.channel === 'app' ? response.text || HELP_TEXT : whatsAppChatText(response.text || HELP_TEXT), intent: 'other', result: { conversationHandled: true, voiceAllowed: !response.pendingActionId && (response.kind === 'query' || response.kind === 'explanation') } }
     } catch {
       this.logger.warn({ event: 'whatsapp_chat_fallback_failed', inboundId: ctx.inboundId })

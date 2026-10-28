@@ -1,5 +1,5 @@
 import { compatibleAccount, resolveAccount, type IntakeAccount } from '../parsing/account-resolution'
-import { formatMoney, optionList } from '../reply/format'
+import { formatMoney } from '../reply/format'
 import type { Currency, ExpenseProposal, PendingField } from '../types'
 import type { IntakeProfileContext } from './intake-context.service'
 
@@ -47,10 +47,10 @@ export function nextStep(input: ExpenseProposal & { currencyConflict?: boolean; 
     const options = resolution.options.map(account => ({ id: account.id, name: account.name, type: account.type, label: accountLabel(account) }))
     const accountTypes = new Set(options.map(option => option.type))
     const expenseQuestion = accountTypes.has('CASH') && accountTypes.has('BANK')
-      ? '¿Lo pagaste en efectivo o con débito?'
+      ? '¿Lo pagaste en efectivo, débito o crédito?'
       : '¿Con qué cuenta lo pagaste?'
     const intro = options.length
-      ? `${proposal.movementType === 'INCOME' ? `¿A qué cuenta sumo ${amount}?` : expenseQuestion}\n${optionList(options.map(option => option.label))}\nSi querés, lo dejo sin cuenta.`
+      ? `${proposal.movementType === 'INCOME' ? `¿A qué cuenta sumo ${amount}?` : expenseQuestion}${accountTypes.size === 1 ? ` Tenés ${options.map(option => option.label).join(' o ')}.` : ''}`
       : proposal.paymentMethod === 'CREDIT'
         ? `Todavía no tenés una tarjeta de crédito cargada. ¿Lo dejo sin cuenta o preferís agregarla en Balance?`
         : `No tenés una cuenta de ${proposal.currency} para ese pago. ¿Lo dejo sin cuenta o querés agregarla en Balance?`

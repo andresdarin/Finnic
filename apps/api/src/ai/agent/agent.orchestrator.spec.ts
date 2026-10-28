@@ -29,6 +29,15 @@ const makeSubject = (gemini: any, registry: any, executor: any, conversations = 
 const request = { profileId: 'p', conversationId: 'c1' }
 
 describe('AgentOrchestrator', () => {
+  it('keeps a pending intake purchase in context and blocks model-generated writes during interruptions', async () => {
+    const gemini = { chat: vi.fn().mockResolvedValueOnce({ functionCalls: [{ name: writeTool.name, args }] }).mockResolvedValueOnce({ text: 'El gasto sigue pendiente.' }) }
+    const pending = makePending()
+    const executor = makeExecutor()
+    await makeSubject(gemini, makeRegistry(true, writeTool), executor, makeConversations(), pending).run({ ...request, message: 'Cómo calculaste eso?', pendingExpense: { amount: '1281.00', currency: 'UYU', title: 'Libros', pendingField: 'account' } })
+    expect(gemini.chat.mock.calls[0][0].systemInstruction).toContain('1281.00')
+    expect(pending.create).not.toHaveBeenCalled()
+    expect(executor.execute).not.toHaveBeenCalled()
+  })
   it.each(['app', 'whatsapp'] as const)('redirects recipes without calling a model or tools in %s', async channel => {
     const gemini = { chat: vi.fn(async () => ({ text: 'Una receta que no debe salir.' })) }
     const executor = makeExecutor(), pending = makePending(), conversations = makeConversations()
@@ -66,7 +75,7 @@ describe('AgentOrchestrator', () => {
     const gemini = { chat: vi.fn(async () => ({ text: 'Buenas.' })) }
     await makeSubject(gemini, makeRegistry(), makeExecutor()).run({ ...request, message: 'Hola', channel: 'whatsapp' })
     const instruction = (gemini.chat.mock.calls[0] as unknown as [{ systemInstruction: string }])[0].systemInstruction
-    expect(instruction).toContain('[finnic-voice:v3]')
+    expect(instruction).toContain('[finnic-voice:v5]')
     expect(instruction).toContain('CANAL WHATSAPP')
     expect(instruction).toContain('confirmación explícita')
     expect(instruction).toContain('No te presentes como una persona')

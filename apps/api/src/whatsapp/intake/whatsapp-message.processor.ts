@@ -109,11 +109,13 @@ export class WhatsAppMessageProcessor {
       if (preference.input) await this.links.updateDefaults(ctx.profileId, preference.input)
       return { reply: preference.reply, intent: 'other' }
     }
-    if (isStyleRequest(ctx.text)) return this.chat.reply(ctx)
-
     let intent = ruleIntent(ctx.text)
     const draft = await this.drafts.findOpen(ctx.profileId)
-    if (draft && (intent === null || intent === 'cancel' || draft.pendingField === 'receipt_confirmation' && intent === 'correct_last')) return this.draftResponder.answer(ctx, draft, profile, intent === 'cancel')
+    if (isStyleRequest(ctx.text)) return this.chat.reply(ctx, draft ?? undefined)
+    if (draft && (intent === null || intent === 'cancel' || intent === 'correct_last')) {
+      const result = await this.draftResponder.answer(ctx, draft, profile, intent === 'cancel')
+      return result.result?.unrecognizedDraftAnswer ? this.chat.reply(ctx, draft) : result
+    }
     if (intent === 'cancel') return { reply: 'No hay nada pendiente para cancelar.', intent: 'cancel' }
 
     const question = await this.queries.financialQuestion(ctx)

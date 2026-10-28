@@ -1,4 +1,5 @@
 import { EXPENSE_CATEGORIES } from '../constants'
+import { purchaseCalculation } from '../parsing/purchase-calculation'
 import type { TextExtraction } from '../ai/extraction.schemas'
 import { aiAmountToCents, centsToMoney, moneyCandidates } from '../parsing/money-text'
 import { currencySignal, hasDateSignal, paymentSignal } from '../parsing/signals'
@@ -24,6 +25,7 @@ export function dateFromText(text: string, today: string, aiDate: string | null)
  */
 export function proposalFromText(text: string, ai: TextExtraction | null, ctx: IntakeProfileContext, today: string): ExpenseProposal & { dateAsk: boolean; currencyConflict: boolean } {
   const candidates = moneyCandidates(text)
+  const calculation = purchaseCalculation(text)
   const aiCents = aiAmountToCents(ai?.amount)
   const amountCents = aiCents !== null && candidates.includes(aiCents) ? aiCents : candidates.length === 1 ? candidates[0]! : null
   const signal = currencySignal(text)
@@ -32,7 +34,9 @@ export function proposalFromText(text: string, ai: TextExtraction | null, ctx: I
   const date = dateFromText(text, today, ai?.date ?? null)
   const accountHint = ai?.accountName && ctx.accounts.some(a => a.name === ai.accountName) ? ai.accountName : null
   return {
-    amount: amountCents === null ? null : centsToMoney(amountCents),
+    amount: calculation?.total ?? (amountCents === null ? null : centsToMoney(amountCents)),
+    calculation: calculation ?? undefined,
+    confirmationRequired: calculation ? true : undefined,
     currency: signal === 'USD' || signal === 'UYU' ? signal : null,
     currencyConflict: signal === 'CONFLICT',
     title: (ai?.title ?? merchant ?? EXPENSE_CATEGORIES[category]).slice(0, 120),

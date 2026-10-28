@@ -12,6 +12,10 @@ const ctx: IntakeProfileContext = { profileId: 'p', timeZone: 'America/Montevide
 const proposal = () => proposalFromText('Gasté 1271,61 pesos con crédito', null, ctx, '2026-10-26')
 
 describe('credit account compatibility', () => {
+  it('asks for the payment method conversationally without enumerating accounts', () => {
+    const result = nextStep({ ...proposal(), paymentMethod: null }, { ...ctx, defaultAccountId: null })
+    expect(result).toMatchObject({ kind: 'ask', field: 'account', question: '¿Lo pagaste en efectivo, débito o crédito?' })
+  })
   it('never offers cash or debit when the purchase used credit, even when named explicitly', () => {
     expect(resolveAccount({ accounts, currency: 'UYU', method: 'CREDIT', hint: 'Efectivo', defaultAccountId: 'bank' })).toEqual({ status: 'ASK', options: [], reason: 'no_match' })
     expect(nextStep(proposal(), ctx)).toMatchObject({ kind: 'ask', field: 'account', options: [], question: expect.stringContaining('no tenés una tarjeta de crédito cargada') })

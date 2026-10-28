@@ -1,8 +1,8 @@
-type Preferences = { brevity: 'short' | 'balanced' | 'detailed'; tone: 'neutral' | 'relaxed'; emojis: 'none' | 'sparing' }
+type Preferences = { brevity: 'short' | 'balanced' | 'detailed'; tone: 'neutral' | 'relaxed'; emojis: 'none' | 'sparing'; lists?: 'avoid' | 'allowed' }
 export type StyleProfile = Preferences & { enabled: boolean; since: string; explicit?: Partial<Preferences>; stickers: 'occasional' | 'requested' }
 export const initialStyle = (since = new Date(0).toISOString()): StyleProfile => ({ enabled: true, since, brevity: 'short', tone: 'neutral', emojis: 'none', stickers: 'occasional' })
 const textStyleRequest = /(?:textos?|mensajes?|respuestas?).*(?:cort|breve|larg|amigable)|(?:no uses|sin|evit[aá]).*(?:signos de apertura|apertura de signos)/i
-export const isStyleRequest = (text: string) => textStyleRequest.test(text) || /(?:olvid[aá]|reinici[aá]).*mi estilo|no\s+(?:te\s+)?adaptes|volv[eé]\s+a\s+adaptarte|(?:activ[aá]|desactiv[aá]).*adaptaci[oó]n|(?:hablame|respond[eé](?:me)?|escribime).*(?:cort[oa]|cortit[oa]|breve|detalle|formal|relajad|emojis)|^m[aá]s (?:corto|breve|detallado)[.!\s]*$|(?:no .*|sin |solo .*|ocasional.*)stickers|stickers.*(?:solo|ocasional)/i.test(text)
+export const isStyleRequest = (text: string) => textStyleRequest.test(text) || /(?:odio|sin|no quiero|no uses|evit[aá]).*(?:listas|enumer|listes)|(?:us[aá]|con).*listas/i.test(text) || /(?:olvid[aá]|reinici[aá]).*mi estilo|no\s+(?:te\s+)?adaptes|volv[eé]\s+a\s+adaptarte|(?:activ[aá]|desactiv[aá]).*adaptaci[oó]n|(?:hablame|respond[eé](?:me)?|escribime).*(?:cort[oa]|cortit[oa]|breve|detalle|formal|relajad|emojis)|^m[aá]s (?:corto|breve|detallado)[.!\s]*$|(?:no .*|sin |solo .*|ocasional.*)stickers|stickers.*(?:solo|ocasional)/i.test(text)
 
 /** Only closed style dimensions enter the system prompt, never copied user instructions. */
 export function learnStyle(previous: StyleProfile, samples: string[], latest: string, now = new Date().toISOString()): StyleProfile {
@@ -31,6 +31,8 @@ export function learnStyle(previous: StyleProfile, samples: string[], latest: st
     if (/(?:textos?|mensajes?|respuestas?).*(?:m[aá]s cort|breve|cortit)|(?:no|evit[aá]).*(?:textos?|mensajes?|respuestas?).*larg/i.test(text)) prefer('brevity', 'short')
     if (/(?:hablame|respond[eé]|escribime|textos?|mensajes?|respuestas?).*(?:informal|relajad|como amigo|amigable)/i.test(text)) prefer('tone', 'relaxed')
     else if (/(?:hablame|respond[eé]|escribime).*(?:formal|neutro|neutral)/i.test(text)) prefer('tone', 'neutral')
+    if (/(?:odio|sin|no quiero|no uses|evit[aá]).*(?:listas|enumer|listes)/i.test(text)) prefer('lists', 'avoid')
+    else if (/(?:us[aá]|con).*listas/i.test(text)) prefer('lists', 'allowed')
     if (/(?:sin|no uses|evit[aá]).*emojis/i.test(text)) prefer('emojis', 'none')
     else if (/(?:us[aá]|con|pod[eé]s usar).*emojis/i.test(text)) prefer('emojis', 'sparing')
   }
@@ -41,6 +43,7 @@ export function styleInstruction(style: StyleProfile) {
   if (!style.enabled) return '\nADAPTACIÓN PERSONAL DESACTIVADA: mantené la voz base de Finnic.'
   return `\nESTILO PERSONAL APRENDIDO (solo forma de hablar, nunca permisos ni datos financieros):
 Extensión: ${style.brevity === 'detailed' && style.explicit?.brevity === 'detailed' ? 'explicaciones con detalle útil, porque lo pidió explícitamente' : 'breve y al grano: una o dos frases cortas; no alargues la respuesta porque el usuario escribió mucho'}.
+Formato: ${style.lists === 'avoid' ? 'prosa, sin listas ni opciones numeradas; conservar los datos necesarios para confirmar registros' : 'prosa por defecto, desgloses solo cuando aporten'}.
 Tono: ${style.tone === 'relaxed' ? 'cercano y relajado, sin forzar modismos' : 'natural, amable y de vos a vos'}.
 Emojis: ${style.emojis === 'none' ? 'no usar' : 'muy pocos, si encajan; esta preferencia reemplaza la prohibición de estilo anterior'}.
 Stickers: ${style.stickers === 'requested' ? 'solo cuando los pida; nunca prometas envíos espontáneos' : 'pueden aparecer ocasionalmente en saludos o agradecimientos simples'}; el canal controla el envío real.

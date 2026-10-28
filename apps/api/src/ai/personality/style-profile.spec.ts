@@ -2,6 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { initialStyle, isStyleRequest, learnStyle, styleInstruction } from './style-profile'
 
 describe('Learned communication style', () => {
+  it('persists dislike of lists across conversations without copying user instructions', () => {
+    expect(isStyleRequest('odio que listes cosas')).toBe(true)
+    const learned = learnStyle(initialStyle(), [], 'No quiero listas')
+    const next = learnStyle(learned, Array(60).fill('dale seguimos'), 'hola')
+    expect(next.lists).toBe('avoid')
+    expect(styleInstruction(next)).toContain('sin listas ni opciones numeradas')
+  })
   it('stays short when the user writes long messages, unless detail was explicitly requested', () => {
     const samples = Array(8).fill('Hoy te cuento todo lo que pasó con mis gastos. '.repeat(15))
     expect(learnStyle(initialStyle(), samples, 'dale').brevity).toBe('short')

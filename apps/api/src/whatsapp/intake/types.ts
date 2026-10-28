@@ -28,11 +28,13 @@ export type ExpenseProposal = {
   accountHint: string | null
   financeAccountId: string | null
   accountless: boolean
+  calculation?: import('./parsing/purchase-calculation').PurchaseCalculation
   inputMethod: 'MANUAL' | 'RECEIPT_SCAN'
   items?: Array<{ name: string; totalPrice: number; quantity?: number | null; unitPrice?: number | null; category?: string; rawLine?: string }>
   receipt?: { sha256: string | null; subtotal: string | null; confidence: number | null; discounts?: string | null }
   duplicateAcknowledged?: boolean
   receiptConfirmed?: boolean
+  confirmationRequired?: boolean
   audioConfirmationRequired?: boolean
   receiptItemsEdited?: boolean
   movementType?: 'EXPENSE' | 'INCOME'
