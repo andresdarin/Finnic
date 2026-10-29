@@ -124,6 +124,7 @@ export class WhatsAppMessageProcessor {
       const result = await this.draftResponder.answer(ctx, draft, profile, intent === 'cancel')
       return result.result?.unrecognizedDraftAnswer ? this.chat.reply(ctx, draft) : result
     }
+    if (/^(?:bien|perfecto|genial|gracias|muchas gracias|buenisimo|buenísimo|excelente|todo bien|todo correcto)[.!\s]*$/i.test(ctx.text.trim())) return { reply: 'Perfecto, seguimos cuando necesites.', intent: 'other' }
     if (intent === 'cancel') return { reply: 'No hay nada pendiente para cancelar.', intent: 'cancel' }
 
     const question = await this.queries.financialQuestion(ctx)

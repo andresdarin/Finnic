@@ -17,6 +17,28 @@ function setup() {
 }
 
 describe('conversational WhatsApp routing', () => {
+  it.each(['Bien', 'Perfecto!', 'Gracias.', 'Todo correcto'])('closes a completed exchange on %s without invoking the agent or another write', async text => {
+    const { processor, chat, extractor, expenses, responder, message } = setup()
+    const result = await processor.handle(message(text) as never)
+    expect(result.reply).toBe('Perfecto, seguimos cuando necesites.')
+    expect(chat.reply).not.toHaveBeenCalled()
+    expect(extractor.extractText).not.toHaveBeenCalled()
+    expect(expenses.continue).not.toHaveBeenCalled()
+    expect(responder.answer).not.toHaveBeenCalled()
+  })
+  it('keeps a new complaint after an acknowledgement conversational', async () => {
+    const { processor, chat, message } = setup()
+    await processor.handle(message('Bien, pero la fecha sigue mal') as never)
+    expect(chat.reply).toHaveBeenCalledOnce()
+  })
+  it('does not treat bien as confirmation of a pending expense', async () => {
+    const { processor, chat, drafts, responder, message } = setup()
+    const draft = { id: 'draft', pendingField: 'receipt_confirmation', proposal: {} }
+    drafts.findOpen.mockResolvedValue(draft)
+    await processor.handle(message('Bien') as never)
+    expect(chat.reply).toHaveBeenCalledWith(expect.anything(), draft)
+    expect(responder.answer).not.toHaveBeenCalled()
+  })
   it.each(['Es con mi Oca, la del ticket es la misma', '$22.000', 'No sé la deuda, quiero empezar desde ahora'])('routes pending clarification to the agent instead of phrase matching: %s', async text => {
     const { processor, chat, drafts, responder, message, extractor } = setup()
     const draft = { id: 'draft', pendingField: 'account', proposal: {} }
