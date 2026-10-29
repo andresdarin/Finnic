@@ -1,4 +1,5 @@
 import type { TextExtraction } from '../ai/extraction.schemas'
+import { explicitDate } from '../parsing/explicit-date'
 import { aiAmountToCents, centsToMoney, moneyCandidates, parseAmountToCents } from '../parsing/money-text'
 import { currencySignal, hasDateSignal, paymentSignal } from '../parsing/signals'
 import { dateFromText } from '../expense/text-proposal'
@@ -24,7 +25,8 @@ export function correctionFromText(text: string, ai: TextExtraction | null, toda
     if (Number(normalized) > 0) request.fxRate = normalized
     return request
   }
-  const candidates = moneyCandidates(text)
+  const explicit = explicitDate(text, today)
+  const candidates = moneyCandidates(explicit?.remaining ?? text)
   const aiCents = aiAmountToCents(ai?.amount)
   const cents = aiCents !== null && candidates.includes(aiCents) ? aiCents : candidates.length === 1 ? candidates[0]! : null
   if (cents !== null) request.amount = centsToMoney(cents)
@@ -33,7 +35,7 @@ export function correctionFromText(text: string, ai: TextExtraction | null, toda
   const method = paymentSignal(text)
   if (method) request.paymentMethod = method
   if (ai?.accountName && accountNames.includes(ai.accountName)) request.accountHint = ai.accountName
-  if (hasDateSignal(text)) {
+  if (explicit || hasDateSignal(text)) {
     const date = dateFromText(text, today, ai?.date ?? null)
     if (date && date !== 'ASK') request.date = date
   }

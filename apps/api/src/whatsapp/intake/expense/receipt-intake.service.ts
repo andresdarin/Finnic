@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable, Optional } from '@nestjs/common'
+import { CorrectionIntakeService } from '../correction/correction-intake.service'
+import { explicitDate } from '../parsing/explicit-date'
+import { hasDateSignal } from '../parsing/signals'
+import { dateFromText } from './text-proposal'
 import { PrismaService } from '../../../prisma/prisma.service'
 import { WhatsAppClient } from '../../whatsapp-client.service'
 import { WhatsAppExtractorService } from '../ai/whatsapp-extractor.service'
@@ -25,9 +29,11 @@ export class ReceiptIntakeService {
     private readonly extractor: WhatsAppExtractorService,
     private readonly expenses: ExpenseIntakeService,
     private readonly drafts: DraftRepository,
+    @Optional() private readonly corrections?: CorrectionIntakeService,
   ) {}
 
   async handle(ctx: InboundContext, profile: IntakeProfileContext): Promise<HandlerResult> {
+    const replacing = /correg[ií]|corregir|corrige|reemplaz|en (?:lugar|vez) de|actualiz|(?:este|el) es el (?:correcto|verdadero)/i.test(ctx.text)
     if (!ctx.media && !ctx.attachment) return { reply: 'No recibí el archivo. Probá enviarlo de nuevo.', intent: 'other' }
     let media: Awaited<ReturnType<WhatsAppClient['downloadMedia']>>
     try {
@@ -47,6 +53,7 @@ export class ReceiptIntakeService {
       if (ctx.type === 'document' && error instanceof BadRequestException) return { reply: 'No pude abrir ese PDF. Probá una copia sin contraseña o una foto legible del comprobante. No guardé nada.', intent: 'other' }
       throw error
     }
+    if (replacing && (!reading?.isReceipt || reading.documentKind === 'transfer' || reading.documentKind === 'financial')) return { reply: 'No pude leer un ticket válido para corregir el gasto. Mandame una foto legible o escribime el total final. No creé otro gasto.', intent: 'correct_last' }
     if (reading?.documentKind === 'financial') return { reply: reading.summary || 'Es un documento financiero. Qué querés revisar de él? No registré ningún movimiento.', intent: 'other' }
     if (reading?.documentKind === 'transfer') {
       if (reading.paymentStatus === 'pending' || reading.paymentStatus === 'failed') return { reply: 'El comprobante indica una transferencia pendiente o rechazada. No la registré como un movimiento realizado; mandame el comprobante cuando esté completada.', intent: 'other' }
@@ -72,6 +79,18 @@ export class ReceiptIntakeService {
     if (!reading.isReceipt) return { reply: 'No parece un comprobante financiero que pueda registrar. No guardé nada. Si querés, contame qué necesitás revisar de tus finanzas.', intent: 'other' }
 
     const built = proposalFromReceipt(reading, ctx.text, profile, ctx.localDate, media.sha256)
+    // A replacement receipt updates an existing movement; it never enters the create flow.
+    if (replacing) {
+      if (!this.corrections) return { reply: 'No pude preparar la corrección. No creé otro gasto.', intent: 'correct_last' }
+      if (built.ambiguity || !built.proposal.amount) return { reply: 'No pude identificar el total final con seguridad. Escribime cuánto pagaste para corregir el gasto existente. No creé otro gasto.', intent: 'correct_last' }
+      const date = explicitDate(ctx.text, ctx.localDate) || hasDateSignal(ctx.text) ? dateFromText(ctx.text, ctx.localDate, null) : null
+      if (date === 'ASK') return { reply: 'Qué fecha debe tener el gasto? Escribila como día/mes/año. No cambié nada ni creé otro gasto.', intent: 'correct_last' }
+      const request = { amount: built.proposal.amount, ...(date ? { date } : {}) }
+      const target = await this.corrections.target(ctx)
+      if (target.kind === 'none') return { reply: 'No encontré el gasto original para corregir. Respondé al mensaje de confirmación de ese gasto con este comprobante. No creé otro gasto.', intent: 'correct_last' }
+      if (target.kind === 'ambiguous') return this.corrections.askWhich(ctx, target.options, { action: 'correct', request })
+      return this.corrections.applyCorrection(ctx, target.expense, request, profile)
+    }
     if (built.ambiguity) {
       const currency = built.proposal.currency ?? profile.defaultCurrency ?? 'UYU'
       const options = built.amountOptions.length > 1

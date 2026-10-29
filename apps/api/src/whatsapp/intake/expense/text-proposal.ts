@@ -1,4 +1,5 @@
 import { EXPENSE_CATEGORIES } from '../constants'
+import { explicitDate } from '../parsing/explicit-date'
 import { purchaseCalculation } from '../parsing/purchase-calculation'
 import type { TextExtraction } from '../ai/extraction.schemas'
 import { aiAmountToCents, centsToMoney, moneyCandidates } from '../parsing/money-text'
@@ -10,6 +11,8 @@ import type { IntakeProfileContext } from './intake-context.service'
 
 /** Relative dates are resolved deterministically; the AI date is accepted only with textual evidence. */
 export function dateFromText(text: string, today: string, aiDate: string | null): string | null | 'ASK' {
+  const explicit = explicitDate(text, today)
+  if (explicit) return explicit.date ?? 'ASK'
   if (!hasDateSignal(text)) return today
   const valid = validPurchaseDate(aiDate, today)
   if (valid) return valid

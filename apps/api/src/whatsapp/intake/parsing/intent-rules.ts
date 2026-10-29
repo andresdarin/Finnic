@@ -10,6 +10,7 @@ export function ruleIntent(raw: string): IntakeIntent | null {
   const text = normalizeText(raw)
   if (!text) return null
   if (/^(cancelar|cancela|cancelalo|olvidalo|dejalo)$/.test(text)) return 'cancel'
+  if (/\b(?:reemplaza|reemplazalo|reemplazame|corregime|corregilo|cambiale|cambialo)\b|en (?:lugar|vez) de (?:ese|este|el) gasto/.test(text)) return 'correct_last'
   if (/^(ayuda|help|menu|que podes hacer)$/.test(text)) return 'help'
   if (/\b(deshace|deshacer|deshacelo|borra|borralo|borrar|anula|anulalo|elimina|eliminalo)\b/.test(text) && /\b(gasto|eso|ese|ultimo|lo)\b|lo$/.test(text)) return 'undo_last'
   if (/^(no\s*,?\s*)?(eran|era|fueron|fue|son|en realidad)\b/.test(text) || /^(cambia|corregi|corrige)\b/.test(text) || /^cotizacion\b/.test(text)) return 'correct_last'

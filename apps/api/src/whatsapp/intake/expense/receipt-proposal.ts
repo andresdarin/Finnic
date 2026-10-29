@@ -2,7 +2,8 @@ import type { ReceiptExtraction } from '../ai/extraction.schemas'
 import { EXPENSE_CATEGORIES } from '../constants'
 import { validPurchaseDate } from '../parsing/local-date'
 import { aiAmountToCents, centsToMoney } from '../parsing/money-text'
-import { currencySignal, paymentSignal } from '../parsing/signals'
+import { currencySignal, hasDateSignal, paymentSignal } from '../parsing/signals'
+import { explicitDate } from '../parsing/explicit-date'
 import type { ExpenseProposal } from '../types'
 import { budgetCategoryFor, categoryFromText } from './categorize'
 import type { IntakeProfileContext } from './intake-context.service'
@@ -40,7 +41,12 @@ export function proposalFromReceipt(reading: ReceiptExtraction, caption: string,
   const currency = currencyConflict ? null : (captionCurrency as 'UYU' | 'USD' | null) ?? ticketCurrency
 
   let date = validPurchaseDate(reading.date, today)
-  if (!date) {
+  const captionHasDate = Boolean(explicitDate(caption, today) || hasDateSignal(caption))
+  if (captionHasDate) {
+    const requested = dateFromText(caption, today, null)
+    date = requested === 'ASK' ? null : requested
+  }
+  if (!date && !captionHasDate) {
     const fromCaption = dateFromText(caption, today, null)
     date = fromCaption === 'ASK' ? null : fromCaption
     if (date && !/\b(hoy|ayer|anteayer)\b/i.test(caption)) notes.push('El ticket no mostraba una fecha legible: usé la fecha del mensaje.')
