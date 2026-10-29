@@ -94,7 +94,7 @@ export class WhatsAppMessageProcessor {
       if (!reading || 'reply' in reading) return { reply: reading?.reply ?? 'No pude escuchar el audio. Escribime el mensaje y lo vemos.', intent: 'other' }
       ctx.text = reading.text; ctx.type = 'text'; ctx.fromAudio = true
       // Voice recognition must never confirm an existing action or alter earlier records.
-      if (/^(si|sí|dale|ok|confirmo|no|cancelar)$/i.test(ctx.text.trim()) || /^(?:correg|cambi|borra|elimina|deshace)/i.test(ctx.text.trim())) return { reply: `Entendí: “${ctx.text}”. Para confirmar o cambiar algo pendiente, respondeme por escrito. No cambié nada.`, intent: 'other' }
+      if (/^(si|sí|dale|ok|confirmo|no|cancelar)$/i.test(ctx.text.trim()) || /^(?:correg|cambi|borra|elimina|deshace)/i.test(ctx.text.trim())) return { reply: 'Para confirmar, cancelar o cambiar un gasto pendiente, respondeme por escrito. No hice cambios.', intent: 'other' }
     }
     if (LINK_COMMAND.test(ctx.text)) return { reply: 'Este número ya está vinculado a tu cuenta de Finnic.', intent: 'link' }
     if (ctx.type === 'sticker') return { reply: 'Te leo. Cuando quieras, seguimos con tus números.', intent: 'other' }
@@ -107,7 +107,7 @@ export class WhatsAppMessageProcessor {
     if (asksForSticker(ctx.text)) return { reply: 'No pude preparar el sticker. Probá de nuevo en un momento.', intent: 'other' }
     const preference = paymentPreference(ctx.text, profile)
     if (preference) {
-      if (ctx.fromAudio) return { reply: `Entendí: “${ctx.text}”. Para cambiar tus preferencias, mandámelo por escrito.`, intent: 'other' }
+      if (ctx.fromAudio) return { reply: 'Para cambiar tus preferencias de pago, escribime el cambio.', intent: 'other' }
       if (preference.input) await this.links.updateDefaults(ctx.profileId, preference.input)
       return { reply: preference.reply, intent: 'other' }
     }
@@ -117,7 +117,7 @@ export class WhatsAppMessageProcessor {
     if (draft) {
       if (ctx.fromAudio) {
         if (draft.proposal.inputMethod === 'MANUAL' && purchaseCalculation(ctx.text, draft.proposal.calculation)) return this.draftResponder.answer(ctx, draft, profile, false)
-        return { reply: `Entendí: “${ctx.text}”. Para actualizar este gasto pendiente o confirmarlo, respondeme por escrito. No cambié nada.`, intent: 'clarification' }
+        return { reply: 'No pude aplicar ese audio al gasto pendiente. Escribime el dato que querés corregir o confirmalo por escrito; todavía no lo registré.', intent: 'clarification' }
       }
       const confirmation = /^(si|sí|dale|ok|confirmo|confirmar|no)$/i.test(ctx.text.trim())
       if (intent !== 'cancel' && !confirmation) return this.chat.reply(ctx, draft)

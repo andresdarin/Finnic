@@ -10,7 +10,7 @@ function setup() {
   const queries = { financialQuestion: vi.fn(async () => null) }
   const drafts = { findOpen: vi.fn(async (): Promise<unknown> => null) }
   const responder = { answer: vi.fn() }
-  const audio = { transcribe: vi.fn(async () => ({ text: 'Sí, son tres libros. Salían 450 pesos cada uno, pero tenían 5% de descuento' })) }
+  const audio = { transcribe: vi.fn(async () => ({ text: 'Sí, son tres. Narnia, El Príncipe Caspian, Narnia, El Viajero del Alba y Narnia, La Silla Plateada. Salían 450 cada uno, pero tenían 5% de descuento. Así que salía 450 pesos cada libro de los tres que compré. Pero tenían 5% de descuento.' })) }
   const processor = new WhatsAppMessageProcessor(prisma as never, {} as never, extractor as never, context as never, drafts as never, expenses as never, {} as never, {} as never, responder as never, queries as never, chat as never, undefined, undefined, audio as never)
   const message = (body: string) => ({ id: 'in', wamid: 'wa', from: '59899123456', body, type: 'text', createdAt: new Date(), messageTimestamp: null })
   return { processor, chat, extractor, expenses, message, drafts, responder, audio }
@@ -49,6 +49,15 @@ describe('conversational WhatsApp routing', () => {
     expect(result.reply).toContain('Entendí')
     expect(responder.answer).toHaveBeenCalledWith(expect.objectContaining({ fromAudio: true, text: expect.stringContaining('450 pesos') }), draft, expect.anything(), false)
     expect(chat.reply).not.toHaveBeenCalled()
+  })
+  it('does not echo an unrecognized voice transcript back to the user', async () => {
+    const { processor, message, drafts, audio } = setup()
+    const transcript = 'audio que no contiene un dato claro'
+    audio.transcribe.mockResolvedValue({ text: transcript })
+    drafts.findOpen.mockResolvedValue({ id: 'draft', pendingField: 'account', proposal: { inputMethod: 'MANUAL', calculation: undefined } })
+    const result = await processor.handle({ ...message(''), type: 'audio' } as never)
+    expect(result.reply).not.toContain(transcript)
+    expect(result.reply).toContain('Escribime el dato')
   })
   it('keeps open financial questions conversational even if the classifier labels them help', async () => {
     const { processor, chat, extractor, expenses, message } = setup()

@@ -15,6 +15,11 @@ describe('verified purchase arithmetic', () => {
   it('understands quantities spoken as words in a pending purchase clarification', () => {
     expect(purchaseCalculation('Sí, son tres libros. Salían 450 pesos cada uno, pero tenían 5% de descuento')?.total).toBe('1282.50')
   })
+  it('accepts a repeated identical price in a voice transcript but rejects conflicting prices', () => {
+    const transcript = 'Sí, son tres. Narnia, El Príncipe Caspian, Narnia, El Viajero del Alba y Narnia, La Silla Plateada. Salían 450 cada uno, pero tenían 5% de descuento. Así que salía 450 pesos cada libro de los tres que compré. Pero tenían 5% de descuento.'
+    expect(purchaseCalculation(transcript)?.total).toBe('1282.50')
+    expect(purchaseCalculation('Son tres libros: 450 pesos cada uno y 500 cada libro, con 5% de descuento')).toBeNull()
+  })
   it('rejects missing quantity, invalid discount, multiple items and executable expressions', () => {
     expect(purchaseCalculation('Salían 450 cada uno')).toBeNull()
     expect(purchaseCalculation('Compré 3 libros a 450 cada uno con 105% de descuento')).toBeNull()
