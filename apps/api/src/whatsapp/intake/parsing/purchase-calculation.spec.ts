@@ -12,6 +12,9 @@ describe('verified purchase arithmetic', () => {
     expect(purchaseCalculation('Compré 3 libros a 427,50 pesos cada uno')?.total).toBe('1282.50')
     expect(purchaseCalculation('Compré 3 libros a 0,10 pesos cada uno con 5% de descuento')?.total).toBe('0.29')
   })
+  it('understands quantities spoken as words in a pending purchase clarification', () => {
+    expect(purchaseCalculation('Sí, son tres libros. Salían 450 pesos cada uno, pero tenían 5% de descuento')?.total).toBe('1282.50')
+  })
   it('rejects missing quantity, invalid discount, multiple items and executable expressions', () => {
     expect(purchaseCalculation('Salían 450 cada uno')).toBeNull()
     expect(purchaseCalculation('Compré 3 libros a 450 cada uno con 105% de descuento')).toBeNull()

@@ -12,7 +12,7 @@ import { movementDirection } from './movement-direction'
 import { purchaseCalculation } from '../parsing/purchase-calculation'
 import { formatMoney } from '../reply/format'
 import { pickAccountAnswer } from '../parsing/account-resolution'
-import { normalizeText } from '../parsing/signals'
+import { currencySignal, normalizeText } from '../parsing/signals'
 
 type WhichExpense = { pending: { action: 'correct' | 'undo'; request?: CorrectionRequest }; options: string[] }
 
@@ -46,7 +46,8 @@ export class DraftResponder {
     if (draft.pendingField === 'which_expense') return this.whichExpense(ctx, draft, profile)
     const calculation = draft.proposal.inputMethod === 'MANUAL' ? purchaseCalculation(ctx.text, draft.proposal.calculation) : null
     if (calculation) {
-      const proposal = { ...draft.proposal, calculation, amount: calculation.total, receiptConfirmed: false, confirmationRequired: true }
+      const currency = currencySignal(ctx.text)
+      const proposal = { ...draft.proposal, calculation, amount: calculation.total, currency: currency === 'UYU' || currency === 'USD' ? currency : draft.proposal.currency ?? profile.defaultCurrency, receiptConfirmed: false, confirmationRequired: true }
       return this.expenses.continue(ctx, proposal, profile, draft, [`Con ese detalle, el total queda en ${formatMoney(calculation.total, proposal.currency ?? 'UYU')}.`])
     }
     if (draft.proposal.transferDocument && movementDirection(ctx.text) === 'OWN') {

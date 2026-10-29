@@ -10,9 +10,10 @@ function setup() {
   const queries = { financialQuestion: vi.fn(async () => null) }
   const drafts = { findOpen: vi.fn(async (): Promise<unknown> => null) }
   const responder = { answer: vi.fn() }
-  const processor = new WhatsAppMessageProcessor(prisma as never, {} as never, extractor as never, context as never, drafts as never, expenses as never, {} as never, {} as never, responder as never, queries as never, chat as never)
+  const audio = { transcribe: vi.fn(async () => ({ text: 'Sí, son tres libros. Salían 450 pesos cada uno, pero tenían 5% de descuento' })) }
+  const processor = new WhatsAppMessageProcessor(prisma as never, {} as never, extractor as never, context as never, drafts as never, expenses as never, {} as never, {} as never, responder as never, queries as never, chat as never, undefined, undefined, audio as never)
   const message = (body: string) => ({ id: 'in', wamid: 'wa', from: '59899123456', body, type: 'text', createdAt: new Date(), messageTimestamp: null })
-  return { processor, chat, extractor, expenses, message, drafts, responder }
+  return { processor, chat, extractor, expenses, message, drafts, responder, audio }
 }
 
 describe('conversational WhatsApp routing', () => {
@@ -38,6 +39,16 @@ describe('conversational WhatsApp routing', () => {
     expect(chat.reply).not.toHaveBeenCalled()
     expect(extractor.extractText).not.toHaveBeenCalled()
     expect(expenses.continue).not.toHaveBeenCalled()
+  })
+  it('routes a calculable voice clarification into the pending draft without confirming it', async () => {
+    const { processor, message, drafts, responder, chat } = setup()
+    const draft = { id: 'draft', pendingField: 'account', proposal: { inputMethod: 'MANUAL', calculation: undefined } }
+    drafts.findOpen.mockResolvedValue(draft)
+    responder.answer.mockResolvedValue({ reply: 'Entendí el cálculo. Lo guardo?', intent: 'clarification' })
+    const result = await processor.handle({ ...message(''), type: 'audio' } as never)
+    expect(result.reply).toContain('Entendí')
+    expect(responder.answer).toHaveBeenCalledWith(expect.objectContaining({ fromAudio: true, text: expect.stringContaining('450 pesos') }), draft, expect.anything(), false)
+    expect(chat.reply).not.toHaveBeenCalled()
   })
   it('keeps open financial questions conversational even if the classifier labels them help', async () => {
     const { processor, chat, extractor, expenses, message } = setup()

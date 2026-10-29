@@ -26,6 +26,7 @@ import { paymentPreference } from './parsing/payment-preferences'
 import { moneyCandidates } from './parsing/money-text'
 import { offTopicReply } from '../../ai/prompts/financial-scope'
 import { AudioIntakeService } from './audio/audio-intake.service'
+import { purchaseCalculation } from './parsing/purchase-calculation'
 
 export type ProcessorOutcome = HandlerResult & { profileId: string | null }
 
@@ -93,7 +94,7 @@ export class WhatsAppMessageProcessor {
       if (!reading || 'reply' in reading) return { reply: reading?.reply ?? 'No pude escuchar el audio. Escribime el mensaje y lo vemos.', intent: 'other' }
       ctx.text = reading.text; ctx.type = 'text'; ctx.fromAudio = true
       // Voice recognition must never confirm an existing action or alter earlier records.
-      if (await this.drafts.findOpen(ctx.profileId) || /^(si|sí|dale|ok|confirmo|no|cancelar)$/i.test(ctx.text.trim()) || /^(?:correg|cambi|borra|elimina|deshace|eran|fue|eran)/i.test(ctx.text.trim())) return { reply: `Entendí: “${ctx.text}”. Para confirmar o cambiar algo pendiente, respondeme por escrito. No cambié nada.`, intent: 'other' }
+      if (/^(si|sí|dale|ok|confirmo|no|cancelar)$/i.test(ctx.text.trim()) || /^(?:correg|cambi|borra|elimina|deshace)/i.test(ctx.text.trim())) return { reply: `Entendí: “${ctx.text}”. Para confirmar o cambiar algo pendiente, respondeme por escrito. No cambié nada.`, intent: 'other' }
     }
     if (LINK_COMMAND.test(ctx.text)) return { reply: 'Este número ya está vinculado a tu cuenta de Finnic.', intent: 'link' }
     if (ctx.type === 'sticker') return { reply: 'Te leo. Cuando quieras, seguimos con tus números.', intent: 'other' }
@@ -114,6 +115,10 @@ export class WhatsAppMessageProcessor {
     const draft = await this.drafts.findOpen(ctx.profileId)
     if (isStyleRequest(ctx.text)) return this.chat.reply(ctx, draft ?? undefined)
     if (draft) {
+      if (ctx.fromAudio) {
+        if (draft.proposal.inputMethod === 'MANUAL' && purchaseCalculation(ctx.text, draft.proposal.calculation)) return this.draftResponder.answer(ctx, draft, profile, false)
+        return { reply: `Entendí: “${ctx.text}”. Para actualizar este gasto pendiente o confirmarlo, respondeme por escrito. No cambié nada.`, intent: 'clarification' }
+      }
       const confirmation = /^(si|sí|dale|ok|confirmo|confirmar|no)$/i.test(ctx.text.trim())
       if (intent !== 'cancel' && !confirmation) return this.chat.reply(ctx, draft)
       const result = await this.draftResponder.answer(ctx, draft, profile, intent === 'cancel')
