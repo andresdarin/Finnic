@@ -8,7 +8,7 @@
 | 3 Planificación | ✅ | ✅ | ✅ T1–T9 | ✅ M1–M5 |
 | 4 Implementación | ✅ | ✅ | ✅ T1–T9 | ✅ M1–M5 |
 | 5 Verificación | ✅ 44 e2e, 317 unit | ✅ axe 0 serias | ✅ 51 e2e, 79 unit web, axe 0 serias | ✅ 54 e2e, 87 unit, axe 0 serias |
-| 6 Entrega | ✅ en main (push previo) | ✅ en main (push previo) | ✅ CI + CD verdes 2026-10-28 | ⏳ |
+| 6 Entrega | ✅ en main (push previo) | ✅ en main (push previo) | ✅ CI + CD verdes 2026-10-28 | ✅ CI + CD verdes 2026-10-29 |
 
 ## Pendientes (deuda priorizada)
 1. Editar y borrar gastos desde el detalle (alto).
@@ -39,5 +39,6 @@ Spec: `specs/2026-10-28-desktop-experience-design.md`. Sub-proyectos en orden: d
 - Sub-proyectos pendientes: desktop-movements → desktop-dashboard → desktop-finance.
 
 ### desktop-movements
-- En rama `feat/desktop-movements`, sin integrar a main ni pushear.
+- Entregado 2026-10-29 (CI 40877796013, CD 40877796257).
+- Incidente 2026-10-29 (migración sin aplicar): resuelto; acción pendiente en CD. Ver `reviews/2026-10-29-incident-missing-migration.md`.
 - Pendiente aparte: editar/borrar movimientos (backend con reversión de saldos).

@@ -1,3 +1,3 @@
 # Handoff
-**De:** QA → **A:** DevOps / dueño (fase 6 de `desktop-movements`)
-Rama `feat/desktop-movements` lista (54 e2e, 87 unit). Falta integrar a `main` y pushear (dispara CD a producción). Siguiente sub-proyecto: `desktop-dashboard`.
+**De:** DevOps + SRE → **A:** Brainstorming (`desktop-dashboard`)
+`desktop-movements` entregado. Prioridad antes del próximo sub-proyecto: que CD corra `prisma migrate deploy` y dependa de CI (incidente 2026-10-29). Luego: Dashboard desktop, Finanzas/Balance/Tranquilidad, editar/borrar movimientos.
