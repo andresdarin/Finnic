@@ -1,6 +1,21 @@
 import { Users } from 'lucide-react'
 
 export default function BalanceHouseholdSection() {
-  // La API todavía no expone una agregación de ExpenseSplit/Settlement por persona.
-  return <section className="neu-raised rounded-3xl bg-surface/60 p-5 sm:p-6"><div className="flex items-center gap-2.5"><Users className="h-4 w-4 text-primary" /><div><h2 className="text-sm font-bold text-foreground">Balance del hogar</h2><p className="text-[11px] text-muted-foreground">Quién pagó más y quién debe compensar</p></div></div><p className="mt-2 text-xs leading-relaxed text-muted-foreground">Cuando haya movimientos compartidos, acá vas a ver el saldo entre las personas del hogar.</p></section>
+  return (
+    <section aria-labelledby="household-heading" className="neu-raised rounded-2xl bg-surface/60 p-5 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <Users aria-hidden="true" className="h-4 w-4 text-primary" />
+          <h2 id="household-heading" className="text-sm font-bold text-foreground">Hogar compartido</h2>
+        </div>
+        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">Próximamente</span>
+      </div>
+      <p className="mt-4 text-sm font-medium text-foreground">Compartís casa, compartís gastos.</p>
+      <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">
+        Para parejas, roomies, familias y cualquier grupo de personas que viva bajo el mismo techo.
+        Vas a poder organizar los gastos del hogar y ver quién pagó qué y cuánto le corresponde a cada persona.
+      </p>
+      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">Estamos preparando esta función. Te avisaremos acá cuando esté disponible.</p>
+    </section>
+  )
 }

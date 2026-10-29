@@ -26,7 +26,7 @@ export default function ExpenseFormFields({
         </div>
       </div>
 
-      {/* Switch de Alcance: Personal vs En pareja */}
+      {/* Alcance del gasto: personal o del hogar */}
       <div className="flex h-11 gap-1 rounded-2xl border border-border/80 bg-surface-soft p-1">
         <button
           type="button"
@@ -50,7 +50,7 @@ export default function ExpenseFormFields({
           }`}
         >
           <Users className="h-3.5 w-3.5" />
-          En pareja (50/50{profileName ? ` · ${profileName}` : ''})
+          Hogar (50/50{profileName ? ` · ${profileName}` : ''})
         </button>
       </div>
 

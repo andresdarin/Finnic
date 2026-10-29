@@ -33,7 +33,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: 'Finnic',
-  description: 'Tu copiloto financiero personal y en pareja',
+  description: 'Tu copiloto financiero personal y para el hogar compartido',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
